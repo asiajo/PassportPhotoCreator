@@ -22,17 +22,17 @@ import java.util.Map;
 
 public class FaceGraphic extends Graphic {
 
-    private static final float BOX_STROKE_WIDTH = 5.0f;
-    private static final int VALID_COLOR        = Color.GREEN;
-    private static final int INVALID_COLOR      = Color.RED;
+    private static final float  BOX_STROKE_WIDTH = 5.0f;
+    private static final int    VALID_COLOR      = Color.GREEN;
+    private static final int    INVALID_COLOR    = Color.RED;
     public               Canvas canvas;
-    private              Paint mPaint;
-    public volatile      Face mFace;
-    private              Rect faceBoundingBox   = null;
+    public volatile      Face   mFace;
+    private              Paint  mPaint;
+    private              Rect   faceBoundingBox  = null;
     private              PointF facePosition;
 
-    private List<Bitmap> headActions;
-    private Map          headActionsMap = new HashMap<FacePosition, Integer>();
+    private List<Bitmap>               headActions;
+    private Map<FacePosition, Integer> headActionsMap = new HashMap<>();
 
     {
         headActionsMap.put(FacePosition.ROTATE_LEFT, R.drawable.arrow_left);
@@ -128,7 +128,7 @@ public class FaceGraphic extends Graphic {
         for (FacePosition position : positions) {
             headActions.add(BitmapFactory.decodeResource(
                     context.getResources(),
-                    (Integer) headActionsMap.get(position)));
+                    headActionsMap.get(position)));
         }
     }
 
