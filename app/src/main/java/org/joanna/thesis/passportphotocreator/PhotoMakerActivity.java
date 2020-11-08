@@ -15,11 +15,11 @@ import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 
-import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.face.FaceDetector;
 import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 import com.google.android.material.snackbar.Snackbar;
 
+import org.joanna.thesis.passportphotocreator.camera.CameraSource;
 import org.joanna.thesis.passportphotocreator.camera.CameraSourcePreview;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
 import org.joanna.thesis.passportphotocreator.detectors.face.FaceGraphic;
@@ -29,7 +29,8 @@ import java.io.IOException;
 
 import static com.google.android.material.snackbar.Snackbar.make;
 
-public class PhotoMakerActivity extends Activity implements View.OnClickListener {
+public class PhotoMakerActivity extends Activity
+        implements View.OnClickListener {
 
 
     private static final String TAG                   =
@@ -40,9 +41,7 @@ public class PhotoMakerActivity extends Activity implements View.OnClickListener
     private CameraSource                mCameraSource;
     private CameraSourcePreview         mPreview;
     private GraphicOverlay<FaceGraphic> mGraphicOverlay;
-
-    private FaceTracker faceTracker;
-
+    private FaceTracker                 faceTracker;
 
     @Override
     public void onCreate(Bundle bundle) {
@@ -153,6 +152,11 @@ public class PhotoMakerActivity extends Activity implements View.OnClickListener
                 mCameraSource = null;
             }
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
     }
 
 }

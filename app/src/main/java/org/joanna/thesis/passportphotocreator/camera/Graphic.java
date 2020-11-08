@@ -3,8 +3,6 @@ package org.joanna.thesis.passportphotocreator.camera;
 import android.content.Context;
 import android.graphics.Canvas;
 
-import com.google.android.gms.vision.CameraSource;
-
 import org.joanna.thesis.passportphotocreator.detectors.face.FacePosition;
 
 import java.util.List;
