@@ -27,6 +27,7 @@ import org.joanna.thesis.passportphotocreator.camera.CameraSourcePreview;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
 import org.joanna.thesis.passportphotocreator.detectors.face.FaceGraphic;
 import org.joanna.thesis.passportphotocreator.detectors.face.FaceTracker;
+import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.android.OpenCVLoader;
 
 import java.io.IOException;
@@ -42,15 +43,15 @@ public class PhotoMakerActivity extends Activity
     // permission request codes need to be < 256
     private static final int    RC_HANDLE_CAMERA_PERM = 2;
 
+    static {
+        OpenCVLoader.initDebug();
+    }
+
     private CameraSource                mCameraSource;
     private CameraSourcePreview         mPreview;
     private GraphicOverlay<FaceGraphic> mGraphicOverlay;
     private FaceTracker                 faceTracker;
-    private ScaleGestureDetector scaleGestureDetector;
-
-    static {
-        OpenCVLoader.initDebug();
-    }
+    private ScaleGestureDetector        scaleGestureDetector;
 
     @Override
     public void onCreate(Bundle bundle) {
@@ -59,7 +60,9 @@ public class PhotoMakerActivity extends Activity
 
         mPreview = findViewById(R.id.preview);
         mGraphicOverlay = findViewById(R.id.graphicOverlay);
-        scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
+        scaleGestureDetector = new ScaleGestureDetector(
+                this,
+                new ScaleListener());
 
         int rc = ActivityCompat.checkSelfPermission(
                 this,
@@ -80,7 +83,9 @@ public class PhotoMakerActivity extends Activity
 
     @Override
     public void onClick(View v) {
-
+        if (v.getId() == R.id.take_photo_button) {
+            takePhoto();
+        }
     }
 
     @Override
@@ -174,6 +179,19 @@ public class PhotoMakerActivity extends Activity
     @Override
     protected void onPause() {
         super.onPause();
+    }
+
+    private void takePhoto() {
+        if (mCameraSource == null) {
+            return;
+        }
+        final Activity thisActivity = this;
+        mCameraSource.takePicture(null, new CameraSource.PictureCallback() {
+            @Override
+            public void onPictureTaken(byte[] bytes) {
+                ImageUtils.saveImage(bytes, thisActivity);
+            }
+        });
     }
 
     private class ScaleListener implements ScaleGestureDetector.OnScaleGestureListener {
