@@ -8,8 +8,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Toast;
 
@@ -43,6 +46,7 @@ public class PhotoMakerActivity extends Activity
     private CameraSourcePreview         mPreview;
     private GraphicOverlay<FaceGraphic> mGraphicOverlay;
     private FaceTracker                 faceTracker;
+    private ScaleGestureDetector scaleGestureDetector;
 
     static {
         OpenCVLoader.initDebug();
@@ -55,6 +59,7 @@ public class PhotoMakerActivity extends Activity
 
         mPreview = findViewById(R.id.preview);
         mGraphicOverlay = findViewById(R.id.graphicOverlay);
+        scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 
         int rc = ActivityCompat.checkSelfPermission(
                 this,
@@ -82,6 +87,12 @@ public class PhotoMakerActivity extends Activity
     public void onPointerCaptureChanged(boolean hasCapture) {
 
     }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent e) {
+        return scaleGestureDetector.onTouchEvent(e) || super.onTouchEvent(e);
+    }
+
 
     private void requestCameraPermission() {
         final String[] permissions = new String[]{Manifest.permission.CAMERA};
@@ -140,6 +151,7 @@ public class PhotoMakerActivity extends Activity
                 .Builder(context, detector)
                 .setFacing(CameraSource.CAMERA_FACING_BACK)
                 .setRequestedPreviewSize(640, 480)
+                .setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)
                 .setRequestedFps(15.0f);
 
         mCameraSource = builder.build();
@@ -162,6 +174,24 @@ public class PhotoMakerActivity extends Activity
     @Override
     protected void onPause() {
         super.onPause();
+    }
+
+    private class ScaleListener implements ScaleGestureDetector.OnScaleGestureListener {
+
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            return false;
+        }
+
+        @Override
+        public boolean onScaleBegin(ScaleGestureDetector detector) {
+            return true;
+        }
+
+        @Override
+        public void onScaleEnd(ScaleGestureDetector detector) {
+            mCameraSource.doZoom(detector.getScaleFactor());
+        }
     }
 
 }
