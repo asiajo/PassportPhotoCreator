@@ -24,6 +24,7 @@ import org.joanna.thesis.passportphotocreator.camera.CameraSourcePreview;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
 import org.joanna.thesis.passportphotocreator.detectors.face.FaceGraphic;
 import org.joanna.thesis.passportphotocreator.detectors.face.FaceTracker;
+import org.opencv.android.OpenCVLoader;
 
 import java.io.IOException;
 
@@ -42,6 +43,10 @@ public class PhotoMakerActivity extends Activity
     private CameraSourcePreview         mPreview;
     private GraphicOverlay<FaceGraphic> mGraphicOverlay;
     private FaceTracker                 faceTracker;
+
+    static {
+        OpenCVLoader.initDebug();
+    }
 
     @Override
     public void onCreate(Bundle bundle) {

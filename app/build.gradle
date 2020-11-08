@@ -32,4 +32,6 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
     implementation 'com.google.mlkit:face-detection:16.0.2'
+
+    implementation project(path: ':opencv')
 }
