@@ -17,6 +17,7 @@ import org.joanna.thesis.passportphotocreator.detectors.face.FaceGraphic;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
+import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -30,6 +31,15 @@ import java.util.Objects;
 
 public final class ImageUtils {
 
+    /**
+     * Size in pixels of the resulting image. 827 corresponds to 3,5 cm wide
+     * image with the quality of 600 ppi.
+     */
+    private static final int FINAL_IMAGE_WIDTH_PX = 827;
+    private static final int FINAL_IMAGE_HEIGHT_PX =
+            FINAL_IMAGE_WIDTH_PX * 45 / 35;
+
+
     private ImageUtils() {
     }
 
@@ -42,7 +52,8 @@ public final class ImageUtils {
         if (croppedMat == null) {
             return;
         }
-        Bitmap imageCropped = getBitmapFromMat(croppedMat);
+        Mat resizedMat = getResizedMat(croppedMat);
+        Bitmap imageCropped = getBitmapFromMat(resizedMat);
         byte[] byteArray = getBytesFromBitmap(imageCropped);
         safelyRemoveBitmap(imageCropped);
 
@@ -58,6 +69,13 @@ public final class ImageUtils {
         fos.write(byteArray);
         fos.flush();
         fos.close();
+    }
+
+    private static Mat getResizedMat(final Mat croppedMat) {
+        Mat resizedMat = new Mat();
+        Size sz = new Size(FINAL_IMAGE_WIDTH_PX, FINAL_IMAGE_HEIGHT_PX);
+        Imgproc.resize(croppedMat, resizedMat, sz);
+        return resizedMat;
     }
 
     private static byte[] getBytesFromBitmap(final Bitmap imageCropped)
