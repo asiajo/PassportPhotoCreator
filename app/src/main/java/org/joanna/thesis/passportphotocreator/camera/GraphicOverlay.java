@@ -53,7 +53,6 @@ public class GraphicOverlay<T extends Graphic> extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        System.out.println("On draw called.");
         super.onDraw(canvas);
 
         Rect r = new Rect(0, 0, canvas.getWidth(),

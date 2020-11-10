@@ -1,6 +1,8 @@
 package org.joanna.thesis.passportphotocreator.detectors.face;
 
-public enum FacePosition {
+import org.joanna.thesis.passportphotocreator.detectors.Action;
+
+public enum FaceActions implements Action {
     ROTATE_LEFT,
     ROTATE_RIGHT,
     FACE_UP,

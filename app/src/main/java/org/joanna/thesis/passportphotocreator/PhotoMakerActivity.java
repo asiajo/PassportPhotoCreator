@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,8 +25,8 @@ import com.google.android.material.snackbar.Snackbar;
 
 import org.joanna.thesis.passportphotocreator.camera.CameraSource;
 import org.joanna.thesis.passportphotocreator.camera.CameraSourcePreview;
+import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.detectors.face.FaceGraphic;
 import org.joanna.thesis.passportphotocreator.detectors.face.FaceTracker;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.android.OpenCVLoader;
@@ -47,11 +48,11 @@ public class PhotoMakerActivity extends Activity
         OpenCVLoader.initDebug();
     }
 
-    private CameraSource                mCameraSource;
-    private CameraSourcePreview         mPreview;
-    private GraphicOverlay<FaceGraphic> mGraphicOverlay;
-    private FaceTracker                 faceTracker;
-    private ScaleGestureDetector        scaleGestureDetector;
+    private CameraSource            mCameraSource;
+    private CameraSourcePreview     mPreview;
+    private GraphicOverlay<Graphic> mGraphicOverlay;
+    private FaceTracker             faceTracker;
+    private ScaleGestureDetector    scaleGestureDetector;
 
     @Override
     public void onCreate(Bundle bundle) {
@@ -185,11 +186,25 @@ public class PhotoMakerActivity extends Activity
         if (mCameraSource == null) {
             return;
         }
+        final Rect boundingBox = faceTracker.getFaceBoundingBox();
+        if (boundingBox == null) {
+            Toast.makeText(this, "Did not find face on the picture. Cannot " +
+                    "make a photo.", Toast.LENGTH_LONG).show();
+            return;
+        }
         final Activity thisActivity = this;
         mCameraSource.takePicture(null, new CameraSource.PictureCallback() {
             @Override
             public void onPictureTaken(byte[] bytes) {
-                ImageUtils.saveImage(bytes, thisActivity);
+                try {
+                    ImageUtils.saveImage(bytes, thisActivity, mGraphicOverlay);
+                    Toast.makeText(thisActivity, "Image Saved!",
+                            Toast.LENGTH_SHORT).show();
+                } catch (IOException e) {
+                    Toast.makeText(thisActivity, "ERROR! Image Could not be " +
+                            "Saved.", Toast.LENGTH_SHORT).show();
+                    e.printStackTrace();
+                }
             }
         });
     }

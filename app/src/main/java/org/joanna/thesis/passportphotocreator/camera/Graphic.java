@@ -3,7 +3,7 @@ package org.joanna.thesis.passportphotocreator.camera;
 import android.content.Context;
 import android.graphics.Canvas;
 
-import org.joanna.thesis.passportphotocreator.detectors.face.FacePosition;
+import org.joanna.thesis.passportphotocreator.detectors.Action;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ public abstract class Graphic {
     public abstract void draw(final Canvas canvas);
 
     public abstract void setBarActions(
-            final List<FacePosition> positions,
+            final List<Action> positions,
             final Context context);
 
     public float scaleX(final float horizontal) {

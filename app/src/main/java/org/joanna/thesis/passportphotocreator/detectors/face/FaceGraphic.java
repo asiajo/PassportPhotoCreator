@@ -14,6 +14,7 @@ import com.google.android.gms.vision.face.Face;
 import org.joanna.thesis.passportphotocreator.R;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
+import org.joanna.thesis.passportphotocreator.detectors.Action;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,32 +23,39 @@ import java.util.Map;
 
 public class FaceGraphic extends Graphic {
 
-    private static final float  BOX_STROKE_WIDTH = 5.0f;
-    private static final int    VALID_COLOR      = Color.GREEN;
-    private static final int    INVALID_COLOR    = Color.RED;
-    public               Canvas canvas;
-    public volatile      Face   mFace;
-    private              Paint  mPaint;
-    private              Rect   faceBoundingBox  = null;
-    private              PointF facePosition;
+    private static final float BOX_STROKE_WIDTH = 5.0f;
+    private static final int   VALID_COLOR      = Color.GREEN;
+    private static final int   INVALID_COLOR    = Color.RED;
 
-    private List<Bitmap>               headActions;
-    private Map<FacePosition, Integer> headActionsMap = new HashMap<>();
+    private Paint  mPaint;
+    private Canvas canvas;
+
+    private          double bbProportionLeft;
+    private          double bbProportionTop;
+    private          double bbProportionWidth;
+    private          double bbProportionHeight;
+    private          Rect   faceBoundingBox;
+    private          PointF facePosition;
+    private volatile Face   mFace;
+
+    private List<Bitmap>              headActions;
+    private Map<FaceActions, Integer> headActionsMap;
 
     {
-        headActionsMap.put(FacePosition.ROTATE_LEFT, R.drawable.arrow_left);
-        headActionsMap.put(FacePosition.ROTATE_RIGHT, R.drawable.arrow_right);
+        headActionsMap = new HashMap<>();
+        headActionsMap.put(FaceActions.ROTATE_LEFT, R.drawable.arrow_left);
+        headActionsMap.put(FaceActions.ROTATE_RIGHT, R.drawable.arrow_right);
         headActionsMap.put(
-                FacePosition.STRAIGHTEN_FROM_LEFT,
+                FaceActions.STRAIGHTEN_FROM_LEFT,
                 R.drawable.arrow_straighten_right);
         headActionsMap.put(
-                FacePosition.STRAIGHTEN_FROM_RIGHT,
+                FaceActions.STRAIGHTEN_FROM_RIGHT,
                 R.drawable.arrow_straighten_left);
-        headActionsMap.put(FacePosition.FACE_DOWN, R.drawable.arrow_down);
-        headActionsMap.put(FacePosition.FACE_UP, R.drawable.arrow_up);
-        headActionsMap.put(FacePosition.LEFT_EYE_OPEN, R.drawable.eye);
-        headActionsMap.put(FacePosition.RIGHT_EYE_OPEN, R.drawable.eye);
-        headActionsMap.put(FacePosition.NEUTRAL_MOUTH, R.drawable.mouth);
+        headActionsMap.put(FaceActions.FACE_DOWN, R.drawable.arrow_down);
+        headActionsMap.put(FaceActions.FACE_UP, R.drawable.arrow_up);
+        headActionsMap.put(FaceActions.LEFT_EYE_OPEN, R.drawable.eye);
+        headActionsMap.put(FaceActions.RIGHT_EYE_OPEN, R.drawable.eye);
+        headActionsMap.put(FaceActions.NEUTRAL_MOUTH, R.drawable.mouth);
 
     }
 
@@ -71,8 +79,20 @@ public class FaceGraphic extends Graphic {
         if (face == null) {
             return;
         }
-        drawFaceBoundingBox(canvas, face);
+        facePosition = face.getPosition();
+        faceBoundingBox = FaceUtils.getFaceBoundingBox(face, this);
+        setBoundingBoxProportions();
+        canvas.drawRect(faceBoundingBox, mPaint);
         drawFaceActionsToBePerformed(canvas);
+    }
+
+    private void setBoundingBoxProportions() {
+        double canvasWidth = canvas.getWidth();
+        double canvasHeight = canvas.getHeight();
+        bbProportionLeft = faceBoundingBox.left / canvasWidth;
+        bbProportionTop = faceBoundingBox.top / canvasHeight;
+        bbProportionWidth = faceBoundingBox.width() / canvasWidth;
+        bbProportionHeight = faceBoundingBox.height() / canvasHeight;
     }
 
     private void drawFaceActionsToBePerformed(final Canvas canvas) {
@@ -93,39 +113,12 @@ public class FaceGraphic extends Graphic {
         }
     }
 
-    private void drawFaceBoundingBox(final Canvas canvas, final Face face) {
-        // TODO: refactor
-
-        facePosition = face.getPosition();
-        // get center of the face
-        double centerX = translateX(face.getPosition().x + face.getWidth() / 2);
-        double centerY =
-                translateY(face.getPosition().y + face.getHeight() / 2);
-
-        // find location of bounding box edges
-        final int RatioDivisor = 24;
-        final float upperEdgeRatio = (RatioDivisor / 2.0f + 1) / RatioDivisor;
-        final float lowerEdgeRatio = (RatioDivisor / 2.0f - 1) / RatioDivisor;
-        double widthWithOffset = scaleX(face.getWidth()) * 1.3f;
-        double heightWithOffset = widthWithOffset / 3.5f * 4.5f;
-        double left = (float) (centerX - widthWithOffset / 2);
-        double top = (float) (centerY - heightWithOffset * upperEdgeRatio);
-        double right = (float) (centerX + widthWithOffset / 2);
-        double bottom = centerY + heightWithOffset * lowerEdgeRatio;
-        faceBoundingBox = new Rect(
-                (int) left, (int) top, (int) right, (int) bottom);
-
-        // draw a bounding box around the face.
-        canvas.drawRect((float) left, (float) top, (float) right,
-                (float) bottom, mPaint);
-    }
-
     @Override
     public void setBarActions(
-            final List<FacePosition> positions,
+            final List<Action> positions,
             final Context context) {
         headActions = new ArrayList<>();
-        for (FacePosition position : positions) {
+        for (Action position : positions) {
             headActions.add(BitmapFactory.decodeResource(
                     context.getResources(),
                     headActionsMap.get(position)));
@@ -134,6 +127,23 @@ public class FaceGraphic extends Graphic {
 
     public Rect getFaceBoundingBox() {
         return faceBoundingBox;
+    }
+
+
+    public double getBbProportionLeft() {
+        return bbProportionLeft;
+    }
+
+    public double getBbProportionTop() {
+        return bbProportionTop;
+    }
+
+    public double getBbProportionWidth() {
+        return bbProportionWidth;
+    }
+
+    public double getBbProportionHeight() {
+        return bbProportionHeight;
     }
 
     public PointF getFacePosition() {
