@@ -10,11 +10,16 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
+import android.widget.Toast;
 
+import org.joanna.thesis.passportphotocreator.R;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
 import org.joanna.thesis.passportphotocreator.detectors.face.FaceGraphic;
 import org.opencv.android.Utils;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.Size;
@@ -31,13 +36,21 @@ import java.util.Objects;
 
 public final class ImageUtils {
 
+    private static final String TAG = ImageUtils.class.getSimpleName();
+
+    private static final float FINAL_IMAGE_WIDTH_FACTOR = 35f;
+    private static final float FINAL_IMAGE_HEIGHT_FACTOR = 45f;
+    public static final  float FINAL_IMAGE_H_TO_W_RATIO =
+            FINAL_IMAGE_HEIGHT_FACTOR / FINAL_IMAGE_WIDTH_FACTOR;
+    public static final  float FINAL_IMAGE_W_TO_H_RATIO =
+            FINAL_IMAGE_WIDTH_FACTOR / FINAL_IMAGE_HEIGHT_FACTOR;
     /**
      * Size in pixels of the resulting image. 827 corresponds to 3,5 cm wide
      * image with the quality of 600 ppi.
      */
-    private static final int FINAL_IMAGE_WIDTH_PX = 827;
-    private static final int FINAL_IMAGE_HEIGHT_PX =
-            FINAL_IMAGE_WIDTH_PX * 45 / 35;
+    private static final int   FINAL_IMAGE_WIDTH_PX = 827;
+    private static final int   FINAL_IMAGE_HEIGHT_PX =
+            (int) (FINAL_IMAGE_WIDTH_PX * FINAL_IMAGE_H_TO_W_RATIO);
 
 
     private ImageUtils() {
@@ -48,11 +61,18 @@ public final class ImageUtils {
             final Activity photoMakerActivity,
             final GraphicOverlay<Graphic> mGraphicOverlay) throws IOException {
 
-        Mat croppedMat = getCroppedMat(bytes, mGraphicOverlay);
+        Mat inputMat = getMatFromBytes(bytes);
+        Mat croppedMat = cropMatToFaceBoundingBox(
+                inputMat, mGraphicOverlay);
+        inputMat.release();
         if (croppedMat == null) {
+            Toast.makeText(photoMakerActivity, R.string.cannot_make_a_picture,
+                    Toast.LENGTH_LONG).show();
             return;
         }
-        Mat resizedMat = getResizedMat(croppedMat);
+        Mat resizedMat = resizeMat(
+                croppedMat, FINAL_IMAGE_WIDTH_PX, FINAL_IMAGE_HEIGHT_PX);
+        croppedMat.release();
         Bitmap imageCropped = getBitmapFromMat(resizedMat);
         byte[] byteArray = getBytesFromBitmap(imageCropped);
         safelyRemoveBitmap(imageCropped);
@@ -71,14 +91,28 @@ public final class ImageUtils {
         fos.close();
     }
 
-    private static Mat getResizedMat(final Mat croppedMat) {
-        Mat resizedMat = new Mat();
-        Size sz = new Size(FINAL_IMAGE_WIDTH_PX, FINAL_IMAGE_HEIGHT_PX);
-        Imgproc.resize(croppedMat, resizedMat, sz);
-        return resizedMat;
+    public static Mat getMatFromBytes(final byte[] bytes) {
+        Mat bgr = Imgcodecs.imdecode(
+                new MatOfByte(bytes),
+                Imgcodecs.IMREAD_COLOR);
+        Mat rgba = new Mat();
+        Imgproc.cvtColor(bgr, rgba, Imgproc.COLOR_BGR2RGBA);
+        bgr.release();
+        return rgba;
     }
 
-    private static byte[] getBytesFromBitmap(final Bitmap imageCropped)
+    public static Mat getMatFromYuvBytes(
+            final byte[] bytes, final int width, final int height) {
+        int increasedHeight = height + (height / 2);
+        Mat tmp = new Mat(increasedHeight, width, CvType.CV_8UC1);
+        tmp.put(0, 0, bytes);
+        Mat rgba = new Mat();
+        Imgproc.cvtColor(tmp, rgba, Imgproc.COLOR_YUV2RGBA_NV21, 4);
+        tmp.release();
+        return rotateMat(rgba);
+    }
+
+    public static byte[] getBytesFromBitmap(final Bitmap imageCropped)
             throws IOException {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         imageCropped.compress(Bitmap.CompressFormat.PNG, 100, stream);
@@ -88,53 +122,88 @@ public final class ImageUtils {
         return byteArray;
     }
 
-
-    private static void safelyRemoveBitmap(Bitmap bitmap) {
-        if (bitmap != null) {
-            bitmap.recycle();
-            bitmap = null;
-        }
-        System.gc();
-    }
-
-    private static Bitmap getBitmapFromMat(final Mat image) {
+    public static Bitmap getBitmapFromMat(final Mat image) {
         Bitmap map = Bitmap.createBitmap(image.width(), image.height(),
                 Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(image, map);
         return map;
     }
 
-    private static Mat getCroppedMat(
-            final byte[] bytes,
-            final GraphicOverlay<Graphic> mGraphicOverlay) {
+    public static Mat rotateMat(final Mat src) {
+        Core.transpose(src, src);
+        // TODO: double check if on all the phones the same rotation required
+        Core.flip(src, src, 1);
+        return src;
+    }
 
+    public static Mat resizeMat(final Mat src, final int width) {
+        return resizeMat(src, width,
+                (int) (width * FINAL_IMAGE_H_TO_W_RATIO));
+    }
+
+    public static Mat resizeMat(
+            final Mat src, final int width, final int height) {
+
+        float croppedMatRatio =
+                (float) src.height() / src.width();
+        float requestedRatio = height / width;
+        float epsilon = 0.001f;
+        if (Math.abs(croppedMatRatio - requestedRatio) < epsilon) {
+            Log.w(TAG, "Requested cropped ratio is different than the ratio " +
+                    "of original image. Image will get squeezed!");
+        }
+        Mat resizedMat = new Mat();
+        Size sz = new Size(width, height);
+        Imgproc.resize(src, resizedMat, sz);
+        return resizedMat;
+    }
+
+    public static Mat cropMatToFaceBoundingBox(
+            final Mat mat,
+            final GraphicOverlay<Graphic> mGraphicOverlay) {
         FaceGraphic faceGraphic = null;
         for (Graphic item : mGraphicOverlay.getmGraphics()) {
             if (item instanceof FaceGraphic) {
                 faceGraphic = (FaceGraphic) item;
             }
         }
-        if (faceGraphic == null) {
+        if (faceGraphic == null || faceGraphic.getFaceBoundingBox() == null) {
             return null;
         }
 
-        Mat mat = Imgcodecs.imdecode(
-                new MatOfByte(bytes),
-                Imgcodecs.IMREAD_COLOR);
-
         double matWidth = mat.size().width;
         double matHeight = mat.size().height;
+
         int cutWidth = (int) (faceGraphic.getBbProportionWidth() * matWidth);
-        int cutHeight = cutWidth * 45 / 35;
+        int cutHeight = (int) (cutWidth * FINAL_IMAGE_H_TO_W_RATIO);
         int cutLeft = (int) (faceGraphic.getBbProportionLeft() * matWidth);
         int cutTop = (int) (faceGraphic.getBbProportionTop() * matHeight);
         int cutRight = cutLeft + cutWidth;
         int cutBottom = cutTop + cutHeight;
-
+        if (!verifyBoundingBox(cutLeft, cutTop, cutRight, cutBottom,
+                mat.size())) {
+            return null;
+        }
         Mat cropped = mat.submat(cutTop, cutBottom, cutLeft, cutRight);
-        Mat rgba = new Mat();
-        Imgproc.cvtColor(cropped, rgba, Imgproc.COLOR_BGR2RGBA);
-        return rgba;
+        return cropped;
+    }
+
+    private static boolean verifyBoundingBox(
+            final int cutLeft, final int cutTop, final int cutRight,
+            final int cutBottom, final Size size) {
+        return cutLeft >= 0
+                && cutTop >= 0
+                && cutRight > cutLeft
+                && cutRight <= size.width
+                && cutBottom <= size.height;
+    }
+
+    public static void safelyRemoveBitmap(Bitmap bitmap) {
+        if (bitmap != null) {
+            bitmap.recycle();
+            bitmap = null;
+        }
+        System.gc();
     }
 
     private static OutputStream getImageOutputStreamSdkLessThanQ(
@@ -160,6 +229,7 @@ public final class ImageUtils {
             final String fileName, final Context context)
             throws FileNotFoundException {
         // TODO: double check this
+        // TODO: send info to gallery
         ContentResolver resolver = context.getContentResolver();
         ContentValues contentValues = new ContentValues();
         contentValues.put(MediaStore.Images.Media.TITLE, fileName);

@@ -12,4 +12,9 @@
             It is possible to zoom in to have better preview.</string>
     <string name="take_photo_button">Take a shot</string>
     <string name="take_photo">Take a photo</string>
+    <string name="no_background_verification_error">Could not initialize background verification. Application will run without it.</string>
+    <string name="no_face_on_the_picture">Did not find face on the picture. Cannot make a photo.</string>
+    <string name="image_saved">Image Saved!</string>
+    <string name="image_not_saved">ERROR! Image Could not be Saved.</string>
+    <string name="cannot_make_a_picture">Could not make a picture. Make sure that the rectangle around the face is fully visible.</string>
 </resources>

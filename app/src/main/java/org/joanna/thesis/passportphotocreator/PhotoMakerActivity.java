@@ -27,6 +27,7 @@ import org.joanna.thesis.passportphotocreator.camera.CameraSource;
 import org.joanna.thesis.passportphotocreator.camera.CameraSourcePreview;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
+import org.joanna.thesis.passportphotocreator.detectors.background.BackgroundVerification;
 import org.joanna.thesis.passportphotocreator.detectors.face.FaceTracker;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.android.OpenCVLoader;
@@ -39,6 +40,8 @@ public class PhotoMakerActivity extends Activity
         implements View.OnClickListener {
 
 
+    public static final int PREVIEW_WIDTH  = 480;
+    public static final int PREVIEW_HEIGHT = 640;
     private static final String TAG                   =
             PhotoMakerActivity.class.getSimpleName();
     // permission request codes need to be < 256
@@ -48,6 +51,7 @@ public class PhotoMakerActivity extends Activity
         OpenCVLoader.initDebug();
     }
 
+    BackgroundVerification mBackgroundVerificator;
     private CameraSource            mCameraSource;
     private CameraSourcePreview     mPreview;
     private GraphicOverlay<Graphic> mGraphicOverlay;
@@ -156,8 +160,10 @@ public class PhotoMakerActivity extends Activity
         CameraSource.Builder builder = new CameraSource
                 .Builder(context, detector)
                 .setFacing(CameraSource.CAMERA_FACING_BACK)
-                .setRequestedPreviewSize(640, 480)
+                .setRequestedPreviewSize(PREVIEW_HEIGHT, PREVIEW_WIDTH)
                 .setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)
+                .setBackgroundVerifier(
+                        new BackgroundVerification(this, mGraphicOverlay))
                 .setRequestedFps(15.0f);
 
         mCameraSource = builder.build();
@@ -188,8 +194,8 @@ public class PhotoMakerActivity extends Activity
         }
         final Rect boundingBox = faceTracker.getFaceBoundingBox();
         if (boundingBox == null) {
-            Toast.makeText(this, "Did not find face on the picture. Cannot " +
-                    "make a photo.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.no_face_on_the_picture,
+                    Toast.LENGTH_LONG).show();
             return;
         }
         final Activity thisActivity = this;
@@ -198,11 +204,11 @@ public class PhotoMakerActivity extends Activity
             public void onPictureTaken(byte[] bytes) {
                 try {
                     ImageUtils.saveImage(bytes, thisActivity, mGraphicOverlay);
-                    Toast.makeText(thisActivity, "Image Saved!",
+                    Toast.makeText(thisActivity, R.string.image_saved,
                             Toast.LENGTH_SHORT).show();
                 } catch (IOException e) {
-                    Toast.makeText(thisActivity, "ERROR! Image Could not be " +
-                            "Saved.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(thisActivity, R.string.image_not_saved,
+                            Toast.LENGTH_SHORT).show();
                     e.printStackTrace();
                 }
             }

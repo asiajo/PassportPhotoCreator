@@ -24,6 +24,8 @@ import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.Frame;
 
+import org.joanna.thesis.passportphotocreator.detectors.background.BackgroundVerification;
+
 import java.io.IOException;
 import java.lang.Thread.State;
 import java.lang.annotation.Retention;
@@ -77,6 +79,11 @@ public class CameraSource {
      * ratio is less than this tolerance, they are considered to be the same aspect ratio.
      */
     private static final float ASPECT_RATIO_TOLERANCE = 0.01f;
+
+    /**
+     * Every which frame background verifier shall be called.
+     */
+    private static final int BACKGROUND_VERIFICATION_FREQUENCY = 30;
 
     @StringDef({
             Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE,
@@ -138,6 +145,7 @@ public class CameraSource {
      */
     private Thread mProcessingThread;
     private FrameProcessingRunnable mFrameProcessor;
+    BackgroundVerification mBackgroundVerificator;
 
     /**
      * Map to convert between a byte array, received from the camera, and its associated byte
@@ -204,6 +212,10 @@ public class CameraSource {
             return this;
         }
 
+        public Builder setBackgroundVerifier(BackgroundVerification backgroundVerificator) {
+            mCameraSource.mBackgroundVerificator = backgroundVerificator;
+            return this;
+        }
 
 
         /**
@@ -1060,10 +1072,21 @@ public class CameraSource {
      * Called when the camera has a new preview frame.
      */
     private class CameraPreviewCallback implements Camera.PreviewCallback {
+        private int frameLoop = 0;
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
+
             mFrameBytes = data;
             mFrameProcessor.setNextFrame(data, camera);
+
+            frameLoop++;
+            if (frameLoop % BACKGROUND_VERIFICATION_FREQUENCY == 0
+                    && mBackgroundVerificator != null){
+                // perform background verification every
+                // BACKGROUND_VERIFICATION_FREQUENCY frame.
+                frameLoop = 0;
+                mBackgroundVerificator.verify(data);
+            }
         }
     }
 
