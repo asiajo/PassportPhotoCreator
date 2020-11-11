@@ -40,8 +40,8 @@ public class PhotoMakerActivity extends Activity
         implements View.OnClickListener {
 
 
-    public static final int PREVIEW_WIDTH  = 480;
-    public static final int PREVIEW_HEIGHT = 640;
+    public static final  int    PREVIEW_WIDTH         = 480;
+    public static final  int    PREVIEW_HEIGHT        = 640;
     private static final String TAG                   =
             PhotoMakerActivity.class.getSimpleName();
     // permission request codes need to be < 256
@@ -51,12 +51,12 @@ public class PhotoMakerActivity extends Activity
         OpenCVLoader.initDebug();
     }
 
-    BackgroundVerification mBackgroundVerificator;
     private CameraSource            mCameraSource;
     private CameraSourcePreview     mPreview;
     private GraphicOverlay<Graphic> mGraphicOverlay;
     private FaceTracker             faceTracker;
     private ScaleGestureDetector    scaleGestureDetector;
+    private BackgroundVerification  mBackgroundVerifier;
 
     @Override
     public void onCreate(Bundle bundle) {
@@ -91,6 +91,14 @@ public class PhotoMakerActivity extends Activity
         if (v.getId() == R.id.take_photo_button) {
             takePhoto();
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        if (mBackgroundVerifier != null) {
+            mBackgroundVerifier.close();
+        }
+        super.onDestroy();
     }
 
     @Override
@@ -157,13 +165,14 @@ public class PhotoMakerActivity extends Activity
             }
         }
 
+        mBackgroundVerifier = new BackgroundVerification(this, mGraphicOverlay);
+
         CameraSource.Builder builder = new CameraSource
                 .Builder(context, detector)
                 .setFacing(CameraSource.CAMERA_FACING_BACK)
                 .setRequestedPreviewSize(PREVIEW_HEIGHT, PREVIEW_WIDTH)
                 .setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)
-                .setBackgroundVerifier(
-                        new BackgroundVerification(this, mGraphicOverlay))
+                .setBackgroundVerifier(mBackgroundVerifier)
                 .setRequestedFps(15.0f);
 
         mCameraSource = builder.build();

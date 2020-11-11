@@ -34,6 +34,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Objects;
 
+import static org.opencv.core.Core.BORDER_REPLICATE;
+
 public final class ImageUtils {
 
     private static final String TAG = ImageUtils.class.getSimpleName();
@@ -61,19 +63,18 @@ public final class ImageUtils {
             final Activity photoMakerActivity,
             final GraphicOverlay<Graphic> mGraphicOverlay) throws IOException {
 
-        Mat inputMat = getMatFromBytes(bytes);
-        Mat croppedMat = cropMatToFaceBoundingBox(
-                inputMat, mGraphicOverlay);
-        inputMat.release();
-        if (croppedMat == null) {
+        Mat image = getMatFromBytes(bytes);
+        image = cropMatToFaceBoundingBox(
+                image, mGraphicOverlay);
+        if (image == null) {
             Toast.makeText(photoMakerActivity, R.string.cannot_make_a_picture,
                     Toast.LENGTH_LONG).show();
             return;
         }
-        Mat resizedMat = resizeMat(
-                croppedMat, FINAL_IMAGE_WIDTH_PX, FINAL_IMAGE_HEIGHT_PX);
-        croppedMat.release();
-        Bitmap imageCropped = getBitmapFromMat(resizedMat);
+        image = resizeMat(
+                image, FINAL_IMAGE_WIDTH_PX, FINAL_IMAGE_HEIGHT_PX);
+        Bitmap imageCropped = getBitmapFromMat(image);
+        image.release();
         byte[] byteArray = getBytesFromBitmap(imageCropped);
         safelyRemoveBitmap(imageCropped);
 
@@ -92,48 +93,45 @@ public final class ImageUtils {
     }
 
     public static Mat getMatFromBytes(final byte[] bytes) {
-        Mat bgr = Imgcodecs.imdecode(
+        Mat image = Imgcodecs.imdecode(
                 new MatOfByte(bytes),
                 Imgcodecs.IMREAD_COLOR);
-        Mat rgba = new Mat();
-        Imgproc.cvtColor(bgr, rgba, Imgproc.COLOR_BGR2RGBA);
-        bgr.release();
-        return rgba;
+        Imgproc.cvtColor(image, image, Imgproc.COLOR_BGR2RGBA);
+        return image;
     }
 
     public static Mat getMatFromYuvBytes(
             final byte[] bytes, final int width, final int height) {
         int increasedHeight = height + (height / 2);
-        Mat tmp = new Mat(increasedHeight, width, CvType.CV_8UC1);
-        tmp.put(0, 0, bytes);
-        Mat rgba = new Mat();
-        Imgproc.cvtColor(tmp, rgba, Imgproc.COLOR_YUV2RGBA_NV21, 4);
-        tmp.release();
-        return rotateMat(rgba);
+        Mat image = new Mat(increasedHeight, width, CvType.CV_8UC1);
+        image.put(0, 0, bytes);
+        Imgproc.cvtColor(image, image, Imgproc.COLOR_YUV2RGBA_NV21, 4);
+        return rotateMat(image);
     }
 
-    public static byte[] getBytesFromBitmap(final Bitmap imageCropped)
+    public static byte[] getBytesFromBitmap(final Bitmap src)
             throws IOException {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        imageCropped.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        src.compress(Bitmap.CompressFormat.PNG, 100, stream);
         byte[] byteArray = stream.toByteArray();
         stream.flush();
         stream.close();
         return byteArray;
     }
 
-    public static Bitmap getBitmapFromMat(final Mat image) {
-        Bitmap map = Bitmap.createBitmap(image.width(), image.height(),
+    public static Bitmap getBitmapFromMat(final Mat src) {
+        Bitmap bitmap = Bitmap.createBitmap(src.width(), src.height(),
                 Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(image, map);
-        return map;
+        Utils.matToBitmap(src, bitmap);
+        return bitmap;
     }
 
     public static Mat rotateMat(final Mat src) {
-        Core.transpose(src, src);
+        Mat rotated = new Mat();
+        Core.transpose(src, rotated);
         // TODO: double check if on all the phones the same rotation required
-        Core.flip(src, src, 1);
-        return src;
+        Core.flip(rotated, rotated, 1);
+        return rotated;
     }
 
     public static Mat resizeMat(final Mat src, final int width) {
@@ -152,14 +150,14 @@ public final class ImageUtils {
             Log.w(TAG, "Requested cropped ratio is different than the ratio " +
                     "of original image. Image will get squeezed!");
         }
-        Mat resizedMat = new Mat();
+        Mat resized = new Mat();
         Size sz = new Size(width, height);
-        Imgproc.resize(src, resizedMat, sz);
-        return resizedMat;
+        Imgproc.resize(src, resized, sz);
+        return resized;
     }
 
     public static Mat cropMatToFaceBoundingBox(
-            final Mat mat,
+            final Mat src,
             final GraphicOverlay<Graphic> mGraphicOverlay) {
         FaceGraphic faceGraphic = null;
         for (Graphic item : mGraphicOverlay.getmGraphics()) {
@@ -171,8 +169,8 @@ public final class ImageUtils {
             return null;
         }
 
-        double matWidth = mat.size().width;
-        double matHeight = mat.size().height;
+        double matWidth = src.size().width;
+        double matHeight = src.size().height;
 
         int cutWidth = (int) (faceGraphic.getBbProportionWidth() * matWidth);
         int cutHeight = (int) (cutWidth * FINAL_IMAGE_H_TO_W_RATIO);
@@ -181,10 +179,28 @@ public final class ImageUtils {
         int cutRight = cutLeft + cutWidth;
         int cutBottom = cutTop + cutHeight;
         if (!verifyBoundingBox(cutLeft, cutTop, cutRight, cutBottom,
-                mat.size())) {
+                src.size())) {
             return null;
         }
-        Mat cropped = mat.submat(cutTop, cutBottom, cutLeft, cutRight);
+        Mat cropped = src.submat(cutTop, cutBottom, cutLeft, cutRight);
+        return cropped;
+    }
+
+    public static Mat padMatToSquare(final Mat src, final int borderSize) {
+        Mat dst = new Mat();
+        int top = (borderSize - src.height()) / 2;
+        int left = (borderSize - src.width()) / 2;
+        int bottom = borderSize - top - src.height();
+        int right = borderSize - left - src.width();
+        Core.copyMakeBorder(src, dst, top, bottom, left, right,
+                BORDER_REPLICATE);
+        return dst;
+    }
+
+    public static Mat unpadMatFromSquare(final Mat src, final int imgWidth) {
+        int left = (src.width() - imgWidth) / 2;
+        int right = left + imgWidth;
+        Mat cropped = src.submat(0, src.height(), left, right);
         return cropped;
     }
 
