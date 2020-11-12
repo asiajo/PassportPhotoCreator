@@ -157,4 +157,6 @@ public abstract class ImageSegmentor {
     protected abstract void runInference();
 
     protected abstract Mat getBackground(Mat bg);
+
+    protected abstract Mat getForeground(Mat bg);
 }

@@ -9,11 +9,11 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.opencv.core.CvType.CV_32F;
-import static org.opencv.core.CvType.CV_32FC3;
-import static org.opencv.core.CvType.CV_8UC3;
-import static org.opencv.imgproc.Imgproc.COLOR_RGBA2RGB;
+import static org.opencv.core.CvType.CV_8UC1;
 
 /** This segmentor works with the float mobile-unet model. */
 public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
@@ -71,34 +71,56 @@ public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
     @Override
     protected Mat getBackground(final Mat src) {
 
-        Mat mskmat = new Mat(MODEL_INPUT_IMG_SIZE, MODEL_INPUT_IMG_SIZE,
+        if (segmap == null) {
+            return null;
+        }
+        Mat mask = new Mat(MODEL_INPUT_IMG_SIZE, MODEL_INPUT_IMG_SIZE,
                 CV_32F);
-        Mat invmskmat = new Mat(PROCESS_IMG_SIZE, PROCESS_IMG_SIZE,
-                CV_32FC3, new Scalar(1.0, 1.0, 1.0));
+        Mat maskInverted = new Mat(MODEL_INPUT_IMG_SIZE, MODEL_INPUT_IMG_SIZE,
+                CV_32F, new Scalar(1.0));
+        mask.put(0, 0, segmap[0]);
+        Core.subtract(maskInverted, mask, maskInverted);
+        mask.release();
+
+        Mat background = applyMask(src, maskInverted);
+        maskInverted.release();
+
+        return background;
+    }
+
+    @Override
+    protected Mat getForeground(final Mat src) {
 
         if (segmap == null) {
             return null;
         }
+        Mat mask = new Mat(MODEL_INPUT_IMG_SIZE, MODEL_INPUT_IMG_SIZE, CV_32F);
+        mask.put(0, 0, segmap[0]);
+        Mat foreground = applyMask(src, mask);
+        mask.release();
 
-        mskmat.put(0, 0, segmap[0]);
-        Core.multiply(mskmat, new Scalar(2.0), mskmat);
-        Imgproc.threshold(mskmat, mskmat, 1.0, 1.0, Imgproc.THRESH_TRUNC);
+        return foreground;
+    }
 
-        Imgproc.resize(mskmat, mskmat, new Size(
-                PROCESS_IMG_SIZE,
-                PROCESS_IMG_SIZE));
-        Imgproc.cvtColor(mskmat, mskmat, Imgproc.COLOR_GRAY2BGR);
-        Mat background = new Mat();
-        Imgproc.cvtColor(src, background, COLOR_RGBA2RGB);
+    private Mat applyMask(final Mat src, final Mat mask) {
+        Core.multiply(mask, new Scalar(2.0), mask);
+        Imgproc.threshold(mask, mask, 1.0, 1.0, Imgproc.THRESH_TRUNC);
 
-        background.convertTo(background, CV_32FC3, 1.0 / 255.0);
-        Core.subtract(invmskmat, mskmat, invmskmat);
-        Core.multiply(background, invmskmat, background);
-        mskmat.release();
-        invmskmat.release();
+        if (!(src.width() == PROCESS_IMG_SIZE &&
+                src.height() == PROCESS_IMG_SIZE)) {
+            return null;
+        }
 
-        background.convertTo(background, CV_8UC3, 255);
-        return background;
+        Imgproc.resize(mask, mask, new Size(src.width(), src.height()));
+        List<Mat> channels = new ArrayList<>();
+        Core.split(src, channels);
+        mask.convertTo(mask, CV_8UC1, 255);
+        channels.remove(channels.size() - 1);
+        channels.add(mask);
+        Mat masked = new Mat();
+        Core.merge(channels, masked);
+
+        return masked;
     }
 
 }
