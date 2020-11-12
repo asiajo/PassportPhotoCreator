@@ -14,8 +14,9 @@ public final class FaceUtils {
     private FaceUtils() {
     }
 
-    public static Rect getFaceBoundingBox(final Face face,
-                                          final Graphic graphic) {
+    public static Rect getFaceBoundingBox(
+            final Face face,
+            final Graphic graphic) {
         // getPosition returns left top corner of the face bounding box
         double centerX =
                 graphic.translateX(face.getPosition().x + face.getWidth() / 2);
@@ -23,9 +24,10 @@ public final class FaceUtils {
                 graphic.translateY(face.getPosition().y + face.getHeight() / 2);
 
         // find location of bounding box edges
-        final int RatioDivisor = 16;
-        final float upperEdgeRatio = (RatioDivisor / 2.0f + 1) / RatioDivisor;
-        final float lowerEdgeRatio = (RatioDivisor / 2.0f - 1) / RatioDivisor;
+        final int RatioDivisor = 16; // for changing y position of BB
+        final float upperEdgeProportion = RatioDivisor / 2.0f + 1;
+        final float upperEdgeRatio = upperEdgeProportion / RatioDivisor;
+        final float lowerEdgeRatio = 1 - upperEdgeRatio;
         final float half = 0.5f;
 
         double widthWithOffset = graphic.scaleX(face.getWidth()) * BB_SCALING;

@@ -1,7 +1,6 @@
 package org.joanna.thesis.passportphotocreator.detectors.face;
 
 import android.graphics.Canvas;
-import android.graphics.PointF;
 import android.graphics.Rect;
 
 import com.google.android.gms.vision.face.Face;
@@ -19,9 +18,7 @@ public class FaceGraphic extends Graphic {
     private          double bbProportionWidth;
     private          double bbProportionHeight;
     private          Rect   faceBoundingBox;
-    private          PointF facePosition;
     private volatile Face   mFace;
-
 
     {
         getActionsMap().put(FaceActions.ROTATE_LEFT, R.drawable.arrow_left);
@@ -55,7 +52,6 @@ public class FaceGraphic extends Graphic {
         if (face == null) {
             return;
         }
-        facePosition = face.getPosition();
         faceBoundingBox = FaceUtils.getFaceBoundingBox(face, this);
         setBoundingBoxProportions();
         canvas.drawRect(faceBoundingBox, getmPaint());
@@ -89,9 +85,5 @@ public class FaceGraphic extends Graphic {
 
     public double getBbProportionHeight() {
         return bbProportionHeight;
-    }
-
-    public PointF getFacePosition() {
-        return facePosition;
     }
 }

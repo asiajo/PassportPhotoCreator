@@ -17,7 +17,7 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        statusMessage = (TextView) findViewById(R.id.status_message);
+        statusMessage = findViewById(R.id.status_message);
         findViewById(R.id.take_photo).setOnClickListener(this);
     }
 

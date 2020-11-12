@@ -68,7 +68,7 @@ public final class ImageUtils {
                 image, mGraphicOverlay);
         if (image == null) {
             Toast.makeText(photoMakerActivity, R.string.cannot_make_a_picture,
-                    Toast.LENGTH_LONG).show();
+                           Toast.LENGTH_LONG).show();
             return;
         }
         image = resizeMat(
@@ -121,7 +121,7 @@ public final class ImageUtils {
 
     public static Bitmap getBitmapFromMat(final Mat src) {
         Bitmap bitmap = Bitmap.createBitmap(src.width(), src.height(),
-                Bitmap.Config.ARGB_8888);
+                                            Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(src, bitmap);
         return bitmap;
     }
@@ -136,19 +136,22 @@ public final class ImageUtils {
 
     public static Mat resizeMat(final Mat src, final int width) {
         return resizeMat(src, width,
-                (int) (width * FINAL_IMAGE_H_TO_W_RATIO));
+                         (int) (width * FINAL_IMAGE_H_TO_W_RATIO));
     }
 
     public static Mat resizeMat(
             final Mat src, final int width, final int height) {
 
-        float croppedMatRatio =
-                (float) src.height() / src.width();
-        float requestedRatio = height / width;
-        float epsilon = 0.001f;
+        float croppedMatRatio = (float) src.height() / src.width();
+        float requestedRatio = (float) height / width;
+        float epsilon = 0.01f;
         if (Math.abs(croppedMatRatio - requestedRatio) > epsilon) {
-            Log.w(TAG, "Requested cropped ratio is different than the ratio " +
-                    "of original image. Image will get squeezed!");
+            Log.w(TAG, String.format(
+                    "Requested crop ratio: %d/%d=%.3f is different than the " +
+                            "ratio of original image: %d/%d=%.3f. Image will " +
+                            "get squeezed!",
+                    height, width, requestedRatio,
+                    src.height(), src.width(), croppedMatRatio));
         }
         Mat resized = new Mat();
         Size sz = new Size(width, height);
@@ -180,7 +183,7 @@ public final class ImageUtils {
         int cutRight = cutLeft + cutWidth;
         int cutBottom = cutTop + cutHeight;
         if (!verifyBoundingBox(cutLeft, cutTop, cutRight, cutBottom,
-                src.size())) {
+                               src.size())) {
             return null;
         }
         Mat cropped = src.submat(cutTop, cutBottom, cutLeft, cutRight);
@@ -194,7 +197,7 @@ public final class ImageUtils {
         int bottom = borderSize - top - src.height();
         int right = borderSize - left - src.width();
         Core.copyMakeBorder(src, dst, top, bottom, left, right,
-                BORDER_REPLICATE);
+                            BORDER_REPLICATE);
         return dst;
     }
 

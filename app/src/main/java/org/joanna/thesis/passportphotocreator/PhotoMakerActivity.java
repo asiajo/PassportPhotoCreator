@@ -39,13 +39,13 @@ import static com.google.android.material.snackbar.Snackbar.make;
 public class PhotoMakerActivity extends Activity
         implements View.OnClickListener {
 
+    public static final int PREVIEW_WIDTH  = 480;
+    public static final int PREVIEW_HEIGHT = 640;
 
-    public static final  int    PREVIEW_WIDTH         = 480;
-    public static final  int    PREVIEW_HEIGHT        = 640;
-    private static final String TAG                   =
-            PhotoMakerActivity.class.getSimpleName();
+    private static final String TAG = PhotoMakerActivity.class.getSimpleName();
+
     // permission request codes need to be < 256
-    private static final int    RC_HANDLE_CAMERA_PERM = 2;
+    private static final int RC_HANDLE_CAMERA_PERM = 2;
 
     static {
         OpenCVLoader.initDebug();
@@ -94,11 +94,18 @@ public class PhotoMakerActivity extends Activity
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        freeCameraSourceIfNotNull();
+    }
+
+    @Override
     public void onDestroy() {
+        super.onDestroy();
         if (mBackgroundVerifier != null) {
             mBackgroundVerifier.close();
         }
-        super.onDestroy();
+        freeCameraSourceIfNotNull();
     }
 
     @Override
@@ -118,7 +125,7 @@ public class PhotoMakerActivity extends Activity
                 this,
                 Manifest.permission.CAMERA)) {
             ActivityCompat.requestPermissions(this, permissions,
-                    RC_HANDLE_CAMERA_PERM);
+                                              RC_HANDLE_CAMERA_PERM);
             return;
         }
 
@@ -128,12 +135,12 @@ public class PhotoMakerActivity extends Activity
             @Override
             public void onClick(View view) {
                 ActivityCompat.requestPermissions(thisActivity, permissions,
-                        RC_HANDLE_CAMERA_PERM);
+                                                  RC_HANDLE_CAMERA_PERM);
             }
         };
         findViewById(R.id.topLayout).setOnClickListener(listener);
         make(mGraphicOverlay, R.string.permission_camera_rationale,
-                Snackbar.LENGTH_INDEFINITE)
+             Snackbar.LENGTH_INDEFINITE)
                 .setAction(R.string.ok, listener)
                 .show();
     }
@@ -161,7 +168,7 @@ public class PhotoMakerActivity extends Activity
 
             if (hasLowStorage) {
                 Toast.makeText(this, R.string.low_storage_error,
-                        Toast.LENGTH_LONG).show();
+                               Toast.LENGTH_LONG).show();
             }
         }
 
@@ -192,9 +199,11 @@ public class PhotoMakerActivity extends Activity
         }
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
+    private void freeCameraSourceIfNotNull() {
+        if (mCameraSource != null) {
+            mPreview.stop();
+            mPreview.release();
+        }
     }
 
     private void takePhoto() {
@@ -204,7 +213,7 @@ public class PhotoMakerActivity extends Activity
         final Rect boundingBox = faceTracker.getFaceBoundingBox();
         if (boundingBox == null) {
             Toast.makeText(this, R.string.no_face_on_the_picture,
-                    Toast.LENGTH_LONG).show();
+                           Toast.LENGTH_LONG).show();
             return;
         }
         final Activity thisActivity = this;
@@ -214,17 +223,18 @@ public class PhotoMakerActivity extends Activity
                 try {
                     ImageUtils.saveImage(bytes, thisActivity, mGraphicOverlay);
                     Toast.makeText(thisActivity, R.string.image_saved,
-                            Toast.LENGTH_SHORT).show();
+                                   Toast.LENGTH_SHORT).show();
                 } catch (IOException e) {
                     Toast.makeText(thisActivity, R.string.image_not_saved,
-                            Toast.LENGTH_SHORT).show();
+                                   Toast.LENGTH_SHORT).show();
                     e.printStackTrace();
                 }
             }
         });
     }
 
-    private class ScaleListener implements ScaleGestureDetector.OnScaleGestureListener {
+    private class ScaleListener
+            implements ScaleGestureDetector.OnScaleGestureListener {
 
         @Override
         public boolean onScale(ScaleGestureDetector detector) {

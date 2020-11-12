@@ -75,6 +75,7 @@ public class FaceTracker extends Tracker<Face> {
     @Override
     public void onMissing(final Detector.Detections<Face> detectionResults) {
         mOverlay.remove(mFaceGraphic);
+        mFaceGraphic.clearActions();
     }
 
     @Override

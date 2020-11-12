@@ -57,7 +57,8 @@ public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
 
     @Override
     protected void addPixelValue(int pixelValue) {
-        imgData.putFloat((((pixelValue >> 16) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
+        imgData.putFloat(
+                (((pixelValue >> 16) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
         imgData.putFloat((((pixelValue >> 8) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
         imgData.putFloat(((pixelValue & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
     }

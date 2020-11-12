@@ -21,9 +21,12 @@ import java.nio.channels.FileChannel;
  */
 public abstract class ImageSegmentor {
 
-    public static final  int    PROCESS_IMG_SIZE = 448;
-    private static final String TAG              = ImageSegmentor.class.getSimpleName();
+    public static final int PROCESS_IMG_SIZE = 448;
+
+    private static final String TAG = ImageSegmentor.class.getSimpleName();
+
     private static final int DIM_PIXEL_SIZE = 3;
+
     /** Options for configuring the Interpreter. */
     private final Interpreter.Options tfliteOptions = new Interpreter.Options();
     /** An instance of the driver class to run model inference with Tfl Lite. */
@@ -81,7 +84,8 @@ public abstract class ImageSegmentor {
     /**
      * Memory-map the model file in Assets.
      */
-    private MappedByteBuffer loadModelFile(Activity activity) throws IOException {
+    private MappedByteBuffer loadModelFile(Activity activity)
+            throws IOException {
         AssetFileDescriptor fileDescriptor =
                 activity.getAssets().openFd(getModelPath());
         FileInputStream inputStream =

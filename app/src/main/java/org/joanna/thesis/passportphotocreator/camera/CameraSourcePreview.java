@@ -38,8 +38,7 @@ public class CameraSourcePreview extends ViewGroup {
 
     @RequiresPermission(Manifest.permission.CAMERA)
     public void start(final CameraSource cameraSource)
-            throws IOException,
-                   SecurityException {
+            throws IOException, SecurityException {
         mCameraSource = cameraSource;
         if (mCameraSource != null) {
             mStartRequested = true;

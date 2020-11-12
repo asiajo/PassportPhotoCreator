@@ -10,6 +10,7 @@ import android.graphics.Rect;
 
 import org.joanna.thesis.passportphotocreator.detectors.Action;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -22,9 +23,9 @@ public abstract class Graphic {
     public static final int VALID_COLOR                     = Color.GREEN;
     public static final int INVALID_COLOR                   = Color.RED;
     private static      Map<BitmapMetaData, Bitmap> actions = new TreeMap<>();
-    private Map<Action, Integer> actionsMap = new HashMap<>();
-    private GraphicOverlay       mOverlay;
-    private Paint                mPaint;
+    private             Map<Action, Integer> actionsMap     = new HashMap<>();
+    private             GraphicOverlay mOverlay;
+    private             Paint mPaint;
 
     public Graphic(GraphicOverlay overlay) {
         mOverlay = overlay;
@@ -65,7 +66,10 @@ public abstract class Graphic {
         int i = 0;
         int iconSize = canvas.getWidth() / 12;
         int padding = iconSize / 5;
-        for (Bitmap action : actions.values()) {
+        Collection<Bitmap> actionBitmaps = actions.values();
+        Iterator<Bitmap> iterator = actionBitmaps.iterator();
+        while (iterator.hasNext()) {
+            Bitmap action = iterator.next();
             final Rect rectSrc = new Rect(0, 0, action.getWidth(),
                     action.getHeight());
             final Rect rectDst = new Rect(
@@ -101,6 +105,10 @@ public abstract class Graphic {
                 it.remove();
             }
         }
+    }
+
+    public void clearActions() {
+        actions.clear();
     }
 
     public Map<Action, Integer> getActionsMap() {
