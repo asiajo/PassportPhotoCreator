@@ -1072,14 +1072,14 @@ public class CameraSource {
      * Called when the camera has a new preview frame.
      */
     private class CameraPreviewCallback implements Camera.PreviewCallback {
-        private int frameLoop = 0;
+        private final int DELAY = 10;
+        private int frameLoop = BACKGROUND_VERIFICATION_FREQUENCY - DELAY;
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
 
             mFrameBytes = data;
             mFrameProcessor.setNextFrame(data, camera);
 
-            frameLoop++;
             if (frameLoop % BACKGROUND_VERIFICATION_FREQUENCY == 0
                     && mBackgroundVerificator != null){
                 // perform background verification every
@@ -1087,6 +1087,7 @@ public class CameraSource {
                 frameLoop = 0;
                 mBackgroundVerificator.verify(data);
             }
+            frameLoop++;
         }
     }
 

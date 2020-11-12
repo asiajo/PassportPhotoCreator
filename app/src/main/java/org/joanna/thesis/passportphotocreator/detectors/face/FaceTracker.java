@@ -18,21 +18,21 @@ public class FaceTracker extends Tracker<Face> {
 
     private static final String TAG = FaceTracker.class.getSimpleName();
 
-    private static final double NEUTRAL_FACE_THRESHOLD = 0.4;
-    private static final double EYES_OPEN_THRESHOLD    = 0.7;
-    private static final double ROTATION_THRESHOLD     = 4;
-    private Face                        mFace = null;
-    private GraphicOverlay<Graphic> mOverlay;
-    private FaceGraphic                 mFaceGraphic;
-    private Context                     mContext;
+    private static final double                  NEUTRAL_FACE_THRESHOLD = 0.4;
+    private static final double                  EYES_OPEN_THRESHOLD    = 0.7;
+    private static final double                  ROTATION_THRESHOLD     = 4;
+    private              Face                    mFace                  = null;
+    private              GraphicOverlay<Graphic> mOverlay;
+    private              FaceGraphic             mFaceGraphic;
+    private              Context                 mContext;
 
     public FaceTracker(
-            final GraphicOverlay<Graphic> mOverlay,
+            final GraphicOverlay<Graphic> overlay,
             final Context context) {
         super();
         this.mContext = context;
-        this.mOverlay = mOverlay;
-        mFaceGraphic = new FaceGraphic(mOverlay);
+        this.mOverlay = overlay;
+        mFaceGraphic = new FaceGraphic(overlay);
     }
 
     @Override
@@ -68,8 +68,7 @@ public class FaceTracker extends Tracker<Face> {
             positions.add(FaceActions.NEUTRAL_MOUTH);
         }
 
-        mFaceGraphic.setIsValid(positions.size() == 0);
-        mFaceGraphic.setBarActions(positions, mContext);
+        mFaceGraphic.setBarActions(positions, mContext, FaceGraphic.class);
         mFaceGraphic.updateFace(face);
     }
 

@@ -146,13 +146,14 @@ public final class ImageUtils {
                 (float) src.height() / src.width();
         float requestedRatio = height / width;
         float epsilon = 0.001f;
-        if (Math.abs(croppedMatRatio - requestedRatio) < epsilon) {
+        if (Math.abs(croppedMatRatio - requestedRatio) > epsilon) {
             Log.w(TAG, "Requested cropped ratio is different than the ratio " +
                     "of original image. Image will get squeezed!");
         }
         Mat resized = new Mat();
         Size sz = new Size(width, height);
         Imgproc.resize(src, resized, sz);
+
         return resized;
     }
 

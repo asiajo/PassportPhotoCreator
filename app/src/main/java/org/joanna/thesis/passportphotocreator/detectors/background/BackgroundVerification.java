@@ -1,26 +1,34 @@
 package org.joanna.thesis.passportphotocreator.detectors.background;
 
 import android.app.Activity;
+import android.content.Context;
 import android.widget.Toast;
 
 import org.joanna.thesis.passportphotocreator.PhotoMakerActivity;
 import org.joanna.thesis.passportphotocreator.R;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
+import org.joanna.thesis.passportphotocreator.detectors.Action;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.core.Mat;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BackgroundVerification {
 
     public  ImageSegmentor          segmentor;
-    private GraphicOverlay<Graphic> mGraphicOverlay;
+    private GraphicOverlay<Graphic> mOverlay;
+    private Graphic                 mBackgroundGraphic;
+    private Context                 mContext;
 
     public BackgroundVerification(
             final Activity activity,
-            final GraphicOverlay<Graphic> graphicOverlay) {
-        mGraphicOverlay = graphicOverlay;
+            final GraphicOverlay<Graphic> overlay) {
+        mOverlay = overlay;
+        mBackgroundGraphic = new BackgroundGraphic(overlay);
+        mContext = activity.getApplicationContext();
         try {
             segmentor = new ImageSegmentorFloatMobileUnet(activity);
         } catch (IOException e) {
@@ -36,11 +44,23 @@ public class BackgroundVerification {
             return;
         }
 
+        mOverlay.add(mBackgroundGraphic);
+
         // TODO: do actual verification
         Mat background = getBackground(data);
         if (null == background) {
             return;
         }
+        List<Action> positions = new ArrayList<>();
+        if (!BackgroundUtils.isBright(background)) {
+            positions.add(BackgroundActions.TOO_DARK);
+        }
+        if (!BackgroundUtils.isUniform(background)) {
+            positions.add(BackgroundActions.NOT_UNIFORM);
+        }
+
+        mBackgroundGraphic.setBarActions(positions, mContext,
+                BackgroundGraphic.class);
         background.release();
     }
 
@@ -64,7 +84,7 @@ public class BackgroundVerification {
                 PhotoMakerActivity.PREVIEW_HEIGHT,
                 PhotoMakerActivity.PREVIEW_WIDTH);
         image = ImageUtils.cropMatToFaceBoundingBox(
-                image, mGraphicOverlay);
+                image, mOverlay);
         if (image == null) {
             return null;
         }
@@ -79,7 +99,6 @@ public class BackgroundVerification {
         image = segmentor.segmentImgGetBackground(image);
 
         image = ImageUtils.unpadMatFromSquare(image, imgWidth);
-
         return image;
     }
 
