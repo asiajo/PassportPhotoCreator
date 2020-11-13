@@ -16,12 +16,23 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.joanna.thesis.passportphotocreator.detectors.background.BackgroundUtils.processBackgroundColorBlobDetection;
+import static org.joanna.thesis.passportphotocreator.detectors.background.BackgroundUtils.processColorsDetection;
+import static org.joanna.thesis.passportphotocreator.detectors.background.BackgroundUtils.processEdgeDetection;
+
+/**
+ * Verifies if background is bright and uniform.
+ */
 public class BackgroundVerification {
+
+    private static final String TAG =
+            BackgroundVerification.class.getSimpleName();
 
     public  ImageSegmentor          segmentor;
     private GraphicOverlay<Graphic> mOverlay;
     private Graphic                 mBackgroundGraphic;
     private Context                 mContext;
+
 
     public BackgroundVerification(
             final Activity activity,
@@ -35,9 +46,13 @@ public class BackgroundVerification {
             Toast.makeText(activity, R.string.no_background_verification_error,
                     Toast.LENGTH_LONG).show();
         }
-
     }
 
+    /**
+     * Performs the verification and sets the graphic overlay respectively.
+     *
+     * @param data image data under verification
+     */
     public void verify(final byte[] data) {
 
         if (segmentor == null) {
@@ -46,17 +61,31 @@ public class BackgroundVerification {
 
         mOverlay.add(mBackgroundGraphic);
 
-        // TODO: do actual verification
         Mat background = getBackground(data);
         if (null == background) {
             return;
         }
-        List<Action> positions = new ArrayList<>();
-        if (!BackgroundUtils.isBright(background)) {
-            positions.add(BackgroundActions.TOO_DARK);
+        if (!background.isContinuous()) {
+            background = background.clone();
         }
-        if (!BackgroundUtils.isUniform(background)) {
+
+        BackgroundProperties bg = new BackgroundProperties();
+        processBackgroundColorBlobDetection(bg, background);
+        processEdgeDetection(bg, background);
+        processColorsDetection(bg, background, segmentor.getMaskedPerson());
+
+        List<Action> positions = new ArrayList<>();
+        // Those detections are not fully exact, so it is enough that 2 out of 3
+        // state that background is uniform to classify it as uniform.
+        boolean isUniform =
+                bg.isUniform() ?
+                        (bg.isEdgesFree() || bg.isUncolorful()) :
+                        (bg.isEdgesFree() && bg.isUncolorful());
+        if (!isUniform) {
             positions.add(BackgroundActions.NOT_UNIFORM);
+        }
+        if (null != bg.isBright() && !bg.isBright()) {
+            positions.add(BackgroundActions.TOO_DARK);
         }
 
         mBackgroundGraphic.setBarActions(positions, mContext,

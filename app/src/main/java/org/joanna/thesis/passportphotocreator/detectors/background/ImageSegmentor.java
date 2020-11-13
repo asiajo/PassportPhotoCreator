@@ -28,25 +28,28 @@ public abstract class ImageSegmentor {
     private static final int DIM_PIXEL_SIZE = 3;
 
     /** Options for configuring the Interpreter. */
-    private final Interpreter.Options tfliteOptions = new Interpreter.Options();
+    private final Interpreter.Options mTfliteOptions =
+            new Interpreter.Options();
     /** An instance of the driver class to run model inference with Tfl Lite. */
-    protected     Interpreter         tflite;
+    protected     Interpreter         mTflite;
     /** A ByteBuffer to hold image data, to be feed into Tfl Lite as inputs. */
-    protected     ByteBuffer          imgData;
+    protected     ByteBuffer          mImgData;
+    /** Mat holding the image for processing. */
+    protected     Mat                 mImage;
     /** Preallocated buffers for storing image data in. */
-    private       int[]               intValues;
+    private       int[]               mIntValues;
     /** The loaded TensorFlow Lite model. */
-    private       MappedByteBuffer    tfliteModel;
+    private       MappedByteBuffer    mTfliteModel;
 
     ImageSegmentor(Activity activity) throws IOException {
-        tfliteModel = loadModelFile(activity);
-        tflite = new Interpreter(tfliteModel, tfliteOptions);
-        intValues = new int[getImageSizeX() * getImageSizeY()];
-        imgData = ByteBuffer.allocateDirect(
+        mTfliteModel = loadModelFile(activity);
+        mTflite = new Interpreter(mTfliteModel, mTfliteOptions);
+        mIntValues = new int[getImageSizeX() * getImageSizeY()];
+        mImgData = ByteBuffer.allocateDirect(
                 getImageSizeX() * getImageSizeY()
                         * DIM_PIXEL_SIZE
                         * getNumBytesPerChannel());
-        imgData.order(ByteOrder.nativeOrder());
+        mImgData.order(ByteOrder.nativeOrder());
         Log.d(TAG, "Created a Tensorflow Lite Image Segmentor.");
     }
 
@@ -54,9 +57,10 @@ public abstract class ImageSegmentor {
      * Segments a frame from the preview stream.
      */
     public Mat segmentImgGetBackground(Mat image) {
-        if (tflite == null) {
+        if (mTflite == null) {
             Log.e(TAG, "Image segmentor has not been initialized; Skipped.");
         }
+        mImage = image;
 
         Mat resizedMat128 = ImageUtils.resizeMat(image, getImageSizeX(),
                 getImageSizeY());
@@ -68,17 +72,32 @@ public abstract class ImageSegmentor {
         ImageUtils.safelyRemoveBitmap(bmp);
 
         runInference();
-
-        return getBackground(image);
+        return getBackground();
     }
+
+    /**
+     * Returns mask hiding background, in the size of input image (but padded
+     * to squere!) and in CV_32F color scheme.
+     *
+     * @return mask
+     */
+    public abstract Mat getMaskedBackground();
+
+    /**
+     * Returns mask hiding person, in the size of input image (but padded
+     * to squere!) and in CV_32F color scheme.
+     *
+     * @return mask
+     */
+    public abstract Mat getMaskedPerson();
 
     /**
      * Closes tflite to release resources.
      */
     public void close() {
-        tflite.close();
-        tflite = null;
-        tfliteModel = null;
+        mTflite.close();
+        mTflite = null;
+        mTfliteModel = null;
     }
 
     /**
@@ -101,17 +120,17 @@ public abstract class ImageSegmentor {
      * Writes Image data into a {@code ByteBuffer}.
      */
     private void convertBitmapToByteBuffer(Bitmap bitmap) {
-        if (imgData == null) {
+        if (mImgData == null) {
             return;
         }
-        imgData.rewind();
-        bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0,
+        mImgData.rewind();
+        bitmap.getPixels(mIntValues, 0, bitmap.getWidth(), 0, 0,
                 bitmap.getWidth(), bitmap.getHeight());
         // Convert the image to floating point.
         int pixel = 0;
         for (int i = 0; i < getImageSizeX(); ++i) {
             for (int j = 0; j < getImageSizeY(); ++j) {
-                final int val = intValues[pixel++];
+                final int val = mIntValues[pixel++];
                 addPixelValue(val);
             }
         }
@@ -154,9 +173,22 @@ public abstract class ImageSegmentor {
      */
     protected abstract void addPixelValue(int pixelValue);
 
+    /**
+     * Executes call to the network.
+     */
     protected abstract void runInference();
 
-    protected abstract Mat getBackground(Mat bg);
+    /**
+     * Returns original image with detected person painted black.
+     *
+     * @return image with person painted black
+     */
+    protected abstract Mat getBackground();
 
-    protected abstract Mat getForeground(Mat bg);
+    /**
+     * Returns original image with detected background painted black.
+     *
+     * @return image with background painted black
+     */
+    protected abstract Mat getForeground();
 }

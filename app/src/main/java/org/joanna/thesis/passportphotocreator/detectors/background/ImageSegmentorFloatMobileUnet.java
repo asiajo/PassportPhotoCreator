@@ -9,13 +9,14 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.opencv.core.CvType.CV_32F;
-import static org.opencv.core.CvType.CV_8UC1;
+import static org.opencv.core.CvType.CV_32FC3;
+import static org.opencv.core.CvType.CV_8UC3;
 
-/** This segmentor works with the float mobile-unet model. */
+/**
+ * Based on Portrait Segmentation Sample from Tensorflow.
+ * This segmentor works with the float mobile-unet model. */
 public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
 
     public static final  int   MODEL_INPUT_IMG_SIZE = 128;
@@ -57,70 +58,86 @@ public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
 
     @Override
     protected void addPixelValue(int pixelValue) {
-        imgData.putFloat(
+        mImgData.putFloat(
                 (((pixelValue >> 16) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
-        imgData.putFloat((((pixelValue >> 8) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
-        imgData.putFloat(((pixelValue & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
+        mImgData.putFloat((((pixelValue >> 8) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
+        mImgData.putFloat(((pixelValue & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
     }
 
     @Override
     protected void runInference() {
-        tflite.run(imgData, segmap);
+        mTflite.run(mImgData, segmap);
     }
 
     @Override
-    protected Mat getBackground(final Mat src) {
-
-        if (segmap == null) {
-            return null;
-        }
-        Mat mask = new Mat(MODEL_INPUT_IMG_SIZE, MODEL_INPUT_IMG_SIZE,
-                CV_32F);
-        Mat maskInverted = new Mat(MODEL_INPUT_IMG_SIZE, MODEL_INPUT_IMG_SIZE,
-                CV_32F, new Scalar(1.0));
-        mask.put(0, 0, segmap[0]);
-        Core.subtract(maskInverted, mask, maskInverted);
-        mask.release();
-
-        Mat background = applyMask(src, maskInverted);
+    protected Mat getBackground() {
+        Mat maskInverted = getMaskedPerson();
+        Mat background = applyMask(mImage, maskInverted);
         maskInverted.release();
 
         return background;
     }
 
     @Override
-    protected Mat getForeground(final Mat src) {
+    protected Mat getForeground() {
 
-        if (segmap == null) {
+        Mat mask = getMaskedBackground();
+        if (mask == null) {
             return null;
         }
-        Mat mask = new Mat(MODEL_INPUT_IMG_SIZE, MODEL_INPUT_IMG_SIZE, CV_32F);
-        mask.put(0, 0, segmap[0]);
-        Mat foreground = applyMask(src, mask);
+        Mat foreground = applyMask(mImage, mask);
         mask.release();
 
         return foreground;
     }
 
+    @Override
+    public Mat getMaskedBackground() {
+        if (segmap == null) {
+            return null;
+        }
+        Mat mask = new Mat(MODEL_INPUT_IMG_SIZE, MODEL_INPUT_IMG_SIZE, CV_32F);
+        mask.put(0, 0, segmap[0]);
+        return convertMask(mask);
+    }
+
+    @Override
+    public Mat getMaskedPerson() {
+        if (segmap == null) {
+            return null;
+        }
+        Mat mask = new Mat(MODEL_INPUT_IMG_SIZE, MODEL_INPUT_IMG_SIZE, CV_32F);
+        mask.put(0, 0, segmap[0]);
+
+        Mat maskInverted = new Mat(MODEL_INPUT_IMG_SIZE, MODEL_INPUT_IMG_SIZE,
+                CV_32F, new Scalar(1.0));
+        Core.subtract(maskInverted, mask, maskInverted);
+        mask.release();
+        return convertMask(maskInverted);
+    }
+
     private Mat applyMask(final Mat src, final Mat mask) {
-        Core.multiply(mask, new Scalar(2.0), mask);
-        Imgproc.threshold(mask, mask, 1.0, 1.0, Imgproc.THRESH_TRUNC);
 
         if (!(src.width() == PROCESS_IMG_SIZE &&
                 src.height() == PROCESS_IMG_SIZE)) {
             return null;
         }
-
-        Imgproc.resize(mask, mask, new Size(src.width(), src.height()));
-        List<Mat> channels = new ArrayList<>();
-        Core.split(src, channels);
-        mask.convertTo(mask, CV_8UC1, 255);
-        channels.remove(channels.size() - 1);
-        channels.add(mask);
         Mat masked = new Mat();
-        Core.merge(channels, masked);
+        Imgproc.cvtColor(src, masked, Imgproc.COLOR_RGBA2RGB);
+        masked.convertTo(masked, CV_32FC3, 1.0 / 255.0);
+        Core.multiply(masked, mask, masked);
+        masked.convertTo(masked, CV_8UC3, 255);
 
         return masked;
+    }
+
+    private Mat convertMask(final Mat src) {
+        Mat dst = new Mat();
+        Core.multiply(src, new Scalar(2.0), dst);
+        Imgproc.threshold(dst, dst, 1.0, 1.0, Imgproc.THRESH_TRUNC);
+        Imgproc.resize(dst, dst, new Size(PROCESS_IMG_SIZE, PROCESS_IMG_SIZE));
+        Imgproc.cvtColor(dst, dst, Imgproc.COLOR_GRAY2BGR);
+        return dst;
     }
 
 }
