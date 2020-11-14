@@ -33,12 +33,8 @@ public class ColorBlobDetector {
     private List<MatOfPoint> mContours    = new ArrayList<MatOfPoint>();
 
     private Scalar mBlobColorRgba = new Scalar(255);
-    private Scalar mBlobColorHsv  = new Scalar(255);
-    private int    imgScale       = 1;
-
-    public ColorBlobDetector(Mat src, Point p) {
-        process(src, p);
-    }
+    private Scalar mBlobColorHsv = new Scalar(255);
+    private int    imgScale      = 1;
 
     public double getContoursMaxArea() {
         return getContoursMaxArea(mContours);
@@ -73,12 +69,14 @@ public class ColorBlobDetector {
         return maxPerimeter;
     }
 
-    private void process(Mat src, Point p) {
+    public void process(Mat in, Point p) {
 
-        if ((p.x < 0) || (p.y < 0) || (p.x > src.cols()) ||
-                (p.y > src.rows())) {
+        if ((p.x < 0) || (p.y < 0) || (p.x > in.cols()) ||
+                (p.y > in.rows())) {
             return;
         }
+
+        Mat src = in.clone();
 
         Rect colorRect = getColorRect(p);
         Mat colorSample = src.submat(colorRect);
@@ -159,6 +157,10 @@ public class ColorBlobDetector {
 
     public Scalar getmBlobColorRgba() {
         return mBlobColorRgba;
+    }
+
+    public Scalar getmBlobColorHsv() {
+        return mBlobColorHsv;
     }
 
     private void setHsvColor(Scalar hsvColor) {

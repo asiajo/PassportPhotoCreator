@@ -2,6 +2,7 @@ package org.joanna.thesis.passportphotocreator.detectors.background;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 import android.widget.Toast;
 
 import org.joanna.thesis.passportphotocreator.PhotoMakerActivity;
@@ -10,15 +11,22 @@ import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
 import org.joanna.thesis.passportphotocreator.detectors.Action;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfFloat;
+import org.opencv.core.MatOfInt;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.joanna.thesis.passportphotocreator.detectors.background.BackgroundUtils.processBackgroundColorBlobDetection;
-import static org.joanna.thesis.passportphotocreator.detectors.background.BackgroundUtils.processColorsDetection;
-import static org.joanna.thesis.passportphotocreator.detectors.background.BackgroundUtils.processEdgeDetection;
+import static org.joanna.thesis.passportphotocreator.detectors.background.BackgroundUtils.findNonPersonPixel;
+import static org.joanna.thesis.passportphotocreator.detectors.background.BackgroundUtils.findPersonPixel;
+import static org.joanna.thesis.passportphotocreator.detectors.background.BackgroundUtils.getContoursLengthOnTheImage;
+import static org.opencv.core.CvType.CV_8UC1;
 
 /**
  * Verifies if background is bright and uniform.
@@ -32,6 +40,8 @@ public class BackgroundVerification {
     private GraphicOverlay<Graphic> mOverlay;
     private Graphic                 mBackgroundGraphic;
     private Context                 mContext;
+    private BackgroundProperties    mBackgroundProperties;
+    private Mat                     mBackground;
 
 
     public BackgroundVerification(
@@ -40,6 +50,7 @@ public class BackgroundVerification {
         mOverlay = overlay;
         mBackgroundGraphic = new BackgroundGraphic(overlay);
         mContext = activity.getApplicationContext();
+        mBackgroundProperties = new BackgroundProperties();
         try {
             segmentor = new ImageSegmentorFloatMobileUnet(activity);
         } catch (IOException e) {
@@ -61,36 +72,38 @@ public class BackgroundVerification {
 
         mOverlay.add(mBackgroundGraphic);
 
-        Mat background = getBackground(data);
-        if (null == background) {
+        mBackground = getBackground(data);
+        if (null == mBackground) {
             return;
         }
-        if (!background.isContinuous()) {
-            background = background.clone();
+        if (!mBackground.isContinuous()) {
+            mBackground = mBackground.clone();
         }
 
-        BackgroundProperties bg = new BackgroundProperties();
-        processBackgroundColorBlobDetection(bg, background);
-        processEdgeDetection(bg, background);
-        processColorsDetection(bg, background, segmentor.getMaskedPerson());
+        processBackgroundColorBlobDetection();
+        processEdgeDetection();
+        processColorsDetection();
 
         List<Action> positions = new ArrayList<>();
         // Those detections are not fully exact, so it is enough that 2 out of 3
         // state that background is uniform to classify it as uniform.
         boolean isUniform =
-                bg.isUniform() ?
-                        (bg.isEdgesFree() || bg.isUncolorful()) :
-                        (bg.isEdgesFree() && bg.isUncolorful());
+                mBackgroundProperties.isUniform() ?
+                        (mBackgroundProperties.isEdgesFree() ||
+                                mBackgroundProperties.isUncolorful()) :
+                        (mBackgroundProperties.isEdgesFree() &&
+                                mBackgroundProperties.isUncolorful());
         if (!isUniform) {
             positions.add(BackgroundActions.NOT_UNIFORM);
         }
-        if (null != bg.isBright() && !bg.isBright()) {
+        if (null != mBackgroundProperties.isBright() &&
+                !mBackgroundProperties.isBright()) {
             positions.add(BackgroundActions.TOO_DARK);
         }
 
         mBackgroundGraphic.setBarActions(positions, mContext,
                 BackgroundGraphic.class);
-        background.release();
+        mBackground.release();
     }
 
     public void close() {
@@ -129,6 +142,178 @@ public class BackgroundVerification {
 
         image = ImageUtils.unpadMatFromSquare(image, imgWidth);
         return image;
+    }
+
+    /**
+     * Attempts to detect background color and verify if it is uniform across
+     * the whole background. To achieve this it picks a start point (one of
+     * hardcoded, best possible locations - for performance reasons) and
+     * searches for the whole area containing almost the same color. Performance
+     * of this method depends on how good person was segmented out from the
+     * background.
+     */
+    private void processBackgroundColorBlobDetection() {
+        Point pixelBackgroundLeft = findNonPersonPixel(mBackground, true);
+        Point pixelBackgroundRight = findNonPersonPixel(mBackground, true);
+        Point pixelPerson = findPersonPixel(mBackground);
+        if (pixelPerson == null ||
+                (pixelBackgroundLeft == null && pixelBackgroundRight == null)) {
+            Log.w(
+                    TAG,
+                    "Did not find on an image a point matching or a person or" +
+                            " a background. Will not perform background " +
+                            "uniformity verification.");
+            return;
+        }
+
+        // Detect color from right and left side, as slight tone difference
+        // may have influence on correct detection
+        ColorBlobDetector bgContourDetectorLeft = new ColorBlobDetector();
+        bgContourDetectorLeft.process(mBackground, pixelBackgroundLeft);
+
+        ColorBlobDetector bgContourDetectorRight = new ColorBlobDetector();
+        bgContourDetectorRight.process(mBackground, pixelBackgroundRight);
+
+        final Scalar rgbAverage = computeColorAverage(
+                bgContourDetectorLeft.getmBlobColorRgba(),
+                bgContourDetectorRight.getmBlobColorRgba());
+
+        mBackgroundProperties.setBgColorRgba(rgbAverage);
+        final double areaBgdLeft = bgContourDetectorLeft.getContoursMaxArea();
+        final double areaBgdRight = bgContourDetectorRight.getContoursMaxArea();
+
+        ColorBlobDetector personContourDetector = new ColorBlobDetector();
+        personContourDetector.process(mBackground, pixelPerson);
+        mBackgroundProperties.setPersonContourLen(
+                (int) personContourDetector.getContoursMaxPerimeter());
+        final double areaPerson = personContourDetector.getContoursMaxArea();
+
+        final int imgArea = mBackground.width() * mBackground.height();
+        // hard-coded value that seems to do a good job in most cases
+        final int epsilon = imgArea / 10;
+        if ((imgArea - areaPerson - areaBgdLeft) > epsilon
+                && (imgArea - areaPerson - areaBgdRight) > epsilon) {
+            Log.i(TAG, "Unfortunately background seems not to be uniform!");
+            mBackgroundProperties.setUniform(false);
+        } else {
+            Log.i(TAG, "Background seems to be uniform.");
+            mBackgroundProperties.setUniform(true);
+        }
+    }
+
+    private Scalar computeColorAverage(
+            final Scalar color1, final Scalar color2) {
+        final int scalarLength = Math.min(color1.val.length, color2.val.length);
+        double[] colorOut = new double[scalarLength];
+        for (int i = 0; i < scalarLength; i++) {
+            colorOut[i] = (color1.val[i] + color2.val[i]) / 2;
+        }
+        return new Scalar(colorOut);
+    }
+
+    /**
+     * Attempts to detect edges on the background. Performance of this method
+     * depends on how good person was segmented out from the background.
+     */
+    private void processEdgeDetection() {
+
+        final int imgArea = mBackground.width() * mBackground.height();
+        // hard-coded value that seems to do a good job in most cases
+        final int epsilon = imgArea / 100;
+        int whitePixels = getContoursLengthOnTheImage(mBackground);
+        int approxLengthOfEdges =
+                whitePixels - mBackgroundProperties.getPersonContourLen();
+        if (approxLengthOfEdges > epsilon) {
+            Log.i(TAG, "Background seems to contain edges!");
+            mBackgroundProperties.setEdgesFree(false);
+        } else {
+            Log.i(TAG, "Background seems to be plain.");
+            mBackgroundProperties.setEdgesFree(true);
+        }
+    }
+
+    /**
+     * Calculates median and average of the hue of the background. If median and
+     * average are close to each other there is a high probability that the
+     * background have one uniform color. Performance of this method depends
+     * on how good person was segmented out from the background.
+     */
+    private void processColorsDetection() {
+
+        Mat hsvSource = new Mat();
+        Imgproc.cvtColor(mBackground, hsvSource, Imgproc.COLOR_RGB2HSV);
+
+        int hueBins = 60;
+        float hueUpperRange = 180f;
+        int hueChannel = 0;
+        MatOfInt histSize = new MatOfInt(hueBins);
+        MatOfFloat ranges = new MatOfFloat(0f, hueUpperRange);
+        MatOfInt channels = new MatOfInt(hueChannel);
+
+        Mat mask = new Mat();
+        segmentor.getMaskedPerson().convertTo(mask, CV_8UC1, 255);
+        mask = ImageUtils.unpadMatFromSquare(mask, mBackground.width());
+        Imgproc.cvtColor(mask, mask, Imgproc.COLOR_RGB2GRAY);
+
+        Mat histSource = new Mat();
+        final ArrayList<Mat> histImages = new ArrayList<>();
+        histImages.add(hsvSource);
+        Imgproc.calcHist(
+                histImages,
+                channels,
+                mask,
+                histSource,
+                histSize,
+                ranges,
+                false);
+
+        double avgHueValue = Core.mean(hsvSource, mask).val[hueChannel];
+        double medianHueValue = getMedianChannelValue(
+                hueBins, hueUpperRange, hueChannel, histSource);
+
+        mask.release();
+        hsvSource.release();
+        histSource.release();
+
+        // hard-coded value that seems to do a good job in most cases
+        final double epsilon = 3.6;
+        if (Math.abs(medianHueValue - avgHueValue) > epsilon) {
+            Log.i(TAG, "It seems that the background is colorful!");
+            mBackgroundProperties.setUncolorful(false);
+        } else {
+            Log.i(TAG, "It seems that the background color is uniform.");
+            mBackgroundProperties.setUncolorful(true);
+        }
+    }
+
+    /**
+     * Computes median of the channel from the received histogram.
+     *
+     * @param bins       amount of histogram bins
+     * @param upperRange channel maximum allowed value
+     * @param channel    Channel for which median shall be computed, eg h =
+     *                   0, s = 1, v = 2
+     * @param hist       Histogram containing the data
+     * @return median value of the channel
+     */
+    private double getMedianChannelValue(
+            final int bins, final float upperRange, final int channel,
+            final Mat hist) {
+
+        double medianHueValue = 0;
+        double currentElements = 0;
+        // First element representing black is removed as it mainly
+        // represents masked person
+        int half = (int) ((mBackground.width() * mBackground.height() -
+                hist.get(0, 0)[channel]) / 2);
+        for (int i = 1; i < 60; i++) {
+            currentElements += hist.get(i, 0)[channel];
+            if (currentElements > half) {
+                medianHueValue = i * (upperRange / bins) + 1;
+                break;
+            }
+        }
+        return medianHueValue;
     }
 
 }
