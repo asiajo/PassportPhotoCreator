@@ -40,6 +40,8 @@ import java.util.Map;
 // storing images.
 
 /**
+ * Based on OpenSource CameraSource class from googlesamples/android-vision samples.
+ *
  * Manages the camera in conjunction with an underlying
  * {@link com.google.android.gms.vision.Detector}.  This receives preview frames from the camera at
  * a specified rate, sending those frames to the detector as fast as it is able to process those
