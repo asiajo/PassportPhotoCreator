@@ -9,6 +9,7 @@ import org.joanna.thesis.passportphotocreator.PhotoMakerActivity;
 import org.joanna.thesis.passportphotocreator.R;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
+import org.joanna.thesis.passportphotocreator.camera.PhotoValidity;
 import org.joanna.thesis.passportphotocreator.detectors.Action;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.core.Core;
@@ -103,6 +104,9 @@ public class BackgroundVerification {
 
         mBackgroundGraphic.setBarActions(positions, mContext,
                 BackgroundGraphic.class);
+        mBackgroundGraphic.setIsValid(
+                positions.isEmpty() ? PhotoValidity.VALID :
+                        PhotoValidity.WARNING);
         mBackground.release();
     }
 

@@ -9,6 +9,7 @@ import com.google.android.gms.vision.face.Face;
 
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
+import org.joanna.thesis.passportphotocreator.camera.PhotoValidity;
 import org.joanna.thesis.passportphotocreator.detectors.Action;
 
 import java.util.ArrayList;
@@ -68,8 +69,10 @@ public class FaceTracker extends Tracker<Face> {
             positions.add(FaceActions.NEUTRAL_MOUTH);
         }
 
-        mFaceGraphic.setBarActions(positions, mContext, FaceGraphic.class);
         mFaceGraphic.updateFace(face);
+        mFaceGraphic.setBarActions(positions, mContext, FaceGraphic.class);
+        mFaceGraphic.setIsValid(positions.isEmpty() ? PhotoValidity.VALID :
+                PhotoValidity.INVALID);
     }
 
     @Override

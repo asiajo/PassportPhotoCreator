@@ -13,27 +13,49 @@ public class FaceGraphic extends Graphic {
 
     private Canvas canvas;
 
-    private          double bbProportionLeft;
-    private          double bbProportionTop;
-    private          double bbProportionWidth;
-    private          double bbProportionHeight;
-    private          Rect   faceBoundingBox;
-    private volatile Face   mFace;
+    private double        bbProportionLeft;
+    private double        bbProportionTop;
+    private double        bbProportionWidth;
+    private double        bbProportionHeight;
+    private Rect          faceBoundingBox;
+    private volatile Face mFace;
 
     {
-        getActionsMap().put(FaceActions.ROTATE_LEFT, R.drawable.arrow_left);
-        getActionsMap().put(FaceActions.ROTATE_RIGHT, R.drawable.arrow_right);
+        getActionsMap().put(
+                FaceActions.ROTATE_LEFT,
+                new BitmapMetaData(FaceGraphic.class, R.drawable.arrow_left,
+                        true));
+        getActionsMap().put(
+                FaceActions.ROTATE_RIGHT,
+                new BitmapMetaData(FaceGraphic.class, R.drawable.arrow_right,
+                        true));
         getActionsMap().put(
                 FaceActions.STRAIGHTEN_FROM_LEFT,
-                R.drawable.arrow_straighten_right);
+                new BitmapMetaData(
+                        FaceGraphic.class, R.drawable.arrow_straighten_right,
+                        true));
         getActionsMap().put(
                 FaceActions.STRAIGHTEN_FROM_RIGHT,
-                R.drawable.arrow_straighten_left);
-        getActionsMap().put(FaceActions.FACE_DOWN, R.drawable.arrow_down);
-        getActionsMap().put(FaceActions.FACE_UP, R.drawable.arrow_up);
-        getActionsMap().put(FaceActions.LEFT_EYE_OPEN, R.drawable.eye);
-        getActionsMap().put(FaceActions.RIGHT_EYE_OPEN, R.drawable.eye);
-        getActionsMap().put(FaceActions.NEUTRAL_MOUTH, R.drawable.mouth);
+                new BitmapMetaData(
+                        FaceGraphic.class, R.drawable.arrow_straighten_left,
+                        true));
+        getActionsMap().put(
+                FaceActions.FACE_DOWN,
+                new BitmapMetaData(FaceGraphic.class, R.drawable.arrow_down,
+                        true));
+        getActionsMap().put(
+                FaceActions.FACE_UP,
+                new BitmapMetaData(FaceGraphic.class, R.drawable.arrow_up,
+                        true));
+        getActionsMap().put(
+                FaceActions.LEFT_EYE_OPEN,
+                new BitmapMetaData(FaceGraphic.class, R.drawable.eye, true));
+        getActionsMap().put(
+                FaceActions.RIGHT_EYE_OPEN,
+                new BitmapMetaData(FaceGraphic.class, R.drawable.eye, true));
+        getActionsMap().put(
+                FaceActions.NEUTRAL_MOUTH,
+                new BitmapMetaData(FaceGraphic.class, R.drawable.mouth, true));
     }
 
     FaceGraphic(final GraphicOverlay overlay) {

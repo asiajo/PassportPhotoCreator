@@ -11,10 +11,13 @@ public class BackgroundGraphic extends Graphic {
     {
         getActionsMap().put(
                 BackgroundActions.NOT_UNIFORM,
-                R.drawable.non_uniform);
+                new BitmapMetaData(
+                        BackgroundGraphic.class, R.drawable.non_uniform,
+                        false));
         getActionsMap().put(
                 BackgroundActions.TOO_DARK,
-                R.drawable.too_dark);
+                new BitmapMetaData(
+                        BackgroundGraphic.class, R.drawable.too_dark, true));
     }
 
     public BackgroundGraphic(final GraphicOverlay overlay) {
