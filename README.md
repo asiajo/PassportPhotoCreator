@@ -9,8 +9,8 @@ Application supporting passport photos creation with use of Deep Neural Networks
 - [x] verifies if background is plain and bright -> OpenCV
 - [ ] TBD: verifies if face does not contain shadows -> OpenCv
 - [ ] TBD: verifies if eyes are directed towards camera -> Tensorflow lite
-- [ ] TBD: After photo capturing attempts to improve face shadows -> OpenCv
-- [ ] TBD: After photo capturing attempts to improve background -> Tensorflow lite GAN [pix2pix](https://github.com/affinelayer/pix2pix-tensorflow) model
+- [ ] TBD: After photo capturing attempts to improve face shadows -> Tensorflow lite GAN [pix2pix](https://github.com/affinelayer/pix2pix-tensorflow) model
+- [ ] TBD: After photo capturing attempts to improve background -> OpenCv
 - [x] Cuts the photo to correct format and saves it to the phone.
 
 ## Snapshots
