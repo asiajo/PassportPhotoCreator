@@ -96,7 +96,7 @@ public class PhotoMakerActivity extends Activity
     @Override
     protected void onPause() {
         super.onPause();
-        freeCameraSourceIfNotNull();
+        mPreview.stop();
     }
 
     @Override
@@ -105,7 +105,9 @@ public class PhotoMakerActivity extends Activity
         if (mBackgroundVerifier != null) {
             mBackgroundVerifier.close();
         }
-        freeCameraSourceIfNotNull();
+        if (mCameraSource != null) {
+            mCameraSource.release();
+        }
     }
 
     @Override
@@ -196,13 +198,6 @@ public class PhotoMakerActivity extends Activity
                 mCameraSource.release();
                 mCameraSource = null;
             }
-        }
-    }
-
-    private void freeCameraSourceIfNotNull() {
-        if (mCameraSource != null) {
-            mPreview.stop();
-            mPreview.release();
         }
     }
 
