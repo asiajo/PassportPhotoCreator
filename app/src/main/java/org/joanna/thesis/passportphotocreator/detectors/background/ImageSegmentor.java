@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.util.Log;
 
-import org.joanna.thesis.passportphotocreator.detectors.Detector;
+import org.joanna.thesis.passportphotocreator.detectors.DetectorTensorflowLite;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.core.Mat;
 
@@ -13,7 +13,7 @@ import java.io.IOException;
 /**
  * Segments images with Tensorflow Lite.
  */
-public abstract class ImageSegmentor extends Detector {
+public abstract class ImageSegmentor extends DetectorTensorflowLite {
 
     public static final int PROCESS_IMG_SIZE = 448;
 
