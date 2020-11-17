@@ -158,7 +158,7 @@ public class BackgroundVerification {
      */
     private void processBackgroundColorBlobDetection() {
         Point pixelBackgroundLeft = findNonPersonPixel(mBackground, true);
-        Point pixelBackgroundRight = findNonPersonPixel(mBackground, true);
+        Point pixelBackgroundRight = findNonPersonPixel(mBackground, false);
         Point pixelPerson = findPersonPixel(mBackground);
         if (pixelPerson == null ||
                 (pixelBackgroundLeft == null && pixelBackgroundRight == null)) {
@@ -223,7 +223,7 @@ public class BackgroundVerification {
 
         final int imgArea = mBackground.width() * mBackground.height();
         // hard-coded value that seems to do a good job in most cases
-        final int epsilon = imgArea / 100;
+        final int epsilon = imgArea / 200;
         int whitePixels = getContoursLengthOnTheImage(mBackground);
         int approxLengthOfEdges =
                 whitePixels - mBackgroundProperties.getPersonContourLen();
