@@ -6,6 +6,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -22,6 +23,7 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
@@ -34,11 +36,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Objects;
 
+import static org.opencv.core.Core.BORDER_CONSTANT;
 import static org.opencv.core.Core.BORDER_REPLICATE;
 
 public final class ImageUtils {
-
-    private static final String TAG = ImageUtils.class.getSimpleName();
 
     private static final float FINAL_IMAGE_WIDTH_FACTOR = 35f;
     private static final float FINAL_IMAGE_HEIGHT_FACTOR = 45f;
@@ -54,6 +55,8 @@ public final class ImageUtils {
     private static final int   FINAL_IMAGE_HEIGHT_PX =
             (int) (FINAL_IMAGE_WIDTH_PX * FINAL_IMAGE_H_TO_W_RATIO);
 
+    private static final String TAG = ImageUtils.class.getSimpleName();
+
 
     private ImageUtils() {
     }
@@ -68,15 +71,37 @@ public final class ImageUtils {
                 image, mGraphicOverlay);
         if (image == null) {
             Toast.makeText(photoMakerActivity, R.string.cannot_make_a_picture,
-                           Toast.LENGTH_LONG).show();
+                    Toast.LENGTH_LONG).show();
             return;
         }
-        image = resizeMat(
-                image, FINAL_IMAGE_WIDTH_PX, FINAL_IMAGE_HEIGHT_PX);
+        image = resizeMatToFinalSize(image);
         Bitmap imageCropped = getBitmapFromMat(image);
         image.release();
         byte[] byteArray = getBytesFromBitmap(imageCropped);
         safelyRemoveBitmap(imageCropped);
+
+        final Context context = photoMakerActivity.getApplicationContext();
+        final String fileName = System.currentTimeMillis() + ".png";
+
+        OutputStream fos;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            fos = getImageOutputStreamSdkLessThanQ(fileName, context);
+        } else {
+            fos = getImageOutputStreamSdkFromQ(fileName, context);
+        }
+        fos.write(byteArray);
+        fos.flush();
+        fos.close();
+    }
+
+    public static void saveImage(
+            final Mat deshadowed, final Activity photoMakerActivity)
+            throws IOException {
+        Bitmap imageCropped = getBitmapFromMat(deshadowed);
+        byte[] byteArray = getBytesFromBitmap(imageCropped);
+        safelyRemoveBitmap(imageCropped);
+
+        // TODO: refactor
 
         final Context context = photoMakerActivity.getApplicationContext();
         final String fileName = System.currentTimeMillis() + ".png";
@@ -121,7 +146,7 @@ public final class ImageUtils {
 
     public static Bitmap getBitmapFromMat(final Mat src) {
         Bitmap bitmap = Bitmap.createBitmap(src.width(), src.height(),
-                                            Bitmap.Config.ARGB_8888);
+                Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(src, bitmap);
         return bitmap;
     }
@@ -136,7 +161,11 @@ public final class ImageUtils {
 
     public static Mat resizeMat(final Mat src, final int width) {
         return resizeMat(src, width,
-                         (int) (width * FINAL_IMAGE_H_TO_W_RATIO));
+                (int) (width * FINAL_IMAGE_H_TO_W_RATIO));
+    }
+
+    public static Mat resizeMatToFinalSize(final Mat src) {
+        return resizeMat(src, FINAL_IMAGE_WIDTH_PX, FINAL_IMAGE_HEIGHT_PX);
     }
 
     public static Mat resizeMat(
@@ -183,7 +212,7 @@ public final class ImageUtils {
         int cutRight = cutLeft + cutWidth;
         int cutBottom = cutTop + cutHeight;
         if (!verifyBoundingBox(cutLeft, cutTop, cutRight, cutBottom,
-                               src.size())) {
+                src.size())) {
             return null;
         }
         Mat cropped = src.submat(cutTop, cutBottom, cutLeft, cutRight);
@@ -197,7 +226,18 @@ public final class ImageUtils {
         int bottom = borderSize - top - src.height();
         int right = borderSize - left - src.width();
         Core.copyMakeBorder(src, dst, top, bottom, left, right,
-                            BORDER_REPLICATE);
+                BORDER_REPLICATE);
+        return dst;
+    }
+
+    public static Mat padMatToSquareBlack(final Mat src, final int borderSize) {
+        Mat dst = new Mat();
+        int top = (borderSize - src.height()) / 2;
+        int left = (borderSize - src.width()) / 2;
+        int bottom = borderSize - top - src.height();
+        int right = borderSize - left - src.width();
+        Core.copyMakeBorder(src, dst, top, bottom, left, right,
+                BORDER_CONSTANT, new Scalar(0, 0, 0, 255));
         return dst;
     }
 
@@ -208,15 +248,22 @@ public final class ImageUtils {
         return cropped;
     }
 
-    private static boolean verifyBoundingBox(
+    public static boolean verifyBoundingBox(
             final int cutLeft, final int cutTop, final int cutRight,
-            final int cutBottom, final Size size) {
+            final int cutBottom, final Size canvasSize) {
         return cutLeft >= 0
                 && cutTop >= 0
                 && cutRight > cutLeft
-                && cutRight <= size.width
-                && cutBottom <= size.height;
+                && cutRight <= canvasSize.width
+                && cutBottom <= canvasSize.height;
     }
+
+    public static boolean verifyBoundingBox(
+            final Rect faceBoundingBox, final Size canvasSize) {
+        return verifyBoundingBox(faceBoundingBox.left, faceBoundingBox.top,
+                faceBoundingBox.right, faceBoundingBox.bottom, canvasSize);
+    }
+
 
     public static void safelyRemoveBitmap(Bitmap bitmap) {
         if (bitmap != null) {
@@ -275,4 +322,5 @@ public final class ImageUtils {
                 contentValues);
         return resolver.openOutputStream(Objects.requireNonNull(imageUri));
     }
+
 }
