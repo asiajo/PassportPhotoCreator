@@ -40,18 +40,32 @@ public class ColorBlobDetector {
         return getContoursMaxArea(mContours);
     }
 
+    public double getContoursTotalArea() {
+        return getContoursTotalArea(mContours);
+    }
+
     private double getContoursMaxArea(List<MatOfPoint> contours) {
         // Find max contour area
         double maxArea = 0;
-        Iterator<MatOfPoint> each = contours.iterator();
-        while (each.hasNext()) {
-            MatOfPoint wrapper = each.next();
+        Iterator<MatOfPoint> contour = contours.iterator();
+        while (contour.hasNext()) {
+            MatOfPoint wrapper = contour.next();
             double area = Imgproc.contourArea(wrapper);
             if (area > maxArea) {
                 maxArea = area;
             }
         }
         return maxArea;
+    }
+
+    private double getContoursTotalArea(List<MatOfPoint> contours) {
+        // Find max contour area
+        double totalArea = 0;
+        Iterator<MatOfPoint> contour = contours.iterator();
+        while (contour.hasNext()) {
+            totalArea += Imgproc.contourArea(contour.next());
+        }
+        return totalArea;
     }
 
     public double getContoursMaxPerimeter() {

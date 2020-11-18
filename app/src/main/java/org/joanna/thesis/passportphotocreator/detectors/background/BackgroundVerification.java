@@ -183,8 +183,9 @@ public class BackgroundVerification {
                 bgContourDetectorRight.getmBlobColorRgba());
 
         mBackgroundProperties.setBgColorRgba(rgbAverage);
-        final double areaBgdLeft = bgContourDetectorLeft.getContoursMaxArea();
-        final double areaBgdRight = bgContourDetectorRight.getContoursMaxArea();
+        final double areaBgdLeft = bgContourDetectorLeft.getContoursTotalArea();
+        final double areaBgdRight =
+                bgContourDetectorRight.getContoursTotalArea();
 
         ColorBlobDetector personContourDetector = new ColorBlobDetector();
         personContourDetector.process(mBackground, pixelPerson);
@@ -223,7 +224,7 @@ public class BackgroundVerification {
 
         final int imgArea = mBackground.width() * mBackground.height();
         // hard-coded value that seems to do a good job in most cases
-        final int epsilon = imgArea / 200;
+        final int epsilon = imgArea / 150;
         int whitePixels = getContoursLengthOnTheImage(mBackground);
         int approxLengthOfEdges =
                 whitePixels - mBackgroundProperties.getPersonContourLen();
