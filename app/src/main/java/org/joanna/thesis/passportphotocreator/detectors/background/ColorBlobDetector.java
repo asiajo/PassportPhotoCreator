@@ -85,7 +85,7 @@ public class ColorBlobDetector {
 
     public void process(Mat in, Point p) {
 
-        if ((p.x < 0) || (p.y < 0) || (p.x > in.cols()) ||
+        if ( p == null || (p.x < 0) || (p.y < 0) || (p.x > in.cols()) ||
                 (p.y > in.rows())) {
             return;
         }
