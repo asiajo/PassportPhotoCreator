@@ -2,7 +2,6 @@ package org.joanna.thesis.passportphotocreator;
 
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -37,7 +36,6 @@ import org.joanna.thesis.passportphotocreator.detectors.background.BackgroundVer
 import org.joanna.thesis.passportphotocreator.detectors.face.FaceTracker;
 import org.joanna.thesis.passportphotocreator.detectors.light.ShadowRemover;
 import org.joanna.thesis.passportphotocreator.detectors.light.ShadowRemoverPix2Pix;
-import org.joanna.thesis.passportphotocreator.detectors.light.ShadowVerification;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
@@ -234,7 +232,8 @@ public class PhotoMakerActivity extends Activity
                 try {
                     Mat picture = getFaceMatFromPictureTaken(bytes);
                     if (picture == null) {
-                        Toast.makeText(thisActivity, R.string.cannot_make_a_picture,
+                        Toast.makeText(thisActivity,
+                                R.string.cannot_make_a_picture,
                                 Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -243,7 +242,8 @@ public class PhotoMakerActivity extends Activity
                                 new ShadowRemoverPix2Pix(thisActivity);
                         picture = deshadower.deshadow(picture);
                     } catch (IOException e) {
-                        Toast.makeText(thisActivity,
+                        Toast.makeText(
+                                thisActivity,
                                 R.string.no_face_shadow_removal_error,
                                 Toast.LENGTH_SHORT).show();
                     }
