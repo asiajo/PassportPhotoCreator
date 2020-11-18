@@ -118,6 +118,7 @@ public abstract class Graphic {
         } catch (ConcurrentModificationException e) {
             Log.e(TAG, "Exception happened: " + e.getMessage());
         }
+        setValidity();
     }
 
     protected void clearActions(final Class<? extends Graphic> aClass) {
@@ -145,25 +146,14 @@ public abstract class Graphic {
     /**
      * Sets the color to the most strict one: red if at least one item is
      * invalid, yellow if there are only warnings and green if all is perfect.
-     *
-     * @param validity Information if current frame is valid
      */
-    public void setIsValid(final PhotoValidity validity) {
-        switch (validity) {
-            case VALID:
-                if (actions.isEmpty()) {
-                    mPaint.setColor(colorMap.get(validity));
-                } else if (!containsInvalidActions()) {
-                    mPaint.setColor(colorMap.get(PhotoValidity.WARNING));
-                }
-                break;
-            case WARNING:
-                if (!containsInvalidActions()) {
-                    mPaint.setColor(colorMap.get(validity));
-                }
-                break;
-            default:
-                mPaint.setColor(colorMap.get(validity));
+    public void setValidity() {
+        if (containsInvalidActions()) {
+            mPaint.setColor(colorMap.get(PhotoValidity.INVALID));
+        } else if (containsWarningActions()) {
+            mPaint.setColor(colorMap.get(PhotoValidity.WARNING));
+        } else {
+            mPaint.setColor(colorMap.get(PhotoValidity.VALID));
         }
     }
 
@@ -172,9 +162,8 @@ public abstract class Graphic {
     }
 
     /**
-     * For a good photo face have to be perfectly positioned. Background and
-     * shadow will be slightly enhanced by the application, so possibly they
-     * do not have to be perfect and as such shall not block picture creation.
+     * For a good photo face have to be perfectly positioned. Verifies if there
+     * are crucial actions to be performed to get a correct photo.
      *
      * @return true if at least one action would make a photo invalid, false
      *         otherwise
@@ -190,18 +179,37 @@ public abstract class Graphic {
         return false;
     }
 
+    /**
+     * There are actions that are classified as warnings - for example if
+     * background seems to contain edges. Those will be enhanced on the final
+     * photo, so they do not block photo creation. Verifies if such actions are
+     * present in the action list.
+     *
+     * @return true if at least one action is warning action, false otherwise.
+     */
+    private boolean containsWarningActions() {
+        for (Iterator<BitmapMetaData> it =
+             actions.keySet().iterator(); it.hasNext(); ) {
+            BitmapMetaData metaData = it.next();
+            if (metaData.makesPhotoWarning()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public class BitmapMetaData implements Comparable<BitmapMetaData> {
         private Class<? extends Graphic> mClass;
         private int                      mId;
-        private boolean                  mMakesPhotoInvalid;
+        private PhotoValidity            mValidity;
 
         public BitmapMetaData(
                 final Class<? extends Graphic> aClass,
                 final int id,
-                final boolean makesPhotoInvalid) {
+                final PhotoValidity validity) {
             mClass = aClass;
             mId = id;
-            mMakesPhotoInvalid = makesPhotoInvalid;
+            mValidity = validity;
         }
 
         @Override
@@ -223,7 +231,11 @@ public abstract class Graphic {
         }
 
         public boolean makesPhotoInvalid() {
-            return mMakesPhotoInvalid;
+            return mValidity.equals(PhotoValidity.INVALID);
+        }
+
+        public boolean makesPhotoWarning() {
+            return mValidity.equals(PhotoValidity.WARNING);
         }
     }
 }

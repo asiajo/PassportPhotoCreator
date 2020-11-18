@@ -104,9 +104,6 @@ public class BackgroundVerification {
 
         mBackgroundGraphic.setBarActions(positions, mContext,
                 BackgroundGraphic.class);
-        mBackgroundGraphic.setIsValid(
-                positions.isEmpty() ? PhotoValidity.VALID :
-                        PhotoValidity.WARNING);
         mBackground.release();
     }
 

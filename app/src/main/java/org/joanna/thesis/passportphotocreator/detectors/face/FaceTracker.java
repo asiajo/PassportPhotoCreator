@@ -9,7 +9,6 @@ import com.google.android.gms.vision.face.Face;
 
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.camera.PhotoValidity;
 import org.joanna.thesis.passportphotocreator.detectors.Action;
 
 import java.util.ArrayList;
@@ -19,9 +18,10 @@ public class FaceTracker extends Tracker<Face> {
 
     private static final String TAG = FaceTracker.class.getSimpleName();
 
-    private static final double                  NEUTRAL_FACE_THRESHOLD = 0.4;
+    private static final double                  NEUTRAL_FACE_THRESHOLD = 0.5;
     private static final double                  EYES_OPEN_THRESHOLD    = 0.7;
     private static final double                  ROTATION_THRESHOLD     = 4;
+    private static final double                  ROTATION_X_THRESHOLD   = 8;
     private              Face                    mFace                  = null;
     private              GraphicOverlay<Graphic> mOverlay;
     private              FaceGraphic             mFaceGraphic;
@@ -49,9 +49,9 @@ public class FaceTracker extends Tracker<Face> {
         } else if (face.getEulerY() > ROTATION_THRESHOLD) {
             positions.add(FaceActions.ROTATE_RIGHT);
         }
-        if (face.getEulerX() < -ROTATION_THRESHOLD) {
+        if (face.getEulerX() < -ROTATION_X_THRESHOLD) {
             positions.add(FaceActions.FACE_UP);
-        } else if (face.getEulerX() > ROTATION_THRESHOLD) {
+        } else if (face.getEulerX() > ROTATION_X_THRESHOLD) {
             positions.add(FaceActions.FACE_DOWN);
         }
         if (face.getEulerZ() < -ROTATION_THRESHOLD) {
@@ -71,8 +71,6 @@ public class FaceTracker extends Tracker<Face> {
 
         mFaceGraphic.updateFace(face);
         mFaceGraphic.setBarActions(positions, mContext, FaceGraphic.class);
-        mFaceGraphic.setIsValid(positions.isEmpty() ? PhotoValidity.VALID :
-                PhotoValidity.INVALID);
     }
 
     @Override

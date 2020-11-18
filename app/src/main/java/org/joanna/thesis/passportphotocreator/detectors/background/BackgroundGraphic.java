@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import org.joanna.thesis.passportphotocreator.R;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
+import org.joanna.thesis.passportphotocreator.camera.PhotoValidity;
 
 public class BackgroundGraphic extends Graphic {
 
@@ -13,11 +14,12 @@ public class BackgroundGraphic extends Graphic {
                 BackgroundActions.NOT_UNIFORM,
                 new BitmapMetaData(
                         BackgroundGraphic.class, R.drawable.non_uniform,
-                        false));
+                        PhotoValidity.WARNING));
         getActionsMap().put(
                 BackgroundActions.TOO_DARK,
                 new BitmapMetaData(
-                        BackgroundGraphic.class, R.drawable.too_dark, true));
+                        BackgroundGraphic.class, R.drawable.too_dark,
+                        PhotoValidity.INVALID));
     }
 
     public BackgroundGraphic(final GraphicOverlay overlay) {

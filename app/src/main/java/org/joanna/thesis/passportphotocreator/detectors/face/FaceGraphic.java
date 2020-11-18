@@ -8,6 +8,7 @@ import com.google.android.gms.vision.face.Face;
 import org.joanna.thesis.passportphotocreator.R;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
+import org.joanna.thesis.passportphotocreator.camera.PhotoValidity;
 
 public class FaceGraphic extends Graphic {
 
@@ -24,38 +25,44 @@ public class FaceGraphic extends Graphic {
         getActionsMap().put(
                 FaceActions.ROTATE_LEFT,
                 new BitmapMetaData(FaceGraphic.class, R.drawable.arrow_left,
-                        true));
+                        PhotoValidity.INVALID));
         getActionsMap().put(
                 FaceActions.ROTATE_RIGHT,
                 new BitmapMetaData(FaceGraphic.class, R.drawable.arrow_right,
-                        true));
+                        PhotoValidity.INVALID));
         getActionsMap().put(
                 FaceActions.STRAIGHTEN_FROM_LEFT,
                 new BitmapMetaData(
                         FaceGraphic.class, R.drawable.arrow_straighten_right,
-                        true));
+                        PhotoValidity.INVALID));
         getActionsMap().put(
                 FaceActions.STRAIGHTEN_FROM_RIGHT,
                 new BitmapMetaData(
                         FaceGraphic.class, R.drawable.arrow_straighten_left,
-                        true));
+                        PhotoValidity.INVALID));
         getActionsMap().put(
                 FaceActions.FACE_DOWN,
                 new BitmapMetaData(FaceGraphic.class, R.drawable.arrow_down,
-                        true));
+                        PhotoValidity.INVALID));
         getActionsMap().put(
                 FaceActions.FACE_UP,
                 new BitmapMetaData(FaceGraphic.class, R.drawable.arrow_up,
-                        true));
+                        PhotoValidity.INVALID));
         getActionsMap().put(
                 FaceActions.LEFT_EYE_OPEN,
-                new BitmapMetaData(FaceGraphic.class, R.drawable.eye, true));
+                new BitmapMetaData(
+                        FaceGraphic.class, R.drawable.eye,
+                        PhotoValidity.INVALID));
         getActionsMap().put(
                 FaceActions.RIGHT_EYE_OPEN,
-                new BitmapMetaData(FaceGraphic.class, R.drawable.eye, true));
+                new BitmapMetaData(
+                        FaceGraphic.class, R.drawable.eye,
+                        PhotoValidity.INVALID));
         getActionsMap().put(
                 FaceActions.NEUTRAL_MOUTH,
-                new BitmapMetaData(FaceGraphic.class, R.drawable.mouth, true));
+                new BitmapMetaData(
+                        FaceGraphic.class, R.drawable.mouth,
+                        PhotoValidity.INVALID));
     }
 
     FaceGraphic(final GraphicOverlay overlay) {
