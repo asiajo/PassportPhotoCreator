@@ -112,6 +112,14 @@ public class FaceGraphic extends Graphic {
         return bbProportionWidth;
     }
 
+    public double getBbProportionCenterX() {
+        return faceBoundingBox.centerX() / (double) canvas.getWidth();
+    }
+
+    public double getBbProportionCenterY() {
+        return faceBoundingBox.centerY() / (double) canvas.getHeight();
+    }
+
     public double getBbProportionHeight() {
         return bbProportionHeight;
     }

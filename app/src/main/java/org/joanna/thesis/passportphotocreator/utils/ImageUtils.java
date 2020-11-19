@@ -192,12 +192,7 @@ public final class ImageUtils {
     public static Mat cropMatToFaceBoundingBox(
             final Mat src,
             final GraphicOverlay<Graphic> mGraphicOverlay) {
-        FaceGraphic faceGraphic = null;
-        for (Graphic item : mGraphicOverlay.getmGraphics()) {
-            if (item instanceof FaceGraphic) {
-                faceGraphic = (FaceGraphic) item;
-            }
-        }
+        FaceGraphic faceGraphic = getFaceGraphic(mGraphicOverlay);
         if (faceGraphic == null || faceGraphic.getFaceBoundingBox() == null) {
             return null;
         }
@@ -217,6 +212,49 @@ public final class ImageUtils {
         }
         Mat cropped = src.submat(cutTop, cutBottom, cutLeft, cutRight);
         return cropped;
+    }
+
+    public static Mat cropMatToGetFaceOnly(
+            final Mat src,
+            final GraphicOverlay<Graphic> mGraphicOverlay) {
+        FaceGraphic faceGraphic = getFaceGraphic(mGraphicOverlay);
+        if (faceGraphic == null || faceGraphic.getFaceBoundingBox() == null) {
+            return null;
+        }
+
+        double matWidth = src.size().width;
+        double matHeight = src.size().height;
+
+        double faceWidthProp = faceGraphic.getBbProportionWidth() * 0.6;
+        double faceHeightProp = faceGraphic.getBbProportionWidth() * 0.75;
+        double leftProp =
+                faceGraphic.getBbProportionCenterX() - faceWidthProp / 2;
+        double topProp =
+                faceGraphic.getBbProportionCenterY() - faceHeightProp * 0.3;
+
+        int cutWidth = (int) (faceWidthProp * matWidth);
+        int cutHeight = (int) (faceHeightProp * matWidth);
+        int cutLeft = (int) (leftProp * matWidth);
+        int cutTop = (int) (topProp * matHeight);
+        int cutRight = cutLeft + cutWidth;
+        int cutBottom = cutTop + cutHeight;
+        if (!verifyBoundingBox(cutLeft, cutTop, cutRight, cutBottom,
+                src.size())) {
+            return null;
+        }
+        Mat cropped = src.submat(cutTop, cutBottom, cutLeft, cutRight);
+        return cropped;
+    }
+
+    private static FaceGraphic getFaceGraphic(
+            final GraphicOverlay<Graphic> mGraphicOverlay) {
+        FaceGraphic faceGraphic = null;
+        for (Graphic item : mGraphicOverlay.getmGraphics()) {
+            if (item instanceof FaceGraphic) {
+                faceGraphic = (FaceGraphic) item;
+            }
+        }
+        return faceGraphic;
     }
 
     public static Mat padMatToSquare(final Mat src, final int borderSize) {

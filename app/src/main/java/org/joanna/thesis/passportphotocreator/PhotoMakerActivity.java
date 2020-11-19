@@ -36,6 +36,7 @@ import org.joanna.thesis.passportphotocreator.detectors.background.BackgroundVer
 import org.joanna.thesis.passportphotocreator.detectors.face.FaceTracker;
 import org.joanna.thesis.passportphotocreator.detectors.light.ShadowRemover;
 import org.joanna.thesis.passportphotocreator.detectors.light.ShadowRemoverPix2Pix;
+import org.joanna.thesis.passportphotocreator.detectors.light.ShadowVerification;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
@@ -70,6 +71,7 @@ public class PhotoMakerActivity extends Activity
     private ScaleGestureDetector    mScaleGestureDetector;
     private BackgroundVerification  mBackgroundVerifier;
     private FaceDetector            mDetector;
+    private ShadowVerification      mShadowVerifier;
 
     @Override
     public void onCreate(Bundle bundle) {
@@ -83,6 +85,7 @@ public class PhotoMakerActivity extends Activity
                 new ScaleListener());
 
         mBackgroundVerifier = new BackgroundVerification(this, mGraphicOverlay);
+        mShadowVerifier = new ShadowVerification(this, mGraphicOverlay);
 
         int rc = ActivityCompat.checkSelfPermission(
                 this,
@@ -195,6 +198,7 @@ public class PhotoMakerActivity extends Activity
                 .setRequestedPreviewSize(PREVIEW_HEIGHT, PREVIEW_WIDTH)
                 .setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)
                 .setBackgroundVerifier(mBackgroundVerifier)
+                .setShadowVerifier(mShadowVerifier)
                 .setRequestedFps(15.0f);
 
         mCameraSource = builder.build();
@@ -232,7 +236,8 @@ public class PhotoMakerActivity extends Activity
                 try {
                     Mat picture = getFaceMatFromPictureTaken(bytes);
                     if (picture == null) {
-                        Toast.makeText(thisActivity,
+                        Toast.makeText(
+                                thisActivity,
                                 R.string.cannot_make_a_picture,
                                 Toast.LENGTH_SHORT).show();
                         return;
