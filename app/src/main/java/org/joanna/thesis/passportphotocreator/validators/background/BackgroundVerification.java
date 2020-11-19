@@ -276,6 +276,7 @@ public class BackgroundVerification {
         hsvSource.release();
         histSource.release();
 
+        // TODO: improve
         // hard-coded value that seems to do a good job in most cases
         final double epsilon = 3.6;
         if (Math.abs(medianHueValue - avgHueValue) > epsilon) {

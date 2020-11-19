@@ -19,6 +19,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         statusMessage = findViewById(R.id.status_message);
         findViewById(R.id.take_photo).setOnClickListener(this);
+        // TODO: make it nicer
     }
 
     @Override

@@ -78,6 +78,7 @@ public class PhotoMakerActivity extends Activity
         super.onCreate(bundle);
         setContentView(R.layout.photo_capture);
 
+        // TODO: make it nicer
         mPreview = findViewById(R.id.preview);
         mGraphicOverlay = findViewById(R.id.graphicOverlay);
         mScaleGestureDetector = new ScaleGestureDetector(
@@ -232,6 +233,8 @@ public class PhotoMakerActivity extends Activity
         mCameraSource.takePicture(null, new CameraSource.PictureCallback() {
             @Override
             public void onPictureTaken(byte[] bytes) {
+                // TODO: do in background
+                // TODO: move to new activity and display preview before saving
 
                 try {
                     Mat picture = getFaceMatFromPictureTaken(bytes);
@@ -242,6 +245,7 @@ public class PhotoMakerActivity extends Activity
                                 Toast.LENGTH_SHORT).show();
                         return;
                     }
+                    // TODO: add background improvement (smooth + lighten)
                     try {
                         final ShadowRemover deshadower =
                                 new ShadowRemoverPix2Pix(thisActivity);

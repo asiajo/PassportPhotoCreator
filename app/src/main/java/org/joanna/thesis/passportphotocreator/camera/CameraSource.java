@@ -1106,6 +1106,9 @@ public class CameraSource {
                 mShadowVerifier.verify(data);
             }
 
+            // TODO: add no object covering face verification
+            // TODO: add pupils verification
+
             backgroundLoop++;
             shadowLoop++;
         }
