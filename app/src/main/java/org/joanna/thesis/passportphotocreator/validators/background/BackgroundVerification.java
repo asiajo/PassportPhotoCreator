@@ -1,4 +1,4 @@
-package org.joanna.thesis.passportphotocreator.detectors.background;
+package org.joanna.thesis.passportphotocreator.validators.background;
 
 import android.app.Activity;
 import android.content.Context;
@@ -9,7 +9,7 @@ import org.joanna.thesis.passportphotocreator.PhotoMakerActivity;
 import org.joanna.thesis.passportphotocreator.R;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.detectors.Action;
+import org.joanna.thesis.passportphotocreator.validators.Action;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -23,9 +23,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.joanna.thesis.passportphotocreator.detectors.background.BackgroundUtils.findNonPersonPixel;
-import static org.joanna.thesis.passportphotocreator.detectors.background.BackgroundUtils.findPersonPixel;
-import static org.joanna.thesis.passportphotocreator.detectors.background.BackgroundUtils.getContoursLengthOnTheImage;
+import static org.joanna.thesis.passportphotocreator.utils.BackgroundUtils.findNonPersonPixel;
+import static org.joanna.thesis.passportphotocreator.utils.BackgroundUtils.findPersonPixel;
+import static org.joanna.thesis.passportphotocreator.utils.BackgroundUtils.getContoursLengthOnTheImage;
 import static org.opencv.core.CvType.CV_8UC1;
 
 /**

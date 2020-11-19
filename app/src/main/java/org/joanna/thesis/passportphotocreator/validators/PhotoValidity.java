@@ -1,4 +1,4 @@
-package org.joanna.thesis.passportphotocreator.camera;
+package org.joanna.thesis.passportphotocreator.validators;
 
 public enum PhotoValidity {
     VALID,

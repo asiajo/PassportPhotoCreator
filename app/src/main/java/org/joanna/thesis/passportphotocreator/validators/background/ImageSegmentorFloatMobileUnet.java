@@ -1,4 +1,4 @@
-package org.joanna.thesis.passportphotocreator.detectors.background;
+package org.joanna.thesis.passportphotocreator.validators.background;
 
 import android.app.Activity;
 

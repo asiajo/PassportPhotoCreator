@@ -1,5 +1,6 @@
-package org.joanna.thesis.passportphotocreator.detectors.background;
+package org.joanna.thesis.passportphotocreator.validators.background;
 
+import org.joanna.thesis.passportphotocreator.utils.BackgroundUtils;
 import org.opencv.core.Scalar;
 
 /**

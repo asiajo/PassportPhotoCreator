@@ -1,4 +1,4 @@
-package org.joanna.thesis.passportphotocreator.detectors.light;
+package org.joanna.thesis.passportphotocreator.validators.light;
 
 import android.app.Activity;
 import android.content.Context;
@@ -6,7 +6,7 @@ import android.content.Context;
 import org.joanna.thesis.passportphotocreator.PhotoMakerActivity;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.detectors.Action;
+import org.joanna.thesis.passportphotocreator.validators.Action;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;

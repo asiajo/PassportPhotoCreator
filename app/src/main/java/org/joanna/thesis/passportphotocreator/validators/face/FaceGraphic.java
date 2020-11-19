@@ -1,4 +1,4 @@
-package org.joanna.thesis.passportphotocreator.detectors.face;
+package org.joanna.thesis.passportphotocreator.validators.face;
 
 import android.graphics.Canvas;
 import android.graphics.Rect;
@@ -8,7 +8,8 @@ import com.google.android.gms.vision.face.Face;
 import org.joanna.thesis.passportphotocreator.R;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.camera.PhotoValidity;
+import org.joanna.thesis.passportphotocreator.validators.PhotoValidity;
+import org.joanna.thesis.passportphotocreator.utils.FaceUtils;
 
 public class FaceGraphic extends Graphic {
 

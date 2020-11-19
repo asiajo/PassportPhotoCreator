@@ -24,8 +24,8 @@ import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.Frame;
 
-import org.joanna.thesis.passportphotocreator.detectors.background.BackgroundVerification;
-import org.joanna.thesis.passportphotocreator.detectors.light.ShadowVerification;
+import org.joanna.thesis.passportphotocreator.validators.background.BackgroundVerification;
+import org.joanna.thesis.passportphotocreator.validators.light.ShadowVerification;
 
 import java.io.IOException;
 import java.lang.Thread.State;

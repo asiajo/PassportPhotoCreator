@@ -1,4 +1,4 @@
-package org.joanna.thesis.passportphotocreator.detectors.face;
+package org.joanna.thesis.passportphotocreator.validators.face;
 
 import android.content.Context;
 import android.graphics.Rect;
@@ -9,7 +9,8 @@ import com.google.android.gms.vision.face.Face;
 
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.detectors.Action;
+import org.joanna.thesis.passportphotocreator.validators.Action;
+import org.joanna.thesis.passportphotocreator.utils.FaceUtils;
 
 import java.util.ArrayList;
 import java.util.List;

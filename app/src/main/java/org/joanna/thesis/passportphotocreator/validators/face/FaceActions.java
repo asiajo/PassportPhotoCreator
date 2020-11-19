@@ -1,6 +1,6 @@
-package org.joanna.thesis.passportphotocreator.detectors.face;
+package org.joanna.thesis.passportphotocreator.validators.face;
 
-import org.joanna.thesis.passportphotocreator.detectors.Action;
+import org.joanna.thesis.passportphotocreator.validators.Action;
 
 public enum FaceActions implements Action {
     ROTATE_LEFT,

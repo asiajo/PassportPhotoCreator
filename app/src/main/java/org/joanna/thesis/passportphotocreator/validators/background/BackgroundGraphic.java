@@ -1,11 +1,11 @@
-package org.joanna.thesis.passportphotocreator.detectors.background;
+package org.joanna.thesis.passportphotocreator.validators.background;
 
 import android.graphics.Canvas;
 
 import org.joanna.thesis.passportphotocreator.R;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.camera.PhotoValidity;
+import org.joanna.thesis.passportphotocreator.validators.PhotoValidity;
 
 public class BackgroundGraphic extends Graphic {
 

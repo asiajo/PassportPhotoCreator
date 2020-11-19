@@ -1,11 +1,11 @@
-package org.joanna.thesis.passportphotocreator.detectors.light;
+package org.joanna.thesis.passportphotocreator.validators.light;
 
 import android.graphics.Canvas;
 
 import org.joanna.thesis.passportphotocreator.R;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.camera.PhotoValidity;
+import org.joanna.thesis.passportphotocreator.validators.PhotoValidity;
 
 public class ShadowGraphic extends Graphic {
 

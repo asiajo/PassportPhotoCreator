@@ -1,4 +1,4 @@
-package org.joanna.thesis.passportphotocreator.detectors.light;
+package org.joanna.thesis.passportphotocreator.utils;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;

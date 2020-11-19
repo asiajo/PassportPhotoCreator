@@ -1,4 +1,4 @@
-package org.joanna.thesis.passportphotocreator.detectors.light;
+package org.joanna.thesis.passportphotocreator.modifiers;
 
 import android.app.Activity;
 import android.graphics.Bitmap;

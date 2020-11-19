@@ -1,11 +1,12 @@
-package org.joanna.thesis.passportphotocreator.detectors.light;
+package org.joanna.thesis.passportphotocreator.modifiers;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.util.Log;
 
-import org.joanna.thesis.passportphotocreator.detectors.DetectorTensorflowLite;
+import org.joanna.thesis.passportphotocreator.DetectorTensorflowLite;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
+import org.joanna.thesis.passportphotocreator.utils.ShadowUtils;
 import org.opencv.core.Mat;
 
 import java.io.IOException;

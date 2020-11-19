@@ -1,4 +1,4 @@
-package org.joanna.thesis.passportphotocreator.detectors;
+package org.joanna.thesis.passportphotocreator;
 
 import android.app.Activity;
 import android.content.res.AssetFileDescriptor;

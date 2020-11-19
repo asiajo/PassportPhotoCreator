@@ -32,11 +32,11 @@ import org.joanna.thesis.passportphotocreator.camera.CameraSource;
 import org.joanna.thesis.passportphotocreator.camera.CameraSourcePreview;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.detectors.background.BackgroundVerification;
-import org.joanna.thesis.passportphotocreator.detectors.face.FaceTracker;
-import org.joanna.thesis.passportphotocreator.detectors.light.ShadowRemover;
-import org.joanna.thesis.passportphotocreator.detectors.light.ShadowRemoverPix2Pix;
-import org.joanna.thesis.passportphotocreator.detectors.light.ShadowVerification;
+import org.joanna.thesis.passportphotocreator.validators.background.BackgroundVerification;
+import org.joanna.thesis.passportphotocreator.validators.face.FaceTracker;
+import org.joanna.thesis.passportphotocreator.modifiers.ShadowRemover;
+import org.joanna.thesis.passportphotocreator.modifiers.ShadowRemoverPix2Pix;
+import org.joanna.thesis.passportphotocreator.validators.light.ShadowVerification;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
@@ -46,7 +46,7 @@ import java.io.IOException;
 
 import static com.google.android.gms.vision.Frame.ROTATION_90;
 import static com.google.android.material.snackbar.Snackbar.make;
-import static org.joanna.thesis.passportphotocreator.detectors.face.FaceUtils.getFaceBoundingBox;
+import static org.joanna.thesis.passportphotocreator.utils.FaceUtils.getFaceBoundingBox;
 import static org.joanna.thesis.passportphotocreator.utils.ImageUtils.verifyBoundingBox;
 
 public class PhotoMakerActivity extends Activity

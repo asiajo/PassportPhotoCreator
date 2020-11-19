@@ -1,4 +1,4 @@
-package org.joanna.thesis.passportphotocreator.detectors.face;
+package org.joanna.thesis.passportphotocreator.utils;
 
 import android.graphics.Rect;
 

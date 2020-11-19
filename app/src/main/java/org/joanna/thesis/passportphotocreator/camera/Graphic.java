@@ -9,7 +9,8 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.Log;
 
-import org.joanna.thesis.passportphotocreator.detectors.Action;
+import org.joanna.thesis.passportphotocreator.validators.Action;
+import org.joanna.thesis.passportphotocreator.validators.PhotoValidity;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
@@ -30,7 +31,7 @@ public abstract class Graphic {
 
     private static Map<BitmapMetaData, Bitmap> actions = new TreeMap<>();
     private        Map<Action, BitmapMetaData> actionsMap = new HashMap<>();
-    private        Map<PhotoValidity, Integer> colorMap = new HashMap<>();
+    private        Map<PhotoValidity, Integer> colorMap   = new HashMap<>();
     private        GraphicOverlay              mOverlay;
     private        Paint                       mPaint;
 
