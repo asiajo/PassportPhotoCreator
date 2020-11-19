@@ -1,4 +1,4 @@
-package org.joanna.thesis.passportphotocreator.modifiers;
+package org.joanna.thesis.passportphotocreator.modifiers.face;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
