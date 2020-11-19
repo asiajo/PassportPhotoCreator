@@ -7,7 +7,7 @@ Application supporting passport photos creation with use of Deep Neural Networks
 - [x] verifies if the head is oriented straight, eyes are open and facial expression is neutral -> ML Kit Face Detection,
 - [x] segments person from the background -> Tensorflow lite [munet](https://github.com/tensorflow/examples/tree/master/lite/examples/image_segmentation/android) model
 - [x] verifies if background is plain and bright -> OpenCV
-- [ ] TBD: verifies if face does not contain shadows -> OpenCv
+- [x] verifies if face does not contain shadows -> OpenCv
 - [ ] TBD: verifies if eye pupils are directed towards camera -> Tensorflow lite
 - [ ] TBD: verifies if there are no objects partially covering face -> OpenCV
 - [x] After photo capturing attempts to improve face shadows -> Tensorflow lite GAN [pix2pix](https://github.com/affinelayer/pix2pix-tensorflow) model. See below!
