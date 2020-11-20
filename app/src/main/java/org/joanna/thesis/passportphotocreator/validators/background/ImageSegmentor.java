@@ -30,7 +30,7 @@ public abstract class ImageSegmentor extends DetectorTensorflowLite {
     /**
      * Segments a frame from the preview stream.
      */
-    public Mat segmentImgGetBackground(Mat image) {
+    public void segmentImg(Mat image) {
         if (mTflite == null) {
             Log.e(TAG, "Image segmentor has not been initialized; Skipped.");
         }
@@ -46,7 +46,6 @@ public abstract class ImageSegmentor extends DetectorTensorflowLite {
         ImageUtils.safelyRemoveBitmap(bmp);
 
         runInference();
-        return getBackground();
     }
 
     /**
@@ -70,12 +69,12 @@ public abstract class ImageSegmentor extends DetectorTensorflowLite {
      *
      * @return image with person painted black
      */
-    protected abstract Mat getBackground();
+    public abstract Mat getBackground();
 
     /**
      * Returns original image with detected background painted black.
      *
      * @return image with background painted black
      */
-    protected abstract Mat getForeground();
+    public abstract Mat getForeground();
 }

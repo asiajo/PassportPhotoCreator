@@ -3,20 +3,19 @@ package org.joanna.thesis.passportphotocreator.validators.background;
 import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.joanna.thesis.passportphotocreator.PhotoMakerActivity;
-import org.joanna.thesis.passportphotocreator.R;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.validators.Action;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
+import org.joanna.thesis.passportphotocreator.validators.Action;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
@@ -26,15 +25,16 @@ import java.util.List;
 import static org.joanna.thesis.passportphotocreator.utils.BackgroundUtils.findNonPersonPixel;
 import static org.joanna.thesis.passportphotocreator.utils.BackgroundUtils.findPersonPixel;
 import static org.joanna.thesis.passportphotocreator.utils.BackgroundUtils.getContoursLengthOnTheImage;
+import static org.joanna.thesis.passportphotocreator.utils.BackgroundUtils.paste;
 import static org.opencv.core.CvType.CV_8UC1;
 
 /**
  * Verifies if background is bright and uniform.
  */
-public class BackgroundVerification {
+public class BackgroundProcessing {
 
     private static final String TAG =
-            BackgroundVerification.class.getSimpleName();
+            BackgroundProcessing.class.getSimpleName();
 
     public  ImageSegmentor          segmentor;
     private GraphicOverlay<Graphic> mOverlay;
@@ -44,19 +44,14 @@ public class BackgroundVerification {
     private Mat                     mBackground;
 
 
-    public BackgroundVerification(
+    public BackgroundProcessing(
             final Activity activity,
-            final GraphicOverlay<Graphic> overlay) {
+            final GraphicOverlay<Graphic> overlay) throws IOException {
         mOverlay = overlay;
         mBackgroundGraphic = new BackgroundGraphic(overlay);
         mContext = activity.getApplicationContext();
         mBackgroundProperties = new BackgroundProperties();
-        try {
-            segmentor = new ImageSegmentorFloatMobileUnet(activity);
-        } catch (IOException e) {
-            Toast.makeText(activity, R.string.no_background_verification_error,
-                    Toast.LENGTH_LONG).show();
-        }
+        segmentor = new ImageSegmentorFloatMobileUnet(activity);
     }
 
     /**
@@ -138,8 +133,8 @@ public class BackgroundVerification {
                 image,
                 ImageSegmentor.PROCESS_IMG_SIZE);
 
-        image = segmentor.segmentImgGetBackground(image);
-
+        segmentor.segmentImg(image);
+        image = segmentor.getBackground();
         image = ImageUtils.unpadMatFromSquare(image, imgWidth);
         return image;
     }
@@ -316,6 +311,60 @@ public class BackgroundVerification {
             }
         }
         return medianHueValue;
+    }
+
+    public Mat enhance(final Mat src) {
+
+        if (segmentor == null) {
+            return null;
+        }
+
+        Mat personMask = getPersonMask(src);
+
+        Mat person = getPersonWithoutBackground(src, personMask);
+        personMask.release();
+
+        Mat background = new Mat();
+        Imgproc.blur(src, background, new Size(10, 10));
+        background.convertTo(background, -1, 1, 10); //brighten
+
+        Mat dst = paste(person, background);
+        person.release();
+        background.release();
+
+        return dst;
+    }
+
+    private Mat getPersonWithoutBackground(
+            final Mat src, final Mat personMask) {
+
+        List<Mat> channels = new ArrayList<>();
+        Core.split(src, channels);
+        channels.add(personMask);
+        Mat dst = new Mat();
+        Core.merge(channels, dst);
+        return dst;
+    }
+
+    private Mat getPersonMask(final Mat src) {
+        int imgWidth = (int) Math.ceil(
+                ImageSegmentor.PROCESS_IMG_SIZE
+                        * ImageUtils.FINAL_IMAGE_W_TO_H_RATIO);
+        Mat modelImage = ImageUtils.resizeMat(src, imgWidth);
+        modelImage = ImageUtils.padMatToSquare(
+                modelImage,
+                ImageSegmentor.PROCESS_IMG_SIZE);
+
+        segmentor.segmentImg(modelImage);
+        modelImage.release();
+        Mat personMask = segmentor.getMaskedBackground();
+
+        Imgproc.cvtColor(personMask, personMask, Imgproc.COLOR_RGB2GRAY);
+        personMask.convertTo(personMask, CV_8UC1, 255);
+        Imgproc.blur(personMask, personMask, new Size(15, 15));
+        personMask = ImageUtils.unpadMatFromSquare(personMask, imgWidth);
+        personMask = ImageUtils.resizeMat(personMask, src.width());
+        return personMask;
     }
 
 }

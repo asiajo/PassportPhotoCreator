@@ -1,5 +1,7 @@
 package org.joanna.thesis.passportphotocreator.utils;
 
+import android.util.Log;
+
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -115,5 +117,59 @@ public final class BackgroundUtils {
      */
     public static Boolean isBright(final double color) {
         return color > 0.5;
+    }
+
+    /**
+     * Pastes one image containing alpha channel into the second one. This
+     * implementation expects that bot images have exactly the same width
+     * and height and rgba and rgb channels respectively.
+     *
+     * @param foreground image to be pasted in in rgba format
+     * @param background image to which image should be pasted in rgb format
+     * @return merged both images into one
+     */
+    public static Mat paste(final Mat foreground, final Mat background) {
+        if (!(foreground.cols() == background.cols() &&
+                foreground.rows() == background.rows() &&
+                foreground.channels() == 4 &&
+                background.channels() == 3)) {
+            Log.e(
+                    TAG,
+                    "This method expects two Mats of exactly same width and " +
+                            "height, where first one has rgba and second one " +
+                            "rgb format.");
+            return null;
+        }
+        Mat output = background.clone();
+        for (int y = 0; y < output.rows(); y++) {
+            for (int x = 0; x < output.cols(); x++) {
+                final double alpha = foreground.get(y, x)[3];
+                if (alpha > 0) {
+                    final double[] point = averageTwoColors(
+                            foreground.get(y, x),
+                            output.get(y, x));
+                    output.put(y, x, point);
+                }
+            }
+
+        }
+        return output;
+    }
+
+    private static double[] averageTwoColors(
+            final double[] rgba, final double[] rgb) {
+        if (!(rgba.length == 4 && rgb.length == 3)) {
+            Log.e(
+                    TAG,
+                    "This method expects two color arrays with channels rgba " +
+                            "and rgb respectively.");
+            return null;
+        }
+        double[] out = new double[rgb.length];
+        final double alpha = rgba[3] / 255;
+        for (int i = 0; i < rgb.length; i++) {
+            out[i] = rgb[i] * (1 - alpha) + rgba[i] * alpha;
+        }
+        return out;
     }
 }

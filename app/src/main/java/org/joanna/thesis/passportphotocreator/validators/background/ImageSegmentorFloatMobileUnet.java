@@ -16,7 +16,8 @@ import static org.opencv.core.CvType.CV_8UC3;
 
 /**
  * Based on Portrait Segmentation Sample from Tensorflow.
- * This segmentor works with the float mobile-unet model. */
+ * This segmentor works with the float mobile-unet model.
+ */
 public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
 
     public static final  int   MODEL_INPUT_IMG_SIZE = 128;
@@ -31,7 +32,7 @@ public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
      *
      * @param activity
      */
-    ImageSegmentorFloatMobileUnet(Activity activity) throws IOException {
+    public ImageSegmentorFloatMobileUnet(Activity activity) throws IOException {
         super(activity);
         segmap = new float[1][MODEL_INPUT_IMG_SIZE * MODEL_INPUT_IMG_SIZE];
     }
@@ -60,7 +61,8 @@ public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
     protected void addPixelValue(int pixelValue) {
         mImgData.putFloat(
                 (((pixelValue >> 16) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
-        mImgData.putFloat((((pixelValue >> 8) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
+        mImgData.putFloat(
+                (((pixelValue >> 8) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
         mImgData.putFloat(((pixelValue & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
     }
 
@@ -70,7 +72,7 @@ public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
     }
 
     @Override
-    protected Mat getBackground() {
+    public Mat getBackground() {
         Mat maskInverted = getMaskedPerson();
         Mat background = applyMask(mImage, maskInverted);
         maskInverted.release();
@@ -79,7 +81,7 @@ public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
     }
 
     @Override
-    protected Mat getForeground() {
+    public Mat getForeground() {
 
         Mat mask = getMaskedBackground();
         if (mask == null) {

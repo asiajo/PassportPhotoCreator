@@ -24,7 +24,7 @@ import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.Frame;
 
-import org.joanna.thesis.passportphotocreator.validators.background.BackgroundVerification;
+import org.joanna.thesis.passportphotocreator.validators.background.BackgroundProcessing;
 import org.joanna.thesis.passportphotocreator.validators.light.ShadowVerification;
 
 import java.io.IOException;
@@ -149,8 +149,8 @@ public class CameraSource {
      */
     private Thread mProcessingThread;
     private FrameProcessingRunnable mFrameProcessor;
-    private BackgroundVerification mBackgroundVerifier;
-    private ShadowVerification mShadowVerifier;
+    private BackgroundProcessing    mBackgroundVerifier;
+    private ShadowVerification      mShadowVerifier;
 
     /**
      * Map to convert between a byte array, received from the camera, and its associated byte
@@ -217,7 +217,8 @@ public class CameraSource {
             return this;
         }
 
-        public Builder setBackgroundVerifier(BackgroundVerification backgroundVerificator) {
+        public Builder setBackgroundVerifier(
+                BackgroundProcessing backgroundVerificator) {
             mCameraSource.mBackgroundVerifier = backgroundVerificator;
             return this;
         }

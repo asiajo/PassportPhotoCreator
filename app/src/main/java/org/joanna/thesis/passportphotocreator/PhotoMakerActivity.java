@@ -32,12 +32,12 @@ import org.joanna.thesis.passportphotocreator.camera.CameraSource;
 import org.joanna.thesis.passportphotocreator.camera.CameraSourcePreview;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.validators.background.BackgroundVerification;
-import org.joanna.thesis.passportphotocreator.validators.face.FaceTracker;
 import org.joanna.thesis.passportphotocreator.modifiers.face.ShadowRemover;
 import org.joanna.thesis.passportphotocreator.modifiers.face.ShadowRemoverPix2Pix;
-import org.joanna.thesis.passportphotocreator.validators.light.ShadowVerification;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
+import org.joanna.thesis.passportphotocreator.validators.background.BackgroundProcessing;
+import org.joanna.thesis.passportphotocreator.validators.face.FaceTracker;
+import org.joanna.thesis.passportphotocreator.validators.light.ShadowVerification;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
@@ -69,9 +69,10 @@ public class PhotoMakerActivity extends Activity
     private GraphicOverlay<Graphic> mGraphicOverlay;
     private FaceTracker             mFaceTracker;
     private ScaleGestureDetector    mScaleGestureDetector;
-    private BackgroundVerification  mBackgroundVerifier;
+    private BackgroundProcessing    mBackgroundProcessor;
     private FaceDetector            mDetector;
     private ShadowVerification      mShadowVerifier;
+    private ShadowRemover           mFaceDeshadower;
 
     @Override
     public void onCreate(Bundle bundle) {
@@ -85,8 +86,23 @@ public class PhotoMakerActivity extends Activity
                 this,
                 new ScaleListener());
 
-        mBackgroundVerifier = new BackgroundVerification(this, mGraphicOverlay);
         mShadowVerifier = new ShadowVerification(this, mGraphicOverlay);
+
+        try {
+            mFaceDeshadower = new ShadowRemoverPix2Pix(this);
+        } catch (IOException e) {
+            Toast.makeText(
+                    this,
+                    R.string.no_face_shadow_removal_error,
+                    Toast.LENGTH_SHORT).show();
+        }
+        try {
+            mBackgroundProcessor =
+                    new BackgroundProcessing(this, mGraphicOverlay);
+        } catch (IOException e) {
+            Toast.makeText(this, R.string.no_background_verification_error,
+                    Toast.LENGTH_LONG).show();
+        }
 
         int rc = ActivityCompat.checkSelfPermission(
                 this,
@@ -121,8 +137,11 @@ public class PhotoMakerActivity extends Activity
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (mBackgroundVerifier != null) {
-            mBackgroundVerifier.close();
+        if (mBackgroundProcessor != null) {
+            mBackgroundProcessor.close();
+        }
+        if (mFaceDeshadower != null) {
+            mFaceDeshadower.close();
         }
         if (mCameraSource != null) {
             mCameraSource.release();
@@ -198,7 +217,7 @@ public class PhotoMakerActivity extends Activity
                 .setFacing(CameraSource.CAMERA_FACING_BACK)
                 .setRequestedPreviewSize(PREVIEW_HEIGHT, PREVIEW_WIDTH)
                 .setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)
-                .setBackgroundVerifier(mBackgroundVerifier)
+                .setBackgroundVerifier(mBackgroundProcessor)
                 .setShadowVerifier(mShadowVerifier)
                 .setRequestedFps(15.0f);
 
@@ -245,17 +264,13 @@ public class PhotoMakerActivity extends Activity
                                 Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    // TODO: add background improvement (smooth + lighten)
-                    try {
-                        final ShadowRemover deshadower =
-                                new ShadowRemoverPix2Pix(thisActivity);
-                        picture = deshadower.deshadow(picture);
-                    } catch (IOException e) {
-                        Toast.makeText(
-                                thisActivity,
-                                R.string.no_face_shadow_removal_error,
-                                Toast.LENGTH_SHORT).show();
+                    if (mFaceDeshadower != null) {
+                        picture = mFaceDeshadower.deshadow(picture);
                     }
+                    if (mBackgroundProcessor != null) {
+                        picture = mBackgroundProcessor.enhance(picture);
+                    }
+
                     ImageUtils.saveImage(picture, thisActivity);
                     Toast.makeText(thisActivity, R.string.image_saved,
                             Toast.LENGTH_SHORT).show();
@@ -280,6 +295,10 @@ public class PhotoMakerActivity extends Activity
         // picture. To be on the safe side we make detection on the final photo.
         SparseArray<Face> faces = mDetector.detect(frame);
         if (faces.size() == 0) {
+            Log.w(
+                    TAG,
+                    "Did not find any face on the image data. Picture taking " +
+                            "will fail.");
             ImageUtils.safelyRemoveBitmap(bmp);
             return null;
         }
@@ -291,6 +310,10 @@ public class PhotoMakerActivity extends Activity
 
         Rect faceBoundingBox = getFaceBoundingBox(face);
         if (!verifyBoundingBox(faceBoundingBox, picture.size())) {
+            Log.w(
+                    TAG,
+                    "Picture does not fit entirely within visible camera " +
+                            "region. Picture taking will fail.");
             return null;
         }
         picture = picture.submat(faceBoundingBox.top, faceBoundingBox.bottom,

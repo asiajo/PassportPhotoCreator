@@ -95,9 +95,9 @@ public final class ImageUtils {
     }
 
     public static void saveImage(
-            final Mat deshadowed, final Activity photoMakerActivity)
+            final Mat image, final Activity photoMakerActivity)
             throws IOException {
-        Bitmap imageCropped = getBitmapFromMat(deshadowed);
+        Bitmap imageCropped = getBitmapFromMat(image);
         byte[] byteArray = getBytesFromBitmap(imageCropped);
         safelyRemoveBitmap(imageCropped);
 
