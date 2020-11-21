@@ -12,12 +12,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class GraphicOverlay<T extends Graphic> extends View {
-    private final Object mLock             = new Object();
-    private       int    mPreviewWidth;
-    private       float  mWidthScaleFactor = 1.0f;
-
-    private int   mPreviewHeight;
-    private float mHeightScaleFactor = 1.0f;
+    public static final float  TOP_RECT_W_TO_H_RATIO = 8.0f;
+    private final       Object mLock                 = new Object();
+    private             int    mPreviewWidth;
+    private             float  mWidthScaleFactor     = 1.0f;
+    private             int    mPreviewHeight;
+    private             float  mHeightScaleFactor    = 1.0f;
 
     private int    mFacing   = CameraSource.CAMERA_FACING_BACK;
     private Set<T> mGraphics = new HashSet<>();
@@ -55,8 +55,9 @@ public class GraphicOverlay<T extends Graphic> extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        Rect r = new Rect(0, 0, canvas.getWidth(),
-                canvas.getWidth() / 8);
+        final int whiteRectangleHeight =
+                (int) (canvas.getWidth() / TOP_RECT_W_TO_H_RATIO);
+        Rect r = new Rect(0, 0, canvas.getWidth(), whiteRectangleHeight);
         Paint whiteFill = new Paint();
         whiteFill.setStyle(Paint.Style.FILL);
         whiteFill.setColor(Color.WHITE);
@@ -64,10 +65,10 @@ public class GraphicOverlay<T extends Graphic> extends View {
 
         synchronized (mLock) {
             if ((mPreviewWidth != 0) && (mPreviewHeight != 0)) {
-                mWidthScaleFactor =
-                        (float) canvas.getWidth() / (float) mPreviewWidth;
+                mWidthScaleFactor = canvas.getWidth() / (float) mPreviewWidth;
                 mHeightScaleFactor =
-                        (float) canvas.getHeight() / (float) mPreviewHeight;
+                        (canvas.getHeight() - whiteRectangleHeight) /
+                                (float) mPreviewHeight;
             }
 
             for (Graphic graphic : mGraphics) {

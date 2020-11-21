@@ -14,6 +14,8 @@ import com.google.android.gms.common.images.Size;
 
 import java.io.IOException;
 
+import static org.joanna.thesis.passportphotocreator.camera.GraphicOverlay.TOP_RECT_W_TO_H_RATIO;
+
 public class CameraSourcePreview extends ViewGroup {
 
     private static final String TAG = CameraSourcePreview.class.getSimpleName();
@@ -90,14 +92,19 @@ public class CameraSourcePreview extends ViewGroup {
             final int right,
             final int bottom) {
 
-        int layoutWidth = right - left;
-        int layoutHeight = layoutWidth * 45 / 35;
+        final int layoutWidth = right - left;
+        final int layoutHeight = layoutWidth * 45 / 35;
+        final int whiteRectangleHeight =
+                (int) (layoutWidth / TOP_RECT_W_TO_H_RATIO);
 
         for (int i = 0; i < getChildCount(); ++i) {
-            getChildAt(i).layout(0, 0, layoutWidth, layoutHeight);
+            getChildAt(i).layout(
+                    0, 0, layoutWidth, layoutHeight + whiteRectangleHeight);
         }
         if (mSurfaceView != null) {
-            mSurfaceView.layout(0, 0, layoutWidth, layoutHeight);
+            mSurfaceView.layout(
+                    0, whiteRectangleHeight,
+                    layoutWidth, layoutHeight + whiteRectangleHeight);
         }
 
         try {

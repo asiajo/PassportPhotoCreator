@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static org.joanna.thesis.passportphotocreator.camera.GraphicOverlay.TOP_RECT_W_TO_H_RATIO;
+
 public abstract class Graphic {
 
     public static final float BOX_STROKE_WIDTH = 5.0f;
@@ -29,7 +31,7 @@ public abstract class Graphic {
 
     private static final String TAG = Graphic.class.getSimpleName();
 
-    private static Map<BitmapMetaData, Bitmap> actions = new TreeMap<>();
+    private static Map<BitmapMetaData, Bitmap> actions    = new TreeMap<>();
     private        Map<Action, BitmapMetaData> actionsMap = new HashMap<>();
     private        Map<PhotoValidity, Integer> colorMap   = new HashMap<>();
     private        GraphicOverlay              mOverlay;
@@ -68,7 +70,7 @@ public abstract class Graphic {
     }
 
     public float translateY(final float y) {
-        return scaleY(y);
+        return mOverlay.getWidth() / TOP_RECT_W_TO_H_RATIO + scaleY(y);
     }
 
     public void postInvalidate() {
