@@ -9,8 +9,8 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.Log;
 
-import org.joanna.thesis.passportphotocreator.validators.Action;
-import org.joanna.thesis.passportphotocreator.validators.PhotoValidity;
+import org.joanna.thesis.passportphotocreator.processing.Action;
+import org.joanna.thesis.passportphotocreator.processing.PhotoValidity;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;

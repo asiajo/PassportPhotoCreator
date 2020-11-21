@@ -17,7 +17,7 @@ import android.widget.Toast;
 import org.joanna.thesis.passportphotocreator.R;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.validators.face.FaceGraphic;
+import org.joanna.thesis.passportphotocreator.processing.face.FaceGraphic;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
