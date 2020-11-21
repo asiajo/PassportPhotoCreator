@@ -1,13 +1,12 @@
 package org.joanna.thesis.passportphotocreator.validators.light;
 
 import android.app.Activity;
-import android.content.Context;
 
-import org.joanna.thesis.passportphotocreator.PhotoMakerActivity;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.validators.Action;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
+import org.joanna.thesis.passportphotocreator.validators.Action;
+import org.joanna.thesis.passportphotocreator.validators.Verifier;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
@@ -16,34 +15,28 @@ import org.opencv.imgproc.Imgproc;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.joanna.thesis.passportphotocreator.PhotoMakerActivity.PREVIEW_HEIGHT;
+import static org.joanna.thesis.passportphotocreator.PhotoMakerActivity.PREVIEW_WIDTH;
 import static org.opencv.imgproc.Imgproc.THRESH_BINARY;
 
 /**
- * Verifies if background is bright and uniform.
+ * Verifies if face does not contain side shadows.
  */
-public class ShadowVerification {
+public class ShadowVerification extends Verifier {
 
     private static final String TAG =
             ShadowVerification.class.getSimpleName();
 
-    private GraphicOverlay<Graphic> mOverlay;
-    private Graphic                 mShadowGraphic;
-    private Context                 mContext;
-
+    protected Graphic mShadowGraphic;
 
     public ShadowVerification(
             final Activity activity,
             final GraphicOverlay<Graphic> overlay) {
-        mOverlay = overlay;
+        super(activity, overlay);
         mShadowGraphic = new ShadowGraphic(overlay);
-        mContext = activity.getApplicationContext();
     }
 
-    /**
-     * Performs the verification and sets the graphic overlay respectively.
-     *
-     * @param data image data under verification
-     */
+    @Override
     public void verify(final byte[] data) {
 
         mOverlay.add(mShadowGraphic);
@@ -51,8 +44,8 @@ public class ShadowVerification {
 
         Mat image = ImageUtils.getMatFromYuvBytes(
                 data,
-                PhotoMakerActivity.PREVIEW_HEIGHT,
-                PhotoMakerActivity.PREVIEW_WIDTH);
+                PREVIEW_HEIGHT,
+                PREVIEW_WIDTH);
         image = ImageUtils.cropMatToGetFaceOnly(image, mOverlay);
         if (null == image) {
             return;

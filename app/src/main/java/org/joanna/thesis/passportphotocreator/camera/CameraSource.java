@@ -24,8 +24,7 @@ import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.Frame;
 
-import org.joanna.thesis.passportphotocreator.validators.background.BackgroundProcessing;
-import org.joanna.thesis.passportphotocreator.validators.light.ShadowVerification;
+import org.joanna.thesis.passportphotocreator.validators.Verifier;
 
 import java.io.IOException;
 import java.lang.Thread.State;
@@ -86,8 +85,7 @@ public class CameraSource {
     /**
      * Every which frame background verifier shall be called.
      */
-    private static final int   BACKGROUND_VERIFICATION_FREQUENCY = 30;
-    private static final int   SHADOW_VERIFICATION_FREQUENCY = 30;
+    private static final int VERIFICATION_FREQUENCY            = 30;
 
     @StringDef({
             Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE,
@@ -149,8 +147,8 @@ public class CameraSource {
      */
     private Thread mProcessingThread;
     private FrameProcessingRunnable mFrameProcessor;
-    private BackgroundProcessing    mBackgroundVerifier;
-    private ShadowVerification      mShadowVerifier;
+
+    private List<Verifier> mVerifiers;
 
     /**
      * Map to convert between a byte array, received from the camera, and its associated byte
@@ -217,14 +215,8 @@ public class CameraSource {
             return this;
         }
 
-        public Builder setBackgroundVerifier(
-                BackgroundProcessing backgroundVerificator) {
-            mCameraSource.mBackgroundVerifier = backgroundVerificator;
-            return this;
-        }
-
-        public Builder setShadowVerifier(final ShadowVerification mSR) {
-            mCameraSource.mShadowVerifier = mSR;
+        public Builder setVerifiers(List<Verifier> verifiers) {
+            mCameraSource.mVerifiers = verifiers;
             return this;
         }
 
@@ -266,6 +258,7 @@ public class CameraSource {
             mCameraSource.mFrameProcessor = mCameraSource.new FrameProcessingRunnable(mDetector);
             return mCameraSource;
         }
+
     }
 
     //==============================================================================================
@@ -1083,35 +1076,31 @@ public class CameraSource {
      */
     private class CameraPreviewCallback implements Camera.PreviewCallback {
 
-        private int       backgroundLoop = 10;
-        private int       shadowLoop = 20;
+        private int verificationLoop = 0;
+        private int verificationItem = 0;
 
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
 
             mFrameBytes = data;
             mFrameProcessor.setNextFrame(data, camera);
-
-
-            // perform background verification every BACKGROUND_VERIFICATION_FREQUENCY frame.
-            if (backgroundLoop % BACKGROUND_VERIFICATION_FREQUENCY == 0
-                    && mBackgroundVerifier != null){
-                backgroundLoop = 0;
-                mBackgroundVerifier.verify(data);
+            if (verificationLoop++ == VERIFICATION_FREQUENCY / mVerifiers.size()) {
+                performVerifications(data);
+                verificationLoop = 0;
             }
 
-            // perform shadow verification every SHADOW_VERIFICATION_FREQUENCY frame.
-            if (shadowLoop % SHADOW_VERIFICATION_FREQUENCY == 0
-                    && mShadowVerifier != null){
-                shadowLoop = 0;
-                mShadowVerifier.verify(data);
-            }
+        }
 
-            // TODO: add no object covering face verification
+        private void performVerifications(final byte[] data) {
+
+            Verifier currentVerifier = mVerifiers.get(verificationItem++);
+            if (currentVerifier != null) {
+                currentVerifier.verify(data);
+            }
+            if (verificationItem == mVerifiers.size()) {
+                verificationItem = 0;
+            }
             // TODO: add pupils verification
-
-            backgroundLoop++;
-            shadowLoop++;
         }
     }
 

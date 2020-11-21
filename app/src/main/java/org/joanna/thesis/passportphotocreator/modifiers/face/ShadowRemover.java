@@ -7,11 +7,13 @@ import android.util.Log;
 import org.joanna.thesis.passportphotocreator.DetectorTensorflowLite;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.joanna.thesis.passportphotocreator.utils.ShadowUtils;
+import org.joanna.thesis.passportphotocreator.validators.Enhancer;
 import org.opencv.core.Mat;
 
 import java.io.IOException;
 
-public abstract class ShadowRemover extends DetectorTensorflowLite {
+public abstract class ShadowRemover extends DetectorTensorflowLite
+        implements Enhancer {
 
     private static final String TAG = ShadowRemover.class.getSimpleName();
     /** Mat holding the image for processing. */
@@ -22,7 +24,8 @@ public abstract class ShadowRemover extends DetectorTensorflowLite {
         Log.d(TAG, "Created a Tensorflow Lite Shadow Remover.");
     }
 
-    public Mat deshadow(final Mat src) {
+    @Override
+    public Mat enhance(final Mat src) {
         Mat input = prepareInput(src);
         Mat deshadowed = getDeshadowedOverlay(input);
         input.release();

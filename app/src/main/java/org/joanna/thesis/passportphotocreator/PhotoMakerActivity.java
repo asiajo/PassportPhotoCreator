@@ -32,9 +32,10 @@ import org.joanna.thesis.passportphotocreator.camera.CameraSource;
 import org.joanna.thesis.passportphotocreator.camera.CameraSourcePreview;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.modifiers.face.ShadowRemover;
 import org.joanna.thesis.passportphotocreator.modifiers.face.ShadowRemoverPix2Pix;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
+import org.joanna.thesis.passportphotocreator.validators.Enhancer;
+import org.joanna.thesis.passportphotocreator.validators.Verifier;
 import org.joanna.thesis.passportphotocreator.validators.background.BackgroundProcessing;
 import org.joanna.thesis.passportphotocreator.validators.face.FaceTracker;
 import org.joanna.thesis.passportphotocreator.validators.light.ShadowVerification;
@@ -43,6 +44,8 @@ import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.google.android.gms.vision.Frame.ROTATION_90;
 import static com.google.android.material.snackbar.Snackbar.make;
@@ -69,10 +72,9 @@ public class PhotoMakerActivity extends Activity
     private GraphicOverlay<Graphic> mGraphicOverlay;
     private FaceTracker             mFaceTracker;
     private ScaleGestureDetector    mScaleGestureDetector;
-    private BackgroundProcessing    mBackgroundProcessor;
     private FaceDetector            mDetector;
-    private ShadowVerification      mShadowVerifier;
-    private ShadowRemover           mFaceDeshadower;
+    private List<Verifier>          mVerifiers;
+    private List<Enhancer>          mEnhancers;
 
     @Override
     public void onCreate(Bundle bundle) {
@@ -86,19 +88,24 @@ public class PhotoMakerActivity extends Activity
                 this,
                 new ScaleListener());
 
-        mShadowVerifier = new ShadowVerification(this, mGraphicOverlay);
-
+        mEnhancers = new ArrayList<>();
         try {
-            mFaceDeshadower = new ShadowRemoverPix2Pix(this);
+            mEnhancers.add(new ShadowRemoverPix2Pix(this));
         } catch (IOException e) {
             Toast.makeText(
                     this,
                     R.string.no_face_shadow_removal_error,
                     Toast.LENGTH_SHORT).show();
         }
+
+        mVerifiers = new ArrayList<>();
+        // TODO: add face size on the preview verifier
+        mVerifiers.add(new ShadowVerification(this, mGraphicOverlay));
         try {
-            mBackgroundProcessor =
+            BackgroundProcessing mBackgroundProcessor =
                     new BackgroundProcessing(this, mGraphicOverlay);
+            mVerifiers.add(mBackgroundProcessor);
+            mEnhancers.add(mBackgroundProcessor);
         } catch (IOException e) {
             Toast.makeText(this, R.string.no_background_verification_error,
                     Toast.LENGTH_LONG).show();
@@ -137,11 +144,8 @@ public class PhotoMakerActivity extends Activity
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (mBackgroundProcessor != null) {
-            mBackgroundProcessor.close();
-        }
-        if (mFaceDeshadower != null) {
-            mFaceDeshadower.close();
+        for (Enhancer enhancer : mEnhancers) {
+            enhancer.close();
         }
         if (mCameraSource != null) {
             mCameraSource.release();
@@ -190,7 +194,7 @@ public class PhotoMakerActivity extends Activity
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         mDetector = new FaceDetector.Builder(context)
-                .setLandmarkType(FaceDetector.ALL_LANDMARKS)
+                .setLandmarkType(FaceDetector.NO_LANDMARKS)
                 .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
                 .setProminentFaceOnly(true)
                 .build();
@@ -217,8 +221,7 @@ public class PhotoMakerActivity extends Activity
                 .setFacing(CameraSource.CAMERA_FACING_BACK)
                 .setRequestedPreviewSize(PREVIEW_HEIGHT, PREVIEW_WIDTH)
                 .setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)
-                .setBackgroundVerifier(mBackgroundProcessor)
-                .setShadowVerifier(mShadowVerifier)
+                .setVerifiers(mVerifiers)
                 .setRequestedFps(15.0f);
 
         mCameraSource = builder.build();
@@ -264,11 +267,8 @@ public class PhotoMakerActivity extends Activity
                                 Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    if (mFaceDeshadower != null) {
-                        picture = mFaceDeshadower.deshadow(picture);
-                    }
-                    if (mBackgroundProcessor != null) {
-                        picture = mBackgroundProcessor.enhance(picture);
+                    for (Enhancer enhancer : mEnhancers) {
+                        picture = enhancer.enhance(picture);
                     }
 
                     ImageUtils.saveImage(picture, thisActivity);

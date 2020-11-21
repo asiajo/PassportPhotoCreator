@@ -1,14 +1,14 @@
 package org.joanna.thesis.passportphotocreator.validators.background;
 
 import android.app.Activity;
-import android.content.Context;
 import android.util.Log;
 
-import org.joanna.thesis.passportphotocreator.PhotoMakerActivity;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.joanna.thesis.passportphotocreator.validators.Action;
+import org.joanna.thesis.passportphotocreator.validators.Enhancer;
+import org.joanna.thesis.passportphotocreator.validators.Verifier;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfFloat;
@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.joanna.thesis.passportphotocreator.PhotoMakerActivity.PREVIEW_HEIGHT;
+import static org.joanna.thesis.passportphotocreator.PhotoMakerActivity.PREVIEW_WIDTH;
 import static org.joanna.thesis.passportphotocreator.utils.BackgroundUtils.findNonPersonPixel;
 import static org.joanna.thesis.passportphotocreator.utils.BackgroundUtils.findPersonPixel;
 import static org.joanna.thesis.passportphotocreator.utils.BackgroundUtils.getContoursLengthOnTheImage;
@@ -31,34 +33,27 @@ import static org.opencv.core.CvType.CV_8UC1;
 /**
  * Verifies if background is bright and uniform.
  */
-public class BackgroundProcessing {
+public class BackgroundProcessing extends Verifier implements Enhancer {
 
     private static final String TAG =
             BackgroundProcessing.class.getSimpleName();
 
-    public  ImageSegmentor          segmentor;
-    private GraphicOverlay<Graphic> mOverlay;
-    private Graphic                 mBackgroundGraphic;
-    private Context                 mContext;
-    private BackgroundProperties    mBackgroundProperties;
-    private Mat                     mBackground;
+    public  ImageSegmentor       segmentor;
+    private Graphic              mBackgroundGraphic;
+    private BackgroundProperties mBackgroundProperties;
+    private Mat                  mBackground;
 
 
     public BackgroundProcessing(
             final Activity activity,
             final GraphicOverlay<Graphic> overlay) throws IOException {
-        mOverlay = overlay;
+        super(activity, overlay);
         mBackgroundGraphic = new BackgroundGraphic(overlay);
-        mContext = activity.getApplicationContext();
         mBackgroundProperties = new BackgroundProperties();
         segmentor = new ImageSegmentorFloatMobileUnet(activity);
     }
 
-    /**
-     * Performs the verification and sets the graphic overlay respectively.
-     *
-     * @param data image data under verification
-     */
+    @Override
     public void verify(final byte[] data) {
 
         if (segmentor == null) {
@@ -101,6 +96,7 @@ public class BackgroundProcessing {
         mBackground.release();
     }
 
+    @Override
     public void close() {
         if (segmentor != null) {
             segmentor.close();
@@ -118,8 +114,8 @@ public class BackgroundProcessing {
     private Mat getBackground(final byte[] data) {
         Mat image = ImageUtils.getMatFromYuvBytes(
                 data,
-                PhotoMakerActivity.PREVIEW_HEIGHT,
-                PhotoMakerActivity.PREVIEW_WIDTH);
+                PREVIEW_HEIGHT,
+                PREVIEW_WIDTH);
         image = ImageUtils.cropMatToFaceBoundingBox(
                 image, mOverlay);
         if (image == null) {
@@ -313,6 +309,7 @@ public class BackgroundProcessing {
         return medianHueValue;
     }
 
+    @Override
     public Mat enhance(final Mat src) {
 
         if (segmentor == null) {
@@ -321,11 +318,14 @@ public class BackgroundProcessing {
 
         Mat personMask = getPersonMask(src);
 
-        Mat person = getPersonWithoutBackground(src, personMask);
+        Mat background = src.clone();
+        if (background.channels() == 4) {
+            Imgproc.cvtColor(background, background, Imgproc.COLOR_RGBA2RGB);
+        }
+        Mat person = getPersonWithoutBackground(background, personMask);
         personMask.release();
 
-        Mat background = new Mat();
-        Imgproc.blur(src, background, new Size(10, 10));
+        Imgproc.blur(background, background, new Size(10, 10));
         background.convertTo(background, -1, 1, 10); //brighten
 
         Mat dst = paste(person, background);
