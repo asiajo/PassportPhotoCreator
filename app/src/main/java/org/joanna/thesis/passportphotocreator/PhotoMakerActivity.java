@@ -32,13 +32,13 @@ import org.joanna.thesis.passportphotocreator.camera.CameraSource;
 import org.joanna.thesis.passportphotocreator.camera.CameraSourcePreview;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.processing.light.enhancement.ShadowRemoverPix2Pix;
-import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.joanna.thesis.passportphotocreator.processing.Enhancer;
 import org.joanna.thesis.passportphotocreator.processing.Verifier;
 import org.joanna.thesis.passportphotocreator.processing.background.BackgroundProcessing;
 import org.joanna.thesis.passportphotocreator.processing.face.FaceTracker;
+import org.joanna.thesis.passportphotocreator.processing.light.enhancement.ShadowRemoverPix2Pix;
 import org.joanna.thesis.passportphotocreator.processing.light.verification.ShadowVerification;
+import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
@@ -61,7 +61,14 @@ public class PhotoMakerActivity extends Activity
     private static final String TAG = PhotoMakerActivity.class.getSimpleName();
 
     // permission request codes need to be < 256
-    private static final int RC_HANDLE_CAMERA_PERM = 2;
+    private static final int      RC_HANDLE_CAMERA_PERM = 2;
+    private static final String[] PERMISSIONS_CAMERA    =
+            {Manifest.permission.CAMERA};
+
+    private static final int      REQUEST_EXTERNAL_STORAGE = 1;
+    private static final String[] PERMISSIONS_STORAGE      =
+            {Manifest.permission.WRITE_EXTERNAL_STORAGE};
+
 
     static {
         OpenCVLoader.initDebug();
@@ -164,11 +171,13 @@ public class PhotoMakerActivity extends Activity
 
 
     private void requestCameraPermission() {
-        final String[] permissions = new String[]{Manifest.permission.CAMERA};
+
         if (!ActivityCompat.shouldShowRequestPermissionRationale(
                 this,
                 Manifest.permission.CAMERA)) {
-            ActivityCompat.requestPermissions(this, permissions,
+            ActivityCompat.requestPermissions(
+                    this,
+                    PERMISSIONS_CAMERA,
                     RC_HANDLE_CAMERA_PERM);
             return;
         }
@@ -178,7 +187,9 @@ public class PhotoMakerActivity extends Activity
         View.OnClickListener listener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ActivityCompat.requestPermissions(thisActivity, permissions,
+                ActivityCompat.requestPermissions(
+                        thisActivity,
+                        PERMISSIONS_CAMERA,
                         RC_HANDLE_CAMERA_PERM);
             }
         };
@@ -187,6 +198,19 @@ public class PhotoMakerActivity extends Activity
                 Snackbar.LENGTH_INDEFINITE)
                 .setAction(R.string.ok, listener)
                 .show();
+    }
+
+    private void requestStoragePermissions() {
+        int permission = ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                    this,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE);
+        }
     }
 
     private void createCameraSource() {
@@ -251,6 +275,7 @@ public class PhotoMakerActivity extends Activity
                     Toast.LENGTH_LONG).show();
             return;
         }
+        requestStoragePermissions();
         final Activity thisActivity = this;
         mCameraSource.takePicture(null, new CameraSource.PictureCallback() {
             @Override
