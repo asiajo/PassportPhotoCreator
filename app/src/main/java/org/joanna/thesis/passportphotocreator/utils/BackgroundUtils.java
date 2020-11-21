@@ -135,10 +135,11 @@ public final class BackgroundUtils {
                 background.channels() == 3)) {
             Log.e(
                     TAG,
-                    "This method expects two Mats of exactly same width and " +
+                    "Paste method expects two Mats of exactly same width and " +
                             "height, where first one has rgba and second one " +
-                            "rgb format.");
-            return null;
+                            "rgb format. Unmodified background will be " +
+                            "returned.");
+            return background;
         }
         Mat output = background.clone();
         for (int y = 0; y < output.rows(); y++) {
@@ -151,7 +152,6 @@ public final class BackgroundUtils {
                     output.put(y, x, point);
                 }
             }
-
         }
         return output;
     }
