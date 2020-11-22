@@ -8,13 +8,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -22,8 +19,6 @@ import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 
-import com.google.android.gms.vision.Frame;
-import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
 import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 import com.google.android.material.snackbar.Snackbar;
@@ -40,17 +35,14 @@ import org.joanna.thesis.passportphotocreator.processing.light.enhancement.Shado
 import org.joanna.thesis.passportphotocreator.processing.light.verification.ShadowVerification;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.android.gms.vision.Frame.ROTATION_90;
 import static com.google.android.material.snackbar.Snackbar.make;
-import static org.joanna.thesis.passportphotocreator.processing.face.FaceUtils.getFaceBoundingBox;
-import static org.joanna.thesis.passportphotocreator.utils.ImageUtils.verifyBoundingBox;
+import static org.joanna.thesis.passportphotocreator.utils.Utlis.getFaceMatFromPictureTaken;
 
 public class PhotoMakerActivity extends Activity
         implements View.OnClickListener {
@@ -282,9 +274,8 @@ public class PhotoMakerActivity extends Activity
             public void onPictureTaken(byte[] bytes) {
                 // TODO: do in background
                 // TODO: move to new activity and display preview before saving
-
                 try {
-                    Mat picture = getFaceMatFromPictureTaken(bytes);
+                    Mat picture = getFaceMatFromPictureTaken(bytes, mDetector);
                     if (picture == null) {
                         Toast.makeText(
                                 thisActivity,
@@ -295,7 +286,6 @@ public class PhotoMakerActivity extends Activity
                     for (Enhancer enhancer : mEnhancers) {
                         picture = enhancer.enhance(picture);
                     }
-
                     ImageUtils.saveImage(picture, thisActivity);
                     Toast.makeText(thisActivity, R.string.image_saved,
                             Toast.LENGTH_SHORT).show();
@@ -306,45 +296,6 @@ public class PhotoMakerActivity extends Activity
                 }
             }
         });
-    }
-
-    private Mat getFaceMatFromPictureTaken(final byte[] bytes) {
-        Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        Frame frame = new Frame.Builder().setBitmap(bmp)
-                                         .setRotation(ROTATION_90)
-                                         .build();
-
-        // we need to detect face again on the bitmap. In case the face is quite
-        // small on the screen and the camera was moved there could be a shift
-        // between previously detected face position and actual position on the
-        // picture. To be on the safe side we make detection on the final photo.
-        SparseArray<Face> faces = mDetector.detect(frame);
-        if (faces.size() == 0) {
-            Log.w(
-                    TAG,
-                    "Did not find any face on the image data. Picture taking " +
-                            "will fail.");
-            ImageUtils.safelyRemoveBitmap(bmp);
-            return null;
-        }
-        Face face = faces.valueAt(0);
-        Mat picture = new Mat();
-        Utils.bitmapToMat(bmp, picture);
-        ImageUtils.safelyRemoveBitmap(bmp);
-        picture = ImageUtils.rotateMat(picture);
-
-        Rect faceBoundingBox = getFaceBoundingBox(face);
-        if (!verifyBoundingBox(faceBoundingBox, picture.size())) {
-            Log.w(
-                    TAG,
-                    "Picture does not fit entirely within visible camera " +
-                            "region. Picture taking will fail.");
-            return null;
-        }
-        picture = picture.submat(faceBoundingBox.top, faceBoundingBox.bottom,
-                faceBoundingBox.left, faceBoundingBox.right);
-        picture = ImageUtils.resizeMatToFinalSize(picture);
-        return picture;
     }
 
     private class ScaleListener
