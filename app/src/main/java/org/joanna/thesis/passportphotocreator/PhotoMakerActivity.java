@@ -10,6 +10,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
 import android.hardware.Camera;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -267,7 +268,9 @@ public class PhotoMakerActivity extends Activity
                     Toast.LENGTH_LONG).show();
             return;
         }
-        requestStoragePermissions();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            requestStoragePermissions();
+        }
         final Activity thisActivity = this;
         mCameraSource.takePicture(null, new CameraSource.PictureCallback() {
             @Override
