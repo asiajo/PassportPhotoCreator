@@ -5,14 +5,14 @@ import android.util.Log;
 
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
+import org.joanna.thesis.passportphotocreator.processing.Action;
+import org.joanna.thesis.passportphotocreator.processing.Enhancer;
+import org.joanna.thesis.passportphotocreator.processing.Verifier;
 import org.joanna.thesis.passportphotocreator.processing.background.verification.BackgroundActions;
 import org.joanna.thesis.passportphotocreator.processing.background.verification.BackgroundGraphic;
 import org.joanna.thesis.passportphotocreator.processing.background.verification.BackgroundProperties;
 import org.joanna.thesis.passportphotocreator.processing.background.verification.ColorBlobDetector;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
-import org.joanna.thesis.passportphotocreator.processing.Action;
-import org.joanna.thesis.passportphotocreator.processing.Enhancer;
-import org.joanna.thesis.passportphotocreator.processing.Verifier;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfFloat;
@@ -31,7 +31,6 @@ import static org.joanna.thesis.passportphotocreator.PhotoMakerActivity.PREVIEW_
 import static org.joanna.thesis.passportphotocreator.processing.background.BackgroundUtils.findNonPersonPixel;
 import static org.joanna.thesis.passportphotocreator.processing.background.BackgroundUtils.findPersonPixel;
 import static org.joanna.thesis.passportphotocreator.processing.background.BackgroundUtils.getContoursLengthOnTheImage;
-import static org.joanna.thesis.passportphotocreator.processing.background.BackgroundUtils.paste;
 import static org.opencv.core.CvType.CV_8UC1;
 
 /**
@@ -319,35 +318,17 @@ public class BackgroundProcessing extends Verifier implements Enhancer {
         if (segmentor == null) {
             return null;
         }
-
         Mat personMask = getPersonMask(src);
 
         Mat background = src.clone();
-        if (background.channels() == 4) {
-            Imgproc.cvtColor(background, background, Imgproc.COLOR_RGBA2RGB);
-        }
-        Mat person = getPersonWithoutBackground(background, personMask);
+        Mat person = src.clone();
+        Imgproc.blur(background, background, new Size(15, 15));
+        background.convertTo(background, -1, 1, 3); //brighten
+        person.copyTo(background, personMask);
+        person.release();
         personMask.release();
 
-        Imgproc.blur(background, background, new Size(10, 10));
-        background.convertTo(background, -1, 1, 10); //brighten
-
-        Mat dst = paste(person, background);
-        person.release();
-        background.release();
-
-        return dst;
-    }
-
-    private Mat getPersonWithoutBackground(
-            final Mat src, final Mat personMask) {
-
-        List<Mat> channels = new ArrayList<>();
-        Core.split(src, channels);
-        channels.add(personMask);
-        Mat dst = new Mat();
-        Core.merge(channels, dst);
-        return dst;
+        return background;
     }
 
     private Mat getPersonMask(final Mat src) {
@@ -366,6 +347,8 @@ public class BackgroundProcessing extends Verifier implements Enhancer {
         Imgproc.cvtColor(personMask, personMask, Imgproc.COLOR_RGB2GRAY);
         personMask.convertTo(personMask, CV_8UC1, 255);
         Imgproc.blur(personMask, personMask, new Size(15, 15));
+        Imgproc.threshold(
+                personMask, personMask, 127, 255, Imgproc.THRESH_BINARY);
         personMask = ImageUtils.unpadMatFromSquare(personMask, imgWidth);
         personMask = ImageUtils.resizeMat(personMask, src.width());
         return personMask;
