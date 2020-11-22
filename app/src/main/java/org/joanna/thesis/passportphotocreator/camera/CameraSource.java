@@ -157,15 +157,6 @@ public class CameraSource {
      */
     private Map<byte[], ByteBuffer> mBytesToByteBuffer = new HashMap<>();
 
-    /**
-     * Bytes of the current frame for further processing
-     */
-    private byte[] mFrameBytes = null;
-
-    public byte[] getmFrameBytes() {
-        return mFrameBytes;
-    }
-
     //==============================================================================================
     // Builder
     //==============================================================================================
@@ -1082,13 +1073,11 @@ public class CameraSource {
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
 
-            mFrameBytes = data;
             mFrameProcessor.setNextFrame(data, camera);
             if (verificationLoop++ == VERIFICATION_FREQUENCY / mVerifiers.size()) {
                 performVerifications(data);
                 verificationLoop = 0;
             }
-
         }
 
         private void performVerifications(final byte[] data) {
