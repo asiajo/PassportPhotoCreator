@@ -94,17 +94,17 @@ public class CameraSourcePreview extends ViewGroup {
 
         final int layoutWidth = right - left;
         final int layoutHeight = layoutWidth * 45 / 35;
-        final int whiteRectangleHeight =
+        final int cameraPreviewTopOffset =
                 (int) (layoutWidth / TOP_RECT_W_TO_H_RATIO);
 
         for (int i = 0; i < getChildCount(); ++i) {
             getChildAt(i).layout(
-                    0, 0, layoutWidth, layoutHeight + whiteRectangleHeight);
+                    0, 0, layoutWidth, layoutHeight + cameraPreviewTopOffset);
         }
         if (mSurfaceView != null) {
             mSurfaceView.layout(
-                    0, whiteRectangleHeight,
-                    layoutWidth, layoutHeight + whiteRectangleHeight);
+                    0, cameraPreviewTopOffset,
+                    layoutWidth, layoutHeight + cameraPreviewTopOffset);
         }
 
         try {

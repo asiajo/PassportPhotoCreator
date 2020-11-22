@@ -31,9 +31,9 @@ public abstract class Graphic {
 
     private static final String TAG = Graphic.class.getSimpleName();
 
-    private static Map<BitmapMetaData, Bitmap> actions    = new TreeMap<>();
+    private static Map<BitmapMetaData, Bitmap> actions = new TreeMap<>();
     private        Map<Action, BitmapMetaData> actionsMap = new HashMap<>();
-    private        Map<PhotoValidity, Integer> colorMap   = new HashMap<>();
+    private        Map<PhotoValidity, Integer> colorMap = new HashMap<>();
     private        GraphicOverlay              mOverlay;
     private        Paint                       mPaint;
 
@@ -70,7 +70,7 @@ public abstract class Graphic {
     }
 
     public float translateY(final float y) {
-        return mOverlay.getWidth() / TOP_RECT_W_TO_H_RATIO + scaleY(y);
+        return scaleY(y);
     }
 
     public void postInvalidate() {
@@ -80,7 +80,7 @@ public abstract class Graphic {
     protected void drawActionsToBePerformed(final Canvas canvas) {
         // draws actions to be performed to get perfect picture
         int i = 0;
-        int iconSize = canvas.getWidth() / 12;
+        int iconSize = mOverlay.getWidth() / 12;
         int padding = iconSize / 5;
         List<Bitmap> actionBitmaps = new ArrayList<>();
 

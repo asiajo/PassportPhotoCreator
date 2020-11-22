@@ -55,20 +55,11 @@ public class GraphicOverlay<T extends Graphic> extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        final int whiteRectangleHeight =
-                (int) (canvas.getWidth() / TOP_RECT_W_TO_H_RATIO);
-        Rect r = new Rect(0, 0, canvas.getWidth(), whiteRectangleHeight);
-        Paint whiteFill = new Paint();
-        whiteFill.setStyle(Paint.Style.FILL);
-        whiteFill.setColor(Color.WHITE);
-        canvas.drawRect(r, whiteFill);
-
         synchronized (mLock) {
             if ((mPreviewWidth != 0) && (mPreviewHeight != 0)) {
-                mWidthScaleFactor = canvas.getWidth() / (float) mPreviewWidth;
+                mWidthScaleFactor = getWidth() / (float) mPreviewWidth;
                 mHeightScaleFactor =
-                        (canvas.getHeight() - whiteRectangleHeight) /
-                                (float) mPreviewHeight;
+                        getOverlayRelativeHeight() / (float) mPreviewHeight;
             }
 
             for (Graphic graphic : mGraphics) {
@@ -98,5 +89,9 @@ public class GraphicOverlay<T extends Graphic> extends View {
 
     public Set<T> getmGraphics() {
         return mGraphics;
+    }
+
+    public int getOverlayRelativeHeight() {
+        return getHeight() - (int) (getWidth() / TOP_RECT_W_TO_H_RATIO);
     }
 }

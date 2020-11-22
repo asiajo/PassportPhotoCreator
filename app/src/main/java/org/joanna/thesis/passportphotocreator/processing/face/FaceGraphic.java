@@ -9,17 +9,21 @@ import org.joanna.thesis.passportphotocreator.R;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
 import org.joanna.thesis.passportphotocreator.processing.PhotoValidity;
+import org.joanna.thesis.passportphotocreator.utils.PPCUtlis;
+
+import static org.joanna.thesis.passportphotocreator.camera.GraphicOverlay.TOP_RECT_W_TO_H_RATIO;
 
 public class FaceGraphic extends Graphic {
 
     private Canvas canvas;
 
-    private double        bbProportionLeft;
-    private double        bbProportionTop;
-    private double        bbProportionWidth;
-    private double        bbProportionHeight;
-    private Rect          faceBoundingBox;
-    private volatile Face mFace;
+    private          double         bbProportionLeft;
+    private          double         bbProportionTop;
+    private          double         bbProportionWidth;
+    private          double         bbProportionHeight;
+    private          Rect           faceBoundingBox;
+    private volatile Face           mFace;
+    private          GraphicOverlay mOverlay;
 
     {
         getActionsMap().put(
@@ -67,6 +71,7 @@ public class FaceGraphic extends Graphic {
 
     FaceGraphic(final GraphicOverlay overlay) {
         super(overlay);
+        mOverlay = overlay;
     }
 
     void updateFace(final Face face) {
@@ -82,14 +87,17 @@ public class FaceGraphic extends Graphic {
             return;
         }
         faceBoundingBox = FaceUtils.getFaceBoundingBox(face, this);
+        Rect displayBoundingBox = PPCUtlis.translateY(
+                faceBoundingBox,
+                mOverlay.getWidth() / TOP_RECT_W_TO_H_RATIO);
         setBoundingBoxProportions();
-        canvas.drawRect(faceBoundingBox, getmPaint());
+        canvas.drawRect(displayBoundingBox, getmPaint());
         drawActionsToBePerformed(canvas);
     }
 
     private void setBoundingBoxProportions() {
-        double canvasWidth = canvas.getWidth();
-        double canvasHeight = canvas.getHeight();
+        double canvasWidth = mOverlay.getWidth();
+        double canvasHeight = mOverlay.getOverlayRelativeHeight();
         bbProportionLeft = faceBoundingBox.left / canvasWidth;
         bbProportionTop = faceBoundingBox.top / canvasHeight;
         bbProportionWidth = faceBoundingBox.width() / canvasWidth;
@@ -113,11 +121,12 @@ public class FaceGraphic extends Graphic {
     }
 
     public double getBbProportionCenterX() {
-        return faceBoundingBox.centerX() / (double) canvas.getWidth();
+        return faceBoundingBox.centerX() / (double) mOverlay.getWidth();
     }
 
     public double getBbProportionCenterY() {
-        return faceBoundingBox.centerY() / (double) canvas.getHeight();
+        return faceBoundingBox.centerY() /
+                ((double) mOverlay.getOverlayRelativeHeight());
     }
 
     public double getBbProportionHeight() {

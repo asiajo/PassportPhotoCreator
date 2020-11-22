@@ -17,7 +17,7 @@ import static com.google.android.gms.vision.Frame.ROTATION_90;
 import static org.joanna.thesis.passportphotocreator.processing.face.FaceUtils.getFaceBoundingBox;
 import static org.joanna.thesis.passportphotocreator.utils.ImageUtils.verifyBoundingBox;
 
-public final class Utlis {
+public final class PPCUtlis {
 
     public static Rect multiplyRect(
             final int bigToSmallImgScale, final Rect faceBoundingBoxSmall) {
@@ -95,6 +95,15 @@ public final class Utlis {
         picture = picture.submat(AndroidRectToOpenCVRect(faceBoundingBox));
         picture = ImageUtils.resizeMatToFinalSize(picture);
         return picture;
+    }
+
+    public static Rect translateY(final Rect faceBoundingBox, final float v) {
+        return new Rect(
+                faceBoundingBox.left,
+                (int) (faceBoundingBox.top + v),
+                faceBoundingBox.right,
+                (int) (faceBoundingBox.bottom + v)
+        );
     }
 
     private void Utils() {

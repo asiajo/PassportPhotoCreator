@@ -42,7 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.android.material.snackbar.Snackbar.make;
-import static org.joanna.thesis.passportphotocreator.utils.Utlis.getFaceMatFromPictureTaken;
+import static org.joanna.thesis.passportphotocreator.utils.PPCUtlis.getFaceMatFromPictureTaken;
 
 public class PhotoMakerActivity extends Activity
         implements View.OnClickListener {
