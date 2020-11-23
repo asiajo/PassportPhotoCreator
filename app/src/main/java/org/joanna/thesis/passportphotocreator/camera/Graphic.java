@@ -20,8 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import static org.joanna.thesis.passportphotocreator.camera.GraphicOverlay.TOP_RECT_W_TO_H_RATIO;
-
 public abstract class Graphic {
 
     public static final float BOX_STROKE_WIDTH = 5.0f;
@@ -87,7 +85,7 @@ public abstract class Graphic {
         try {
             actionBitmaps.addAll(actions.values());
         } catch (ConcurrentModificationException e) {
-            Log.e(TAG, "Exception happened: " + e.getMessage());
+            Log.e(TAG, "Concurrent Modification of actions bar happened.");
         }
 
         for (Bitmap action : actionBitmaps) {
@@ -119,7 +117,7 @@ public abstract class Graphic {
             clearActions(aClass);
             actions.putAll(newActions);
         } catch (ConcurrentModificationException e) {
-            Log.e(TAG, "Exception happened: " + e.getMessage());
+            Log.e(TAG, "Concurrent Modification of actions bar happened.");
         }
         setValidity();
     }
@@ -134,7 +132,7 @@ public abstract class Graphic {
                 }
             }
         } catch (ConcurrentModificationException e) {
-            Log.e(TAG, "Exception happened: " + e.getMessage());
+            Log.e(TAG, "Concurrent Modification of actions bar happened.");
         }
     }
 
