@@ -15,8 +15,7 @@ import org.joanna.thesis.passportphotocreator.processing.background.verification
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfFloat;
-import org.opencv.core.MatOfInt;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -228,8 +227,9 @@ public class BackgroundProcessing extends Verifier implements Enhancer {
     }
 
     /**
-     * Calculates median and average of the hue of the background. If median and
-     * average are close to each other there is a high probability that the
+     * Calculates the average and standard deviation of the hue and the value
+     * of the hsv color space of the background. If those standard deviations
+     * are relatively small there is a high probability that the
      * background have one uniform color. Performance of this method depends
      * on how good person was segmented out from the background.
      */
@@ -238,78 +238,29 @@ public class BackgroundProcessing extends Verifier implements Enhancer {
         Mat hsvSource = new Mat();
         Imgproc.cvtColor(mBackground, hsvSource, Imgproc.COLOR_RGB2HSV);
 
-        int hueBins = 60;
-        float hueUpperRange = 180f;
-        int hueChannel = 0;
-        MatOfInt histSize = new MatOfInt(hueBins);
-        MatOfFloat ranges = new MatOfFloat(0f, hueUpperRange);
-        MatOfInt channels = new MatOfInt(hueChannel);
-
         Mat mask = new Mat();
         segmentor.getMaskedPerson().convertTo(mask, CV_8UC1, 255);
         mask = ImageUtils.unpadMatFromSquare(mask, mBackground.width());
         Imgproc.cvtColor(mask, mask, Imgproc.COLOR_RGB2GRAY);
 
-        Mat histSource = new Mat();
-        final ArrayList<Mat> histImages = new ArrayList<>();
-        histImages.add(hsvSource);
-        Imgproc.calcHist(
-                histImages,
-                channels,
-                mask,
-                histSource,
-                histSize,
-                ranges,
-                false);
-
-        double avgHueValue = Core.mean(hsvSource, mask).val[hueChannel];
-        double medianHueValue = getMedianChannelValue(
-                hueBins, hueUpperRange, hueChannel, histSource);
+        MatOfDouble std = new MatOfDouble();
+        Core.meanStdDev(hsvSource, new MatOfDouble(), std, mask);
+        final double[] standardDeviation = std.toArray();
 
         mask.release();
         hsvSource.release();
-        histSource.release();
 
-        // TODO: improve
         // hard-coded value that seems to do a good job in most cases
-        final double epsilon = 3.6;
-        if (Math.abs(medianHueValue - avgHueValue) > epsilon) {
+        final int epsilonHue = 25;
+        final int epsilonValue = 50;
+        if (standardDeviation[0] > epsilonHue ||
+                standardDeviation[2] > epsilonValue) {
             Log.i(TAG, "It seems that the background is colorful!");
             mBackgroundProperties.setUncolorful(false);
         } else {
             Log.i(TAG, "It seems that the background color is uniform.");
             mBackgroundProperties.setUncolorful(true);
         }
-    }
-
-    /**
-     * Computes median of the channel from the received histogram.
-     *
-     * @param bins       amount of histogram bins
-     * @param upperRange channel maximum allowed value
-     * @param channel    Channel for which median shall be computed, eg h =
-     *                   0, s = 1, v = 2
-     * @param hist       Histogram containing the data
-     * @return median value of the channel
-     */
-    private double getMedianChannelValue(
-            final int bins, final float upperRange, final int channel,
-            final Mat hist) {
-
-        double medianHueValue = 0;
-        double currentElements = 0;
-        // First element representing black is removed as it mainly
-        // represents masked person
-        int half = (int) ((mBackground.width() * mBackground.height() -
-                hist.get(0, 0)[channel]) / 2);
-        for (int i = 1; i < 60; i++) {
-            currentElements += hist.get(i, 0)[channel];
-            if (currentElements > half) {
-                medianHueValue = i * (upperRange / bins) + 1;
-                break;
-            }
-        }
-        return medianHueValue;
     }
 
     @Override
