@@ -135,8 +135,7 @@ public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
 
     private Mat convertMask(final Mat src) {
         Mat dst = new Mat();
-        Core.multiply(src, new Scalar(2.0), dst);
-        Imgproc.threshold(dst, dst, 1.0, 1.0, Imgproc.THRESH_TRUNC);
+        Imgproc.threshold(src, dst, 0.9, 1.0, Imgproc.THRESH_BINARY);
         Imgproc.resize(dst, dst, new Size(PROCESS_IMG_SIZE, PROCESS_IMG_SIZE));
         Imgproc.cvtColor(dst, dst, Imgproc.COLOR_GRAY2BGR);
         return dst;
