@@ -25,4 +25,8 @@ public abstract class Verifier {
      */
     public abstract void verify(final byte[] data);
 
+    public void close() {
+
+    }
+
 }

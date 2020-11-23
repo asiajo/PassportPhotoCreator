@@ -5,12 +5,14 @@ import android.graphics.Bitmap;
 import android.util.Log;
 
 import org.joanna.thesis.passportphotocreator.DetectorTensorflowLite;
-import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
-import org.joanna.thesis.passportphotocreator.processing.light.ShadowUtils;
 import org.joanna.thesis.passportphotocreator.processing.Enhancer;
+import org.joanna.thesis.passportphotocreator.processing.light.ShadowUtils;
+import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.core.Mat;
 
 import java.io.IOException;
+
+import static org.joanna.thesis.passportphotocreator.processing.light.ShadowUtils.isEvenlyLightened;
 
 public abstract class ShadowRemover extends DetectorTensorflowLite
         implements Enhancer {
@@ -68,4 +70,9 @@ public abstract class ShadowRemover extends DetectorTensorflowLite
     protected abstract Mat getDeshadowedOverlay();
 
     protected abstract int getOutputImageWidth();
+
+    @Override
+    public boolean verify(final Mat src) {
+        return isEvenlyLightened(src);
+    }
 }

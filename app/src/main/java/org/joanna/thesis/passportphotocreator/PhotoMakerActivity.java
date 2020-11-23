@@ -30,7 +30,8 @@ import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
 import org.joanna.thesis.passportphotocreator.processing.Enhancer;
 import org.joanna.thesis.passportphotocreator.processing.Verifier;
-import org.joanna.thesis.passportphotocreator.processing.background.BackgroundProcessing;
+import org.joanna.thesis.passportphotocreator.processing.background.BackgroundVerifier;
+import org.joanna.thesis.passportphotocreator.processing.background.enhancement.BackgroundEnhancement;
 import org.joanna.thesis.passportphotocreator.processing.face.FaceTracker;
 import org.joanna.thesis.passportphotocreator.processing.light.enhancement.ShadowRemoverPix2Pix;
 import org.joanna.thesis.passportphotocreator.processing.light.verification.ShadowVerification;
@@ -102,10 +103,8 @@ public class PhotoMakerActivity extends Activity
         // TODO: add face size on the preview verifier
         mVerifiers.add(new ShadowVerification(this, mGraphicOverlay));
         try {
-            BackgroundProcessing mBackgroundProcessor =
-                    new BackgroundProcessing(this, mGraphicOverlay);
-            mVerifiers.add(mBackgroundProcessor);
-            mEnhancers.add(mBackgroundProcessor);
+            mVerifiers.add(new BackgroundVerifier(this, mGraphicOverlay));
+            mEnhancers.add(new BackgroundEnhancement(this));
         } catch (IOException e) {
             Toast.makeText(this, R.string.no_background_verification_error,
                     Toast.LENGTH_LONG).show();
@@ -146,6 +145,9 @@ public class PhotoMakerActivity extends Activity
         super.onDestroy();
         for (Enhancer enhancer : mEnhancers) {
             enhancer.close();
+        }
+        for (Verifier verifier : mVerifiers) {
+            verifier.close();
         }
         if (mCameraSource != null) {
             mCameraSource.release();
@@ -287,7 +289,9 @@ public class PhotoMakerActivity extends Activity
                         return;
                     }
                     for (Enhancer enhancer : mEnhancers) {
-                        picture = enhancer.enhance(picture);
+                        if (!enhancer.verify(picture)) {
+                            picture = enhancer.enhance(picture);
+                        }
                     }
                     ImageUtils.saveImage(picture, thisActivity);
                     Toast.makeText(thisActivity, R.string.image_saved,

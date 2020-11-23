@@ -2,18 +2,214 @@ package org.joanna.thesis.passportphotocreator.processing.background;
 
 import android.util.Log;
 
+import org.joanna.thesis.passportphotocreator.processing.background.verification.BackgroundProperties;
+import org.joanna.thesis.passportphotocreator.processing.background.verification.ColorBlobDetector;
+import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+
+import static org.opencv.core.CvType.CV_8UC1;
 
 public final class BackgroundUtils {
 
     private static final String TAG = BackgroundUtils.class.getSimpleName();
 
     private BackgroundUtils() {
+    }
+
+    public static boolean isUniform(
+            final Mat background,
+            final BackgroundProperties properties,
+            final ImageSegmentor segmentor) {
+
+        processBackgroundColorBlobDetection(background, properties);
+        processEdgeDetection(background, properties);
+        processColorsDetection(background, properties, segmentor);
+
+        // Those detections are not fully exact, so it is enough that 2 out of 3
+        // state that background is uniform to classify it as uniform.
+        return properties.isUniform() ?
+                (properties.isEdgesFree() ||
+                        properties.isUncolorful()) :
+                (properties.isEdgesFree() &&
+                        properties.isUncolorful());
+    }
+
+    public static Mat getBackground(
+            final Mat src,
+            final ImageSegmentor segmentor) {
+        int imgWidth = (int) Math.ceil(
+                ImageSegmentor.PROCESS_IMG_SIZE
+                        * ImageUtils.FINAL_IMAGE_W_TO_H_RATIO);
+        Mat image = ImageUtils.resizeMat(src, imgWidth);
+        image = ImageUtils.padMatToSquare(
+                image,
+                ImageSegmentor.PROCESS_IMG_SIZE);
+
+        segmentor.segmentImg(image);
+        image = segmentor.getBackground();
+        image = ImageUtils.unpadMatFromSquare(image, imgWidth);
+        return image;
+    }
+
+    public static Mat getPersonMask(
+            final Mat src,
+            final ImageSegmentor segmentor) {
+        int imgWidth = (int) Math.ceil(
+                ImageSegmentor.PROCESS_IMG_SIZE
+                        * ImageUtils.FINAL_IMAGE_W_TO_H_RATIO);
+        Mat modelImage = ImageUtils.resizeMat(src, imgWidth);
+        modelImage = ImageUtils.padMatToSquare(
+                modelImage,
+                ImageSegmentor.PROCESS_IMG_SIZE);
+
+        segmentor.segmentImg(modelImage);
+        modelImage.release();
+        Mat personMask = segmentor.getMaskedBackground();
+
+        Imgproc.cvtColor(personMask, personMask, Imgproc.COLOR_RGB2GRAY);
+        personMask.convertTo(personMask, CV_8UC1, 255);
+        Imgproc.blur(personMask, personMask, new Size(15, 15));
+        Imgproc.threshold(
+                personMask, personMask, 127, 255, Imgproc.THRESH_BINARY);
+        personMask = ImageUtils.unpadMatFromSquare(personMask, imgWidth);
+        personMask = ImageUtils.resizeMat(personMask, src.width());
+        return personMask;
+    }
+
+    /**
+     * Attempts to detect background color and verify if it is uniform across
+     * the whole background. To achieve this it picks a start point (one of
+     * hardcoded, best possible locations - for performance reasons) and
+     * searches for the whole area containing almost the same color. Performance
+     * of this method depends on how good person was segmented out from the
+     * background.
+     */
+    public static void processBackgroundColorBlobDetection(
+            final Mat background, final BackgroundProperties properties) {
+        Point pixelBackgroundLeft = findNonPersonPixel(background, true);
+        Point pixelBackgroundRight = findNonPersonPixel(background, false);
+        Point pixelPerson = findPersonPixel(background);
+        if (pixelPerson == null ||
+                (pixelBackgroundLeft == null && pixelBackgroundRight == null)) {
+            Log.w(
+                    TAG,
+                    "Did not find on an image a point matching or a person or" +
+                            " a background. Will not perform background " +
+                            "uniformity verification.");
+            return;
+        }
+
+        // Detect color from right and left side, as slight tone difference
+        // may have influence on correct detection
+        ColorBlobDetector bgContourDetectorLeft = new ColorBlobDetector();
+        bgContourDetectorLeft.process(background, pixelBackgroundLeft);
+
+        ColorBlobDetector bgContourDetectorRight = new ColorBlobDetector();
+        bgContourDetectorRight.process(background, pixelBackgroundRight);
+
+        final Scalar rgbAverage = computeColorAverage(
+                bgContourDetectorLeft.getmBlobColorRgba(),
+                bgContourDetectorRight.getmBlobColorRgba());
+
+        properties.setBgColorRgba(rgbAverage);
+        final double areaBgdLeft = bgContourDetectorLeft.getContoursTotalArea();
+        final double areaBgdRight =
+                bgContourDetectorRight.getContoursTotalArea();
+
+        ColorBlobDetector personContourDetector = new ColorBlobDetector();
+        personContourDetector.process(background, pixelPerson);
+        properties.setPersonContourLen(
+                (int) personContourDetector.getContoursMaxPerimeter());
+        final double areaPerson = personContourDetector.getContoursMaxArea();
+
+        final int imgArea = background.width() * background.height();
+        // hard-coded value that seems to do a good job in most cases
+        final int epsilon = imgArea / 10;
+        if ((imgArea - areaPerson - areaBgdLeft) > epsilon
+                && (imgArea - areaPerson - areaBgdRight) > epsilon) {
+            Log.i(TAG, "Unfortunately background seems not to be uniform!");
+            properties.setUniform(false);
+        } else {
+            Log.i(TAG, "Background seems to be uniform.");
+            properties.setUniform(true);
+        }
+    }
+
+    private static Scalar computeColorAverage(
+            final Scalar color1, final Scalar color2) {
+        final int scalarLength = Math.min(color1.val.length, color2.val.length);
+        double[] colorOut = new double[scalarLength];
+        for (int i = 0; i < scalarLength; i++) {
+            colorOut[i] = (color1.val[i] + color2.val[i]) / 2;
+        }
+        return new Scalar(colorOut);
+    }
+
+    /**
+     * Attempts to detect edges on the background. Performance of this method
+     * depends on how good person was segmented out from the background.
+     */
+    public static void processEdgeDetection(
+            final Mat background, final BackgroundProperties properties) {
+
+        final int imgArea = background.width() * background.height();
+        // hard-coded value that seems to do a good job in most cases
+        final int epsilon = imgArea / 150;
+        int whitePixels = getContoursLengthOnTheImage(background);
+        int approxLengthOfEdges =
+                whitePixels - properties.getPersonContourLen();
+        if (approxLengthOfEdges > epsilon) {
+            Log.i(TAG, "Background seems to contain edges!");
+            properties.setEdgesFree(false);
+        } else {
+            Log.i(TAG, "Background seems to be plain.");
+            properties.setEdgesFree(true);
+        }
+    }
+
+    /**
+     * Calculates the average and standard deviation of the hue and the value
+     * of the hsv color space of the background. If those standard deviations
+     * are relatively small there is a high probability that the
+     * background have one uniform color. Performance of this method depends
+     * on how good person was segmented out from the background.
+     */
+    public static void processColorsDetection(
+            final Mat background, final BackgroundProperties properties,
+            final ImageSegmentor segmentor) {
+
+        Mat hsvSource = new Mat();
+        Imgproc.cvtColor(background, hsvSource, Imgproc.COLOR_RGB2HSV);
+
+        Mat mask = new Mat();
+        segmentor.getMaskedPerson().convertTo(mask, CV_8UC1, 255);
+        mask = ImageUtils.unpadMatFromSquare(mask, background.width());
+        Imgproc.cvtColor(mask, mask, Imgproc.COLOR_RGB2GRAY);
+
+        MatOfDouble std = new MatOfDouble();
+        Core.meanStdDev(hsvSource, new MatOfDouble(), std, mask);
+        final double[] standardDeviation = std.toArray();
+
+        mask.release();
+        hsvSource.release();
+
+        // hard-coded value that seems to do a good job in most cases
+        final int epsilonHue = 25;
+        final int epsilonValue = 50;
+        if (standardDeviation[0] > epsilonHue ||
+                standardDeviation[2] > epsilonValue) {
+            Log.i(TAG, "It seems that the background is colorful!");
+            properties.setUncolorful(false);
+        } else {
+            Log.i(TAG, "It seems that the background color is uniform.");
+            properties.setUncolorful(true);
+        }
     }
 
     public static int getContoursLengthOnTheImage(final Mat background) {
