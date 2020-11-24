@@ -30,11 +30,12 @@ import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
 import org.joanna.thesis.passportphotocreator.processing.Enhancer;
 import org.joanna.thesis.passportphotocreator.processing.Verifier;
-import org.joanna.thesis.passportphotocreator.processing.background.verification.BackgroundVerifier;
 import org.joanna.thesis.passportphotocreator.processing.background.enhancement.BackgroundEnhancement;
+import org.joanna.thesis.passportphotocreator.processing.background.verification.BackgroundVerifier;
 import org.joanna.thesis.passportphotocreator.processing.face.FaceTracker;
 import org.joanna.thesis.passportphotocreator.processing.light.enhancement.ShadowRemoverPix2Pix;
 import org.joanna.thesis.passportphotocreator.processing.light.verification.ShadowVerification;
+import org.joanna.thesis.passportphotocreator.processing.visibility.FaceUncoveredVerification;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 
@@ -96,6 +97,7 @@ public class PhotoMakerActivity extends Activity
 
         mVerifiers = new ArrayList<>();
         mVerifiers.add(new ShadowVerification(this, mGraphicOverlay));
+        mVerifiers.add(new FaceUncoveredVerification(this, mGraphicOverlay));
         try {
             mVerifiers.add(new BackgroundVerifier(this, mGraphicOverlay));
             mEnhancers.add(new BackgroundEnhancement(this));
