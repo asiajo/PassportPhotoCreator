@@ -95,7 +95,6 @@ public class PhotoMakerActivity extends Activity
         }
 
         mVerifiers = new ArrayList<>();
-        // TODO: add face size on the preview verifier
         mVerifiers.add(new ShadowVerification(this, mGraphicOverlay));
         try {
             mVerifiers.add(new BackgroundVerifier(this, mGraphicOverlay));

@@ -33,7 +33,7 @@ public class FaceTracker extends Tracker<Face> {
         super();
         this.mContext = context;
         this.mOverlay = overlay;
-        mFaceGraphic = new FaceGraphic(overlay);
+        mFaceGraphic = new FaceGraphic(overlay, context);
     }
 
     @Override

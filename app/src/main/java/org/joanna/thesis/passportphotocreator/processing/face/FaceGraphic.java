@@ -1,6 +1,10 @@
 package org.joanna.thesis.passportphotocreator.processing.face;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.Rect;
 
 import com.google.android.gms.vision.face.Face;
@@ -15,15 +19,18 @@ import static org.joanna.thesis.passportphotocreator.camera.GraphicOverlay.TOP_R
 
 public class FaceGraphic extends Graphic {
 
-    private Canvas canvas;
-
-    private          double         bbProportionLeft;
-    private          double         bbProportionTop;
-    private          double         bbProportionWidth;
-    private          double         bbProportionHeight;
-    private          Rect           faceBoundingBox;
-    private volatile Face           mFace;
-    private          GraphicOverlay mOverlay;
+    private static final int            ARROW_MIN_SIZE = 4;
+    private static final int            ARROW_MAX_SIZE = 12;
+    private              Canvas         canvas;
+    private              double         bbProportionLeft;
+    private              double         bbProportionTop;
+    private              double         bbProportionWidth;
+    private              double         bbProportionHeight;
+    private              Rect           faceBoundingBox;
+    private volatile     Face           mFace;
+    private              GraphicOverlay mOverlay;
+    private              Context        mContext;
+    private              int            arrowsScale    = ARROW_MIN_SIZE;
 
     {
         getActionsMap().put(
@@ -69,9 +76,10 @@ public class FaceGraphic extends Graphic {
                         PhotoValidity.INVALID));
     }
 
-    FaceGraphic(final GraphicOverlay overlay) {
+    FaceGraphic(final GraphicOverlay overlay, final Context context) {
         super(overlay);
         mOverlay = overlay;
+        mContext = context;
     }
 
     void updateFace(final Face face) {
@@ -93,6 +101,36 @@ public class FaceGraphic extends Graphic {
         setBoundingBoxProportions();
         canvas.drawRect(displayBoundingBox, getmPaint());
         drawActionsToBePerformed(canvas);
+        if (isFaceTooSmall()) {
+            drawEnlargingInfo(canvas);
+        }
+    }
+
+    private boolean isFaceTooSmall() {
+        return bbProportionWidth < 0.5;
+    }
+
+    private void drawEnlargingInfo(final Canvas canvas) {
+        Bitmap enlarge = BitmapFactory.decodeResource(
+                mContext.getResources(),
+                R.drawable.enlarge);
+        final Rect rectSrc = new Rect(0, 0, enlarge.getWidth(),
+                enlarge.getHeight());
+        int dstHalfWidth =
+                canvas.getWidth() / 2 * arrowsScale++ / ARROW_MAX_SIZE;
+        int dstHalfHeight =
+                dstHalfWidth * enlarge.getHeight() / enlarge.getWidth();
+        final int centerX = canvas.getWidth() / 2;
+        final int centerY = canvas.getHeight() / 2;
+        final Rect rectDst = new Rect(
+                centerX - dstHalfWidth,
+                centerY - dstHalfHeight,
+                centerX + dstHalfWidth,
+                centerY + dstHalfHeight);
+        canvas.drawBitmap(enlarge, rectSrc, rectDst, new Paint());
+        if (arrowsScale == ARROW_MAX_SIZE) {
+            arrowsScale = ARROW_MIN_SIZE;
+        }
     }
 
     private void setBoundingBoxProportions() {
