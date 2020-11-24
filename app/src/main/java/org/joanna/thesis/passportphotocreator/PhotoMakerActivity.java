@@ -30,7 +30,7 @@ import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
 import org.joanna.thesis.passportphotocreator.processing.Enhancer;
 import org.joanna.thesis.passportphotocreator.processing.Verifier;
-import org.joanna.thesis.passportphotocreator.processing.background.BackgroundVerifier;
+import org.joanna.thesis.passportphotocreator.processing.background.verification.BackgroundVerifier;
 import org.joanna.thesis.passportphotocreator.processing.background.enhancement.BackgroundEnhancement;
 import org.joanna.thesis.passportphotocreator.processing.face.FaceTracker;
 import org.joanna.thesis.passportphotocreator.processing.light.enhancement.ShadowRemoverPix2Pix;

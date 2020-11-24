@@ -2,9 +2,6 @@ package org.joanna.thesis.passportphotocreator.camera;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -21,7 +18,7 @@ public class GraphicOverlay<T extends Graphic> extends View {
 
     private int    mFacing   = CameraSource.CAMERA_FACING_BACK;
     private Set<T> mGraphics = new HashSet<>();
-    private int    counter   = 0;
+    private int    mCounter  = 0;
 
     public GraphicOverlay(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -35,7 +32,7 @@ public class GraphicOverlay<T extends Graphic> extends View {
     }
 
     public void remove(T graphic) {
-        counter++;
+        mCounter++;
         synchronized (mLock) {
             mGraphics.remove(graphic);
         }
@@ -69,8 +66,8 @@ public class GraphicOverlay<T extends Graphic> extends View {
     }
 
     public void slowlyPostinvalidate() {
-        if (counter >= 5) {
-            counter = 0;
+        if (mCounter >= 5) {
+            mCounter = 0;
             postInvalidate();
         }
     }

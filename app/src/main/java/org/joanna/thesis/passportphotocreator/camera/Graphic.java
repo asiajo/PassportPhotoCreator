@@ -29,16 +29,16 @@ public abstract class Graphic {
 
     private static final String TAG = Graphic.class.getSimpleName();
 
-    private static Map<BitmapMetaData, Bitmap> actions = new TreeMap<>();
-    private        Map<Action, BitmapMetaData> actionsMap = new HashMap<>();
-    private        Map<PhotoValidity, Integer> colorMap = new HashMap<>();
+    private static Map<BitmapMetaData, Bitmap> mActions    = new TreeMap<>();
+    private        Map<Action, BitmapMetaData> mActionsMap = new HashMap<>();
+    private        Map<PhotoValidity, Integer> mColorMap   = new HashMap<>();
     private        GraphicOverlay              mOverlay;
     private        Paint                       mPaint;
 
     {
-        colorMap.put(PhotoValidity.VALID, VALID_COLOR);
-        colorMap.put(PhotoValidity.WARNING, WARNING_COLOR);
-        colorMap.put(PhotoValidity.INVALID, INVALID_COLOR);
+        mColorMap.put(PhotoValidity.VALID, VALID_COLOR);
+        mColorMap.put(PhotoValidity.WARNING, WARNING_COLOR);
+        mColorMap.put(PhotoValidity.INVALID, INVALID_COLOR);
     }
 
     public Graphic(GraphicOverlay overlay) {
@@ -83,7 +83,7 @@ public abstract class Graphic {
         List<Bitmap> actionBitmaps = new ArrayList<>();
 
         try {
-            actionBitmaps.addAll(actions.values());
+            actionBitmaps.addAll(mActions.values());
         } catch (ConcurrentModificationException e) {
             Log.e(TAG, "Concurrent Modification of actions bar happened.");
         }
@@ -108,14 +108,14 @@ public abstract class Graphic {
         Map<BitmapMetaData, Bitmap> newActions = new TreeMap<>();
         for (Action action : positions) {
             newActions.put(
-                    actionsMap.get(action),
+                    mActionsMap.get(action),
                     BitmapFactory.decodeResource(
                             context.getResources(),
-                            actionsMap.get(action).getId()));
+                            mActionsMap.get(action).getId()));
         }
         try {
             clearActions(aClass);
-            actions.putAll(newActions);
+            mActions.putAll(newActions);
         } catch (ConcurrentModificationException e) {
             Log.e(TAG, "Concurrent Modification of actions bar happened.");
         }
@@ -125,7 +125,7 @@ public abstract class Graphic {
     protected void clearActions(final Class<? extends Graphic> aClass) {
         try {
             for (Iterator<Map.Entry<BitmapMetaData, Bitmap>> it =
-                 actions.entrySet().iterator(); it.hasNext(); ) {
+                 mActions.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<BitmapMetaData, Bitmap> entry = it.next();
                 if (entry.getKey().getGraphicClass().equals(aClass)) {
                     it.remove();
@@ -137,11 +137,11 @@ public abstract class Graphic {
     }
 
     public void clearActions() {
-        actions.clear();
+        mActions.clear();
     }
 
     public Map<Action, BitmapMetaData> getActionsMap() {
-        return actionsMap;
+        return mActionsMap;
     }
 
     /**
@@ -150,11 +150,11 @@ public abstract class Graphic {
      */
     public void setValidity() {
         if (containsInvalidActions()) {
-            mPaint.setColor(colorMap.get(PhotoValidity.INVALID));
+            mPaint.setColor(mColorMap.get(PhotoValidity.INVALID));
         } else if (containsWarningActions()) {
-            mPaint.setColor(colorMap.get(PhotoValidity.WARNING));
+            mPaint.setColor(mColorMap.get(PhotoValidity.WARNING));
         } else {
-            mPaint.setColor(colorMap.get(PhotoValidity.VALID));
+            mPaint.setColor(mColorMap.get(PhotoValidity.VALID));
         }
     }
 
@@ -171,7 +171,7 @@ public abstract class Graphic {
      */
     private boolean containsInvalidActions() {
         for (Iterator<BitmapMetaData> it =
-             actions.keySet().iterator(); it.hasNext(); ) {
+             mActions.keySet().iterator(); it.hasNext(); ) {
             BitmapMetaData metaData = it.next();
             if (metaData.makesPhotoInvalid()) {
                 return true;
@@ -190,7 +190,7 @@ public abstract class Graphic {
      */
     private boolean containsWarningActions() {
         for (Iterator<BitmapMetaData> it =
-             actions.keySet().iterator(); it.hasNext(); ) {
+             mActions.keySet().iterator(); it.hasNext(); ) {
             BitmapMetaData metaData = it.next();
             if (metaData.makesPhotoWarning()) {
                 return true;

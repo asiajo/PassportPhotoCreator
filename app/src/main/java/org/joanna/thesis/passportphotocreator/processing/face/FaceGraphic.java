@@ -21,16 +21,15 @@ public class FaceGraphic extends Graphic {
 
     private static final int            ARROW_MIN_SIZE = 4;
     private static final int            ARROW_MAX_SIZE = 12;
-    private              Canvas         canvas;
     private              double         bbProportionLeft;
     private              double         bbProportionTop;
     private              double         bbProportionWidth;
     private              double         bbProportionHeight;
-    private              Rect           faceBoundingBox;
+    private              Rect           mFaceBoundingBox;
     private volatile     Face           mFace;
     private              GraphicOverlay mOverlay;
     private              Context        mContext;
-    private              int            arrowsScale    = ARROW_MIN_SIZE;
+    private              int            mArrowsScale   = ARROW_MIN_SIZE;
 
     {
         getActionsMap().put(
@@ -89,14 +88,13 @@ public class FaceGraphic extends Graphic {
 
     @Override
     public void draw(final Canvas canvas) {
-        this.canvas = canvas;
         Face face = mFace;
         if (face == null) {
             return;
         }
-        faceBoundingBox = FaceUtils.getFaceBoundingBox(face, this);
+        mFaceBoundingBox = FaceUtils.getFaceBoundingBox(face, this);
         Rect displayBoundingBox = PPCUtlis.translateY(
-                faceBoundingBox,
+                mFaceBoundingBox,
                 mOverlay.getWidth() / TOP_RECT_W_TO_H_RATIO);
         setBoundingBoxProportions();
         canvas.drawRect(displayBoundingBox, getmPaint());
@@ -117,7 +115,7 @@ public class FaceGraphic extends Graphic {
         final Rect rectSrc = new Rect(0, 0, enlarge.getWidth(),
                 enlarge.getHeight());
         int dstHalfWidth =
-                canvas.getWidth() / 2 * arrowsScale++ / ARROW_MAX_SIZE;
+                canvas.getWidth() / 2 * mArrowsScale++ / ARROW_MAX_SIZE;
         int dstHalfHeight =
                 dstHalfWidth * enlarge.getHeight() / enlarge.getWidth();
         final int centerX = canvas.getWidth() / 2;
@@ -128,22 +126,22 @@ public class FaceGraphic extends Graphic {
                 centerX + dstHalfWidth,
                 centerY + dstHalfHeight);
         canvas.drawBitmap(enlarge, rectSrc, rectDst, new Paint());
-        if (arrowsScale == ARROW_MAX_SIZE) {
-            arrowsScale = ARROW_MIN_SIZE;
+        if (mArrowsScale == ARROW_MAX_SIZE) {
+            mArrowsScale = ARROW_MIN_SIZE;
         }
     }
 
     private void setBoundingBoxProportions() {
         double canvasWidth = mOverlay.getWidth();
         double canvasHeight = mOverlay.getOverlayRelativeHeight();
-        bbProportionLeft = faceBoundingBox.left / canvasWidth;
-        bbProportionTop = faceBoundingBox.top / canvasHeight;
-        bbProportionWidth = faceBoundingBox.width() / canvasWidth;
-        bbProportionHeight = faceBoundingBox.height() / canvasHeight;
+        bbProportionLeft = mFaceBoundingBox.left / canvasWidth;
+        bbProportionTop = mFaceBoundingBox.top / canvasHeight;
+        bbProportionWidth = mFaceBoundingBox.width() / canvasWidth;
+        bbProportionHeight = mFaceBoundingBox.height() / canvasHeight;
     }
 
     public Rect getFaceBoundingBox() {
-        return faceBoundingBox;
+        return mFaceBoundingBox;
     }
 
     public double getBbProportionLeft() {
@@ -159,11 +157,11 @@ public class FaceGraphic extends Graphic {
     }
 
     public double getBbProportionCenterX() {
-        return faceBoundingBox.centerX() / (double) mOverlay.getWidth();
+        return mFaceBoundingBox.centerX() / (double) mOverlay.getWidth();
     }
 
     public double getBbProportionCenterY() {
-        return faceBoundingBox.centerY() /
+        return mFaceBoundingBox.centerY() /
                 ((double) mOverlay.getOverlayRelativeHeight());
     }
 

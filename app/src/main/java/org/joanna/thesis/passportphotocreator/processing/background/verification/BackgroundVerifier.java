@@ -1,4 +1,4 @@
-package org.joanna.thesis.passportphotocreator.processing.background;
+package org.joanna.thesis.passportphotocreator.processing.background.verification;
 
 import android.app.Activity;
 
@@ -6,9 +6,9 @@ import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
 import org.joanna.thesis.passportphotocreator.processing.Action;
 import org.joanna.thesis.passportphotocreator.processing.Verifier;
-import org.joanna.thesis.passportphotocreator.processing.background.verification.BackgroundActions;
-import org.joanna.thesis.passportphotocreator.processing.background.verification.BackgroundGraphic;
-import org.joanna.thesis.passportphotocreator.processing.background.verification.BackgroundProperties;
+import org.joanna.thesis.passportphotocreator.processing.background.BackgroundUtils;
+import org.joanna.thesis.passportphotocreator.processing.background.ImageSegmentor;
+import org.joanna.thesis.passportphotocreator.processing.background.ImageSegmentorFloatMobileUnet;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.core.Mat;
 

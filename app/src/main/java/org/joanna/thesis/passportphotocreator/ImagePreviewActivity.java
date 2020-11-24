@@ -2,8 +2,6 @@ package org.joanna.thesis.passportphotocreator;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.view.MotionEvent;
-import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -17,8 +15,8 @@ import java.io.IOException;
 public class ImagePreviewActivity extends AppCompatActivity
         implements View.OnClickListener {
 
-    Bitmap image;
-    ImageView imageView;
+    Bitmap    mImage;
+    ImageView mImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,10 +24,10 @@ public class ImagePreviewActivity extends AppCompatActivity
         setContentView(R.layout.activity_preview);
         findViewById(R.id.cancel).setOnClickListener(this);
         findViewById(R.id.save_photo).setOnClickListener(this);
-        imageView = findViewById(R.id.view_photo);
+        mImageView = findViewById(R.id.view_photo);
 
-        image = getIntent().getParcelableExtra("Image");
-        imageView.setImageBitmap(image);
+        mImage = getIntent().getParcelableExtra("Image");
+        mImageView.setImageBitmap(mImage);
     }
 
     @Override
@@ -39,7 +37,7 @@ public class ImagePreviewActivity extends AppCompatActivity
         }
         if (v.getId() == R.id.save_photo) {
             try {
-                ImageUtils.saveImage(image, ImagePreviewActivity.this);
+                ImageUtils.saveImage(mImage, ImagePreviewActivity.this);
                 Toast.makeText(
                         ImagePreviewActivity.this, R.string.image_saved,
                         Toast.LENGTH_SHORT).show();
@@ -56,6 +54,6 @@ public class ImagePreviewActivity extends AppCompatActivity
     @Override
     public void onDestroy() {
         super.onDestroy();
-        ImageUtils.safelyRemoveBitmap(image);
+        ImageUtils.safelyRemoveBitmap(mImage);
     }
 }
