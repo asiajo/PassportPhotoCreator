@@ -62,25 +62,14 @@ public final class ImageUtils {
     }
 
     public static void saveImage(
-            final byte[] bytes,
-            final Activity photoMakerActivity,
-            final GraphicOverlay<Graphic> mGraphicOverlay) throws IOException {
+            final Bitmap image, final Activity activity)
+            throws IOException {
+        byte[] byteArray = getBytesFromBitmap(image);
+        safelyRemoveBitmap(image);
 
-        Mat image = getMatFromBytes(bytes);
-        image = cropMatToFaceBoundingBox(
-                image, mGraphicOverlay);
-        if (image == null) {
-            Toast.makeText(photoMakerActivity, R.string.cannot_make_a_picture,
-                    Toast.LENGTH_LONG).show();
-            return;
-        }
-        image = resizeMatToFinalSize(image);
-        Bitmap imageCropped = getBitmapFromMat(image);
-        image.release();
-        byte[] byteArray = getBytesFromBitmap(imageCropped);
-        safelyRemoveBitmap(imageCropped);
+        // TODO: refactor
 
-        final Context context = photoMakerActivity.getApplicationContext();
+        final Context context = activity.getApplicationContext();
         final String fileName = System.currentTimeMillis() + ".png";
 
         OutputStream fos;
@@ -95,26 +84,29 @@ public final class ImageUtils {
     }
 
     public static void saveImage(
-            final Mat image, final Activity photoMakerActivity)
+            final Mat image, final Activity activity)
             throws IOException {
-        Bitmap imageCropped = getBitmapFromMat(image);
-        byte[] byteArray = getBytesFromBitmap(imageCropped);
-        safelyRemoveBitmap(imageCropped);
+        Bitmap btm = getBitmapFromMat(image);
+        saveImage(btm, activity);
+    }
 
-        // TODO: refactor
+    public static void saveImage(
+            final byte[] bytes,
+            final Activity activity,
+            final GraphicOverlay<Graphic> mGraphicOverlay) throws IOException {
 
-        final Context context = photoMakerActivity.getApplicationContext();
-        final String fileName = System.currentTimeMillis() + ".png";
-
-        OutputStream fos;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            fos = getImageOutputStreamSdkLessThanQ(fileName, context);
-        } else {
-            fos = getImageOutputStreamSdkFromQ(fileName, context);
+        Mat image = getMatFromBytes(bytes);
+        image = cropMatToFaceBoundingBox(
+                image, mGraphicOverlay);
+        if (image == null) {
+            Toast.makeText(activity, R.string.cannot_make_a_picture,
+                    Toast.LENGTH_LONG).show();
+            return;
         }
-        fos.write(byteArray);
-        fos.flush();
-        fos.close();
+        image = resizeMatToFinalSize(image);
+        Bitmap btm = getBitmapFromMat(image);
+        image.release();
+        saveImage(btm, activity);
     }
 
     public static Mat getMatFromBytes(final byte[] bytes) {

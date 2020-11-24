@@ -8,7 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Rect;
+import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
@@ -35,7 +36,6 @@ import org.joanna.thesis.passportphotocreator.processing.background.enhancement.
 import org.joanna.thesis.passportphotocreator.processing.face.FaceTracker;
 import org.joanna.thesis.passportphotocreator.processing.light.enhancement.ShadowRemoverPix2Pix;
 import org.joanna.thesis.passportphotocreator.processing.light.verification.ShadowVerification;
-import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 
@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.android.material.snackbar.Snackbar.make;
+import static org.joanna.thesis.passportphotocreator.utils.ImageUtils.getBitmapFromMat;
 import static org.joanna.thesis.passportphotocreator.utils.PPCUtlis.getFaceMatFromPictureTaken;
 
 public class PhotoMakerActivity extends Activity
@@ -80,6 +81,7 @@ public class PhotoMakerActivity extends Activity
     @Override
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
+        Log.i("TAG", "Creating photo maker activity.");
         setContentView(R.layout.photo_capture);
 
         // TODO: make it nicer
@@ -143,6 +145,7 @@ public class PhotoMakerActivity extends Activity
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.i("TAG", "Destroying photo maker activity.");
         for (Enhancer enhancer : mEnhancers) {
             enhancer.close();
         }
@@ -264,45 +267,41 @@ public class PhotoMakerActivity extends Activity
         if (mCameraSource == null) {
             return;
         }
-        final Rect boundingBox = mFaceTracker.getFaceBoundingBox();
-        if (boundingBox == null) {
-            Toast.makeText(this, R.string.no_face_on_the_picture,
-                    Toast.LENGTH_LONG).show();
-            return;
-        }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             requestStoragePermissions();
         }
-        final Activity thisActivity = this;
         mCameraSource.takePicture(null, new CameraSource.PictureCallback() {
             @Override
             public void onPictureTaken(byte[] bytes) {
-                // TODO: do in background
-                // TODO: move to new activity and display preview before saving
-                try {
-                    Mat picture = getFaceMatFromPictureTaken(bytes, mDetector);
-                    if (picture == null) {
-                        Toast.makeText(
-                                thisActivity,
-                                R.string.cannot_make_a_picture,
-                                Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    for (Enhancer enhancer : mEnhancers) {
-                        if (!enhancer.verify(picture)) {
-                            picture = enhancer.enhance(picture);
-                        }
-                    }
-                    ImageUtils.saveImage(picture, thisActivity);
-                    Toast.makeText(thisActivity, R.string.image_saved,
+                Mat picture = getFaceMatFromPictureTaken(bytes, mDetector);
+                if (picture == null) {
+                    Toast.makeText(
+                            PhotoMakerActivity.this,
+                            R.string.cannot_make_a_picture,
                             Toast.LENGTH_SHORT).show();
-                } catch (IOException e) {
-                    Toast.makeText(thisActivity, R.string.image_not_saved,
-                            Toast.LENGTH_SHORT).show();
-                    e.printStackTrace();
+                    return;
                 }
+                for (Enhancer enhancer : mEnhancers) {
+                    if (!enhancer.verify(picture)) {
+                        picture = enhancer.enhance(picture);
+                    }
+                }
+                startActivity(getIntent(picture, ImagePreviewActivity.class));
             }
         });
+    }
+
+    private Intent getIntent(
+            final Mat picture,
+            final Class<ImagePreviewActivity> activityClass) {
+        Bitmap bmp = getBitmapFromMat(picture);
+        ImageView imageview = findViewById(R.id.image_holder);
+        imageview.setImageBitmap(bmp);
+        imageview.setDrawingCacheEnabled(true);
+        Bitmap bitmap = imageview.getDrawingCache();
+        Intent intent = new Intent(getBaseContext(), activityClass);
+        intent.putExtra("Image", bitmap);
+        return intent;
     }
 
     private class ScaleListener
