@@ -23,7 +23,6 @@ import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.vision.face.FaceDetector;
 import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
-import com.google.android.material.snackbar.Snackbar;
 
 import org.joanna.thesis.passportphotocreator.camera.CameraSource;
 import org.joanna.thesis.passportphotocreator.camera.CameraSourcePreview;
@@ -43,7 +42,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.android.material.snackbar.Snackbar.make;
 import static org.joanna.thesis.passportphotocreator.utils.ImageUtils.getBitmapFromMat;
 import static org.joanna.thesis.passportphotocreator.utils.PPCUtlis.getFaceMatFromPictureTaken;
 
@@ -54,11 +52,6 @@ public class PhotoMakerActivity extends Activity
     public static final int PREVIEW_HEIGHT = 640;
 
     private static final String TAG = PhotoMakerActivity.class.getSimpleName();
-
-    // permission request codes need to be < 256
-    private static final int      RC_HANDLE_CAMERA_PERM = 2;
-    private static final String[] PERMISSIONS_CAMERA    =
-            {Manifest.permission.CAMERA};
 
     private static final int      REQUEST_EXTERNAL_STORAGE = 1;
     private static final String[] PERMISSIONS_STORAGE      =
@@ -111,15 +104,7 @@ public class PhotoMakerActivity extends Activity
             Toast.makeText(this, R.string.no_background_verification_error,
                     Toast.LENGTH_LONG).show();
         }
-
-        int rc = ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.CAMERA);
-        if (rc == PackageManager.PERMISSION_GRANTED) {
-            createCameraSource();
-        } else {
-            requestCameraPermission();
-        }
+        createCameraSource();
         findViewById(R.id.take_photo_button).setOnClickListener(this);
     }
 
@@ -165,37 +150,6 @@ public class PhotoMakerActivity extends Activity
     @Override
     public boolean onTouchEvent(MotionEvent e) {
         return mScaleGestureDetector.onTouchEvent(e) || super.onTouchEvent(e);
-    }
-
-
-    private void requestCameraPermission() {
-
-        if (!ActivityCompat.shouldShowRequestPermissionRationale(
-                this,
-                Manifest.permission.CAMERA)) {
-            ActivityCompat.requestPermissions(
-                    this,
-                    PERMISSIONS_CAMERA,
-                    RC_HANDLE_CAMERA_PERM);
-            return;
-        }
-
-        final Activity thisActivity = this;
-
-        View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ActivityCompat.requestPermissions(
-                        thisActivity,
-                        PERMISSIONS_CAMERA,
-                        RC_HANDLE_CAMERA_PERM);
-            }
-        };
-        findViewById(R.id.topLayout).setOnClickListener(listener);
-        make(mGraphicOverlay, R.string.permission_camera_rationale,
-                Snackbar.LENGTH_INDEFINITE)
-                .setAction(R.string.ok, listener)
-                .show();
     }
 
     private void requestStoragePermissions() {
