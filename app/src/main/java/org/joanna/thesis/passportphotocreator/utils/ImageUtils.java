@@ -225,12 +225,12 @@ public final class ImageUtils {
         double matWidth = src.size().width;
         double matHeight = src.size().height;
 
-        double faceWidthProp = faceGraphic.getBbProportionWidth() * 0.6;
-        double faceHeightProp = faceGraphic.getBbProportionWidth() * 0.75;
+        double faceWidthProp = faceGraphic.getBbProportionWidth() * 0.57;
+        double faceHeightProp = faceGraphic.getBbProportionWidth() * 0.57;
         double leftProp =
                 faceGraphic.getBbProportionCenterX() - faceWidthProp / 2;
         double topProp =
-                faceGraphic.getBbProportionCenterY() - faceHeightProp * 0.3;
+                faceGraphic.getBbProportionCenterY() - faceHeightProp * 0.2;
 
         int cutWidth = (int) (faceWidthProp * matWidth);
         int cutHeight = (int) (faceHeightProp * matWidth);
