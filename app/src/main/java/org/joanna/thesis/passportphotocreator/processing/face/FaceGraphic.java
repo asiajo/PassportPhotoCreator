@@ -19,8 +19,8 @@ import static org.joanna.thesis.passportphotocreator.camera.GraphicOverlay.TOP_R
 
 public class FaceGraphic extends Graphic {
 
-    private static final int            ARROW_MIN_SIZE = 4;
-    private static final int            ARROW_MAX_SIZE = 12;
+    private static final int            ARROW_MIN_SIZE = 12;
+    private static final int            ARROW_MAX_SIZE = 24;
     private              double         bbProportionLeft;
     private              double         bbProportionTop;
     private              double         bbProportionWidth;
@@ -114,12 +114,13 @@ public class FaceGraphic extends Graphic {
                 R.drawable.enlarge);
         final Rect rectSrc = new Rect(0, 0, enlarge.getWidth(),
                 enlarge.getHeight());
-        int dstHalfWidth =
-                canvas.getWidth() / 2 * mArrowsScale++ / ARROW_MAX_SIZE;
+        int dstHalfWidth = (int) (mFaceBoundingBox.width() * mArrowsScale++ /
+                ARROW_MAX_SIZE);
         int dstHalfHeight =
                 dstHalfWidth * enlarge.getHeight() / enlarge.getWidth();
-        final int centerX = canvas.getWidth() / 2;
-        final int centerY = canvas.getHeight() / 2;
+        final int centerX = mFaceBoundingBox.centerX();
+        final int centerY = (int) (mFaceBoundingBox.centerY() +
+                mOverlay.getWidth() / TOP_RECT_W_TO_H_RATIO);
         final Rect rectDst = new Rect(
                 centerX - dstHalfWidth,
                 centerY - dstHalfHeight,
