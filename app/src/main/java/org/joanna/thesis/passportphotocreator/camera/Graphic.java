@@ -29,9 +29,9 @@ public abstract class Graphic {
 
     private static final String TAG = Graphic.class.getSimpleName();
 
-    private static Map<BitmapMetaData, Bitmap> mActions    = new TreeMap<>();
+    private static Map<BitmapMetaData, Bitmap> mActions = new TreeMap<>();
     private        Map<Action, BitmapMetaData> mActionsMap = new HashMap<>();
-    private        Map<PhotoValidity, Integer> mColorMap   = new HashMap<>();
+    private        Map<PhotoValidity, Integer> mColorMap = new HashMap<>();
     private        GraphicOverlay              mOverlay;
     private        Paint                       mPaint;
 
@@ -170,12 +170,16 @@ public abstract class Graphic {
      *         otherwise
      */
     private boolean containsInvalidActions() {
-        for (Iterator<BitmapMetaData> it =
-             mActions.keySet().iterator(); it.hasNext(); ) {
-            BitmapMetaData metaData = it.next();
-            if (metaData.makesPhotoInvalid()) {
-                return true;
+        try {
+            for (Iterator<BitmapMetaData> it =
+                 mActions.keySet().iterator(); it.hasNext(); ) {
+                BitmapMetaData metaData = it.next();
+                if (metaData.makesPhotoInvalid()) {
+                    return true;
+                }
             }
+        } catch (ConcurrentModificationException e) {
+            Log.e(TAG, "Concurrent Modification of actions bar happened.");
         }
         return false;
     }
