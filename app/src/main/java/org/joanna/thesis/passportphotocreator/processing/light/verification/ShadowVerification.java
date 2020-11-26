@@ -1,24 +1,22 @@
 package org.joanna.thesis.passportphotocreator.processing.light.verification;
 
 import android.app.Activity;
+import android.util.Log;
 
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.joanna.thesis.passportphotocreator.processing.Action;
 import org.joanna.thesis.passportphotocreator.processing.Verifier;
-import org.opencv.core.Core;
+import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfDouble;
-import org.opencv.imgproc.Imgproc;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.joanna.thesis.passportphotocreator.PhotoMakerActivity.PREVIEW_HEIGHT;
 import static org.joanna.thesis.passportphotocreator.PhotoMakerActivity.PREVIEW_WIDTH;
 import static org.joanna.thesis.passportphotocreator.processing.light.ShadowUtils.isEvenlyLightened;
-import static org.opencv.imgproc.Imgproc.THRESH_BINARY;
 
 /**
  * Verifies if face does not contain side shadows.
@@ -28,13 +26,25 @@ public class ShadowVerification extends Verifier {
     private static final String TAG =
             ShadowVerification.class.getSimpleName();
 
-    protected Graphic mShadowGraphic;
+    private Graphic mShadowGraphic;
+    private ShadowVerificator mShadowVerificator;
 
     public ShadowVerification(
             final Activity activity,
             final GraphicOverlay<Graphic> overlay) {
         super(activity, overlay);
         mShadowGraphic = new ShadowGraphic(overlay);
+        try {
+            mShadowVerificator =
+                    new ShadowVerificatorFloatMobileNetV2(activity);
+            Log.i(TAG, "Succesfully initialized shadow verifier.");
+        } catch (IOException e) {
+            Log.e(
+                    TAG,
+                    "Could not initialize shadow verifier tensorflow model. " +
+                            "Program will run without it.");
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -51,7 +61,15 @@ public class ShadowVerification extends Verifier {
         if (null == image) {
             return;
         }
-        if (!isEvenlyLightened(image)) {
+
+        Boolean isEvenlyLightened = null;
+        if (mShadowVerificator != null) {
+            mShadowVerificator.classify(image);
+            isEvenlyLightened = mShadowVerificator.isEvenlyLightened();
+        }
+
+        if (!isEvenlyLightened(image) &&
+                (!isEvenlyLightened || null == isEvenlyLightened)) {
             positions.add(ShadowActions.NOT_UNIFORM);
         }
         mShadowGraphic.setBarActions(positions, mContext,
