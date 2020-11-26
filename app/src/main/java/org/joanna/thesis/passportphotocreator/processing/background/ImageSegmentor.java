@@ -28,7 +28,7 @@ public abstract class ImageSegmentor extends DetectorTensorflowLite {
     }
 
     /**
-     * Segments a frame from the preview stream.
+     * Segments received image.
      */
     public void segmentImg(Mat image) {
         if (mTflite == null) {
