@@ -67,8 +67,8 @@ public class BackgroundVerifier extends Verifier {
 
         List<Action> positions = new ArrayList<>();
 
-        if (!BackgroundUtils.isUniform(
-                mBackground, mBackgroundProperties, mSegmentor)) {
+        if (BackgroundUtils.isUniform(
+                mBackground, mBackgroundProperties, mSegmentor) >= 3) {
             positions.add(BackgroundActions.NOT_UNIFORM);
         }
         if (null != mBackgroundProperties.isBright() &&

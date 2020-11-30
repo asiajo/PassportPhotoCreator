@@ -22,7 +22,7 @@ public final class BackgroundUtils {
     private BackgroundUtils() {
     }
 
-    public static boolean isUniform(
+    public static int isUniform(
             final Mat background,
             final BackgroundProperties properties,
             final ImageSegmentor segmentor) {
@@ -33,11 +33,8 @@ public final class BackgroundUtils {
 
         // Those detections are not fully exact, so it is enough that 2 out of 3
         // state that background is uniform to classify it as uniform.
-        return properties.isUniform() ?
-                (properties.isEdgesFree() ||
-                        properties.isUncolorful()) :
-                (properties.isEdgesFree() &&
-                        properties.isUncolorful());
+        return properties.isUniform() + properties.isEdgesFree() +
+                properties.isUncolorful();
     }
 
     public static Mat getBackground(
@@ -134,10 +131,10 @@ public final class BackgroundUtils {
         if ((imgArea - areaPerson - areaBgdLeft) > epsilon
                 && (imgArea - areaPerson - areaBgdRight) > epsilon) {
             Log.i(TAG, "Unfortunately background seems not to be uniform!");
-            properties.setUniform(false);
+            properties.setUniform(2);
         } else {
             Log.i(TAG, "Background seems to be uniform.");
-            properties.setUniform(true);
+            properties.setUniform(0);
         }
     }
 
@@ -160,16 +157,24 @@ public final class BackgroundUtils {
 
         final int imgArea = background.width() * background.height();
         // hard-coded value that seems to do a good job in most cases
-        final int epsilon = imgArea / 150;
+        final int epsilonLittleEdges = imgArea / 200;
+        final int epsilonMediumEdges = imgArea / 120;
+        final int epsilonLotsOfEdges = imgArea / 80;
         int whitePixels = getContoursLengthOnTheImage(background);
         int approxLengthOfEdges =
                 whitePixels - properties.getPersonContourLen();
-        if (approxLengthOfEdges > epsilon) {
-            Log.i(TAG, "Background seems to contain edges!");
-            properties.setEdgesFree(false);
+        if (approxLengthOfEdges > epsilonLotsOfEdges) {
+            Log.i(TAG, "Background seems to contain a lot of edges!");
+            properties.setEdgesFree(3);
+        } else if (approxLengthOfEdges > epsilonMediumEdges) {
+            Log.i(TAG, "Background seems to contain quite some edges!");
+            properties.setEdgesFree(2);
+        } else if (approxLengthOfEdges > epsilonLittleEdges) {
+            Log.i(TAG, "Background seems to contain some edges!");
+            properties.setEdgesFree(1);
         } else {
             Log.i(TAG, "Background seems to be plain.");
-            properties.setEdgesFree(true);
+            properties.setEdgesFree(0);
         }
     }
 
@@ -205,10 +210,10 @@ public final class BackgroundUtils {
         if (standardDeviation[0] > epsilonHue ||
                 standardDeviation[2] > epsilonValue) {
             Log.i(TAG, "It seems that the background is colorful!");
-            properties.setUncolorful(false);
+            properties.setUncolorful(3);
         } else {
             Log.i(TAG, "It seems that the background color is uniform.");
-            properties.setUncolorful(true);
+            properties.setUncolorful(0);
         }
     }
 

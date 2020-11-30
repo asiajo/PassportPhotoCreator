@@ -31,7 +31,7 @@ public class BackgroundEnhancement implements Enhancer {
     public boolean verify(final Mat src) {
         Mat background = BackgroundUtils.getBackground(src, mSegmentor);
         return BackgroundUtils.isUniform(
-                background, mBackgroundProperties, mSegmentor);
+                background, mBackgroundProperties, mSegmentor) < 3;
     }
 
     @Override

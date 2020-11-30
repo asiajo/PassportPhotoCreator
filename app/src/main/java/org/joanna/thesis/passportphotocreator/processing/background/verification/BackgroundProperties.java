@@ -9,10 +9,10 @@ import org.opencv.core.Scalar;
 public class BackgroundProperties {
 
     private int     personContourLen;
-    private Boolean isUniform    = true;
-    private Boolean isUncolorful = true;
-    private Boolean isBright     = true;
-    private Boolean isEdgesFree  = true;
+    private int     isUniform;
+    private int     isUncolorful;
+    private Boolean isBright = true;
+    private int     isEdgesFree;
 
     public void setBgColorRgba(final Scalar bgColor) {
         final double brightness = BackgroundUtils.getBrigtness(bgColor);
@@ -27,11 +27,11 @@ public class BackgroundProperties {
         this.personContourLen = personContourLen;
     }
 
-    public Boolean isUniform() {
+    public int isUniform() {
         return isUniform;
     }
 
-    public void setUniform(final boolean uniform) {
+    public void setUniform(final int uniform) {
         isUniform = uniform;
     }
 
@@ -39,19 +39,19 @@ public class BackgroundProperties {
         return isBright;
     }
 
-    public Boolean isEdgesFree() {
+    public int isEdgesFree() {
         return isEdgesFree;
     }
 
-    public void setEdgesFree(final boolean edgesFree) {
+    public void setEdgesFree(final int edgesFree) {
         isEdgesFree = edgesFree;
     }
 
-    public Boolean isUncolorful() {
+    public int isUncolorful() {
         return isUncolorful;
     }
 
-    public void setUncolorful(final Boolean uncolorful) {
+    public void setUncolorful(final int uncolorful) {
         isUncolorful = uncolorful;
     }
 }
