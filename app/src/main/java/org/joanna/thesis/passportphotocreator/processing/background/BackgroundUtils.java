@@ -31,8 +31,6 @@ public final class BackgroundUtils {
         processEdgeDetection(background, properties);
         processColorsDetection(background, properties, segmentor);
 
-        // Those detections are not fully exact, so it is enough that 2 out of 3
-        // state that background is uniform to classify it as uniform.
         return properties.isUniform() + properties.isEdgesFree() +
                 properties.isUncolorful();
     }
