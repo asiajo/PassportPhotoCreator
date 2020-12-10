@@ -20,7 +20,7 @@ import static org.opencv.core.CvType.CV_8UC3;
  */
 public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
 
-    public static final  int   MODEL_INPUT_IMG_SIZE = 128;
+    public static final  int   MODEL_INPUT_IMG_SIZE = 224;
     private static final float IMAGE_MEAN           = 127.5f;
     private static final float IMAGE_STD            = 127.5f;
 
@@ -39,7 +39,7 @@ public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
 
     @Override
     protected String getModelPath() {
-        return "deconv_fin_munet.tflite";
+        return "munet_mnv3_wm05.tflite";
     }
 
     @Override
