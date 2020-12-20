@@ -61,13 +61,11 @@ public final class ImageUtils {
     private ImageUtils() {
     }
 
-    public static void saveImage(
+    public static String saveImage(
             final Bitmap image, final Activity activity)
             throws IOException {
         byte[] byteArray = getBytesFromBitmap(image);
         safelyRemoveBitmap(image);
-
-        // TODO: refactor
 
         final Context context = activity.getApplicationContext();
         final String fileName = System.currentTimeMillis() + ".png";
@@ -81,6 +79,7 @@ public final class ImageUtils {
         fos.write(byteArray);
         fos.flush();
         fos.close();
+        return fileName;
     }
 
     public static void saveImage(
