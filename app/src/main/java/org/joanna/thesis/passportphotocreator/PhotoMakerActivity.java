@@ -127,7 +127,7 @@ public class PhotoMakerActivity extends AppCompatActivity
     }
 
     @Override
-    public void sendFileName(String theFileName) {
+    public void finishWithResult(String theFileName) {
         Intent intent = new Intent();
         intent.putExtra("fileName", theFileName);
         setResult(RESULT_OK, intent);
