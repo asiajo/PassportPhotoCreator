@@ -79,7 +79,7 @@ public class PhotoMakerActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        if (photoPreviewFragment.isVisible()) {
+        if (photoPreviewFragment!=null && photoPreviewFragment.isVisible()) {
             displayCameraFragment();
         } else {
             super.onBackPressed();
