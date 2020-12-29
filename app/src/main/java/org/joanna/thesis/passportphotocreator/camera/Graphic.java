@@ -118,6 +118,8 @@ public abstract class Graphic {
             mActions.putAll(newActions);
         } catch (ConcurrentModificationException e) {
             Log.e(TAG, "Concurrent Modification of actions bar happened.");
+        } catch (NullPointerException e) {
+            Log.e(TAG, e.getMessage());
         }
         setValidity();
     }
