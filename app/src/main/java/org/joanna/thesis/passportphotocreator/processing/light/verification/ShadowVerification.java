@@ -69,7 +69,7 @@ public class ShadowVerification extends Verifier {
         }
 
         if (!isEvenlyLightened(image) &&
-                (!isEvenlyLightened || null == isEvenlyLightened)) {
+                (null == isEvenlyLightened || !isEvenlyLightened)) {
             positions.add(ShadowActions.NOT_UNIFORM);
         }
         mShadowGraphic.setBarActions(positions, mContext,
