@@ -23,31 +23,37 @@ import org.opencv.core.Mat;
 import java.io.IOException;
 
 import static org.joanna.thesis.passportphotocreator.utils.ImageUtils.getBitmapFromMat;
+import static org.joanna.thesis.passportphotocreator.utils.ImageUtils.getMultiplePhotosOnOnePaper;
 
 public class PhotoPreviewFragment extends Fragment
         implements View.OnClickListener, View.OnTouchListener {
-    public static final float         MAX_ZOOM       = 6.0f;
-    public static final float         MIN_ZOOM       = 1.0f;
-    private             PhotoReceiver photoReceiver;
-    private             Bitmap        mImage;
-    private             ImageView     mImageView;
-    private             Matrix        matrix         = new Matrix();
-    private             Matrix        savedMatrix    = new Matrix();
-    private             TouchAction   mode           = TouchAction.NONE;
-    private             PointF        start          = new PointF();
-    private             PointF        mid            = new PointF();
-    private             float         oldDist        = 1f;
-    private             float         startingWidth  = 0f;
-    private             float         startingHeight = 0f;
-    private             float[]       valuesStart    = new float[9];
-    private             float[]       values         = new float[9];
+    private static final float MAX_ZOOM      = 6.0f;
+    private static final float MIN_ZOOM      = 1.0f;
+    private static final float INCH          = 2.54f;
+    private static final int   DPI_600_CM_10 = (int) (600 * 10 / INCH);
+    private static final int   DPI_600_CM_15 = (int) (600 * 15 / INCH);
+
+    private PhotoReceiver photoReceiver;
+    private Bitmap        mImage;
+    private ImageView     mImageView;
+    private Mat           picture;
+    private Matrix        matrix         = new Matrix();
+    private Matrix        savedMatrix    = new Matrix();
+    private TouchAction   mode           = TouchAction.NONE;
+    private PointF        start          = new PointF();
+    private PointF        mid            = new PointF();
+    private float         oldDist        = 1f;
+    private float         startingWidth  = 0f;
+    private float         startingHeight = 0f;
+    private float[]       valuesStart    = new float[9];
+    private float[]       values         = new float[9];
 
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         photoReceiver = (PhotoReceiver) context;
-        Mat picture = photoReceiver.getPhoto();
+        picture = photoReceiver.getPhoto();
         mImage = getBitmapFromMat(picture);
         startingWidth = mImage.getWidth();
         startingHeight = mImage.getHeight();
@@ -73,6 +79,8 @@ public class PhotoPreviewFragment extends Fragment
         buttonSave.setOnClickListener(this);
         Button buttonCancel = view.findViewById(R.id.cancel);
         buttonCancel.setOnClickListener(this);
+        Button buttonPictures = (Button) view.findViewById(R.id.many_photos);
+        buttonPictures.setOnClickListener(this);
 
         mImageView = view.findViewById(R.id.view_photo);
         mImageView.setImageBitmap(mImage);
@@ -85,11 +93,15 @@ public class PhotoPreviewFragment extends Fragment
 
     @Override
     public void onClick(final View v) {
+
         if (v.getId() == R.id.cancel) {
             photoReceiver.displayCameraFragment();
-
         }
-        if (v.getId() == R.id.save_photo) {
+        if (v.getId() == R.id.save_photo || v.getId() == R.id.many_photos) {
+            if (v.getId() == R.id.many_photos) {
+                mImage = getMultiplePhotosOnOnePaper(DPI_600_CM_10,
+                        DPI_600_CM_15, picture);
+            }
             try {
                 String fileName = ImageUtils.saveImage(mImage, getActivity());
                 Toast.makeText(

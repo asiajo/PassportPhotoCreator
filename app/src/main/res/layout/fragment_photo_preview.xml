@@ -76,6 +76,21 @@
             android:shadowRadius="5"
             android:text="cancel"
             android:textSize="15sp" />
+
+        <Button
+            android:id="@+id/many_photos"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:background="@drawable/buttonshape"
+            android:padding="5dp"
+            android:shadowColor="#A8A8A8"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="5"
+            android:text="save multiple"
+            android:textSize="15sp" />
     </LinearLayout>
 
 </LinearLayout>

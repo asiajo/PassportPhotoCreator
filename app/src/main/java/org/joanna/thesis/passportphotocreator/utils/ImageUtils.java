@@ -352,4 +352,31 @@ public final class ImageUtils {
         return resolver.openOutputStream(Objects.requireNonNull(imageUri));
     }
 
+    public static Bitmap getMultiplePhotosOnOnePaper(
+            final int rows, final int cols, final Mat picture) {
+        org.opencv.core.Rect roi;
+        Mat bigMat = new Mat(rows, cols, picture.type(), new Scalar(255));
+        int hCountPictures = cols / picture.width();
+        int hSpace = (cols % picture.width()) / (hCountPictures + 1);
+        int vCountPictures = rows / picture.height();
+        int vSpace = (cols % picture.width()) / (vCountPictures + 1);
+
+        for (int j = 0; j < vCountPictures; j++) {
+            for (int i = 0; i < hCountPictures; i++) {
+                roi = new org.opencv.core.Rect(
+                        i * picture.width() + (i + 1) * hSpace,
+                        j * picture.height() + (j + 1) * vSpace,
+                        picture.width(),
+                        picture.height());
+                picture.copyTo(bigMat.submat(roi));
+            }
+        }
+        Bitmap mBigImage = Bitmap.createBitmap(
+                bigMat.width(),
+                bigMat.height(),
+                Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(bigMat, mBigImage);
+        return mBigImage;
+    }
+
 }
