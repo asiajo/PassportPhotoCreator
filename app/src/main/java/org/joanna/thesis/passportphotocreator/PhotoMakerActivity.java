@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.joanna.thesis.passportphotocreator.MainActivity.FILE_NAME;
+
 public class PhotoMakerActivity extends AppCompatActivity
         implements CameraFragment.PhotoSender,
                    PhotoPreviewFragment.PhotoReceiver {
@@ -129,7 +131,7 @@ public class PhotoMakerActivity extends AppCompatActivity
     @Override
     public void finishWithResult(String theFileName) {
         Intent intent = new Intent();
-        intent.putExtra("fileName", theFileName);
+        intent.putExtra(FILE_NAME, theFileName);
         setResult(RESULT_OK, intent);
         finish();
     }
