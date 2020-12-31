@@ -324,14 +324,10 @@ public final class ImageUtils {
     private static OutputStream getImageOutputStreamSdkFromQ(
             final String fileName, final Context context)
             throws FileNotFoundException {
-        // TODO: double check this
-        // TODO: send info to gallery
         ContentResolver resolver = context.getContentResolver();
         ContentValues contentValues = new ContentValues();
         contentValues.put(MediaStore.Images.Media.TITLE, fileName);
-        contentValues.put(
-                MediaStore.Images.ImageColumns.DISPLAY_NAME,
-                fileName);
+        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
         contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/png");
         contentValues.put(
                 MediaStore.Images.ImageColumns.RELATIVE_PATH,
@@ -345,7 +341,6 @@ public final class ImageUtils {
         contentValues.put(
                 MediaStore.MediaColumns.DATE_MODIFIED,
                 System.currentTimeMillis() / 1000l);
-        contentValues.put(MediaStore.MediaColumns.IS_PENDING, true);
         Uri imageUri = resolver.insert(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 contentValues);
