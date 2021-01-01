@@ -42,6 +42,7 @@ public class PhotoMakerActivity extends AppCompatActivity
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         Log.i(TAG, "Creating photo maker activity.");
+
         setContentView(R.layout.photo_capture);
         mEnhancers = new ArrayList<>();
         try {
@@ -81,7 +82,7 @@ public class PhotoMakerActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        if (photoPreviewFragment!=null && photoPreviewFragment.isVisible()) {
+        if (photoPreviewFragment != null && photoPreviewFragment.isVisible()) {
             displayCameraFragment();
         } else {
             super.onBackPressed();
