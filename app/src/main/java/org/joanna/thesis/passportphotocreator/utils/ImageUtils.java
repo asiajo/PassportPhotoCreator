@@ -14,6 +14,10 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.face.Face;
+
+import org.jetbrains.annotations.NotNull;
 import org.joanna.thesis.passportphotocreator.R;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
@@ -36,6 +40,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Objects;
 
+import static org.joanna.thesis.passportphotocreator.processing.face.FaceUtils.getFaceBoundingBox;
+import static org.joanna.thesis.passportphotocreator.utils.PPCUtlis.AndroidRectToOpenCVRect;
+import static org.joanna.thesis.passportphotocreator.utils.PPCUtlis.multiplyRect;
 import static org.opencv.core.Core.BORDER_CONSTANT;
 import static org.opencv.core.Core.BORDER_REPLICATE;
 
@@ -54,8 +61,8 @@ public final class ImageUtils {
     private static final int   FINAL_IMAGE_WIDTH_PX = 827;
     private static final int   FINAL_IMAGE_HEIGHT_PX =
             (int) (FINAL_IMAGE_WIDTH_PX * FINAL_IMAGE_H_TO_W_RATIO);
-
     private static final String TAG = ImageUtils.class.getSimpleName();
+    public static        int   PICTURE_PROCESS_SCALE = 8;
 
 
     private ImageUtils() {
@@ -184,7 +191,8 @@ public final class ImageUtils {
             final Mat src,
             final GraphicOverlay<Graphic> mGraphicOverlay) {
         FaceGraphic faceGraphic = getFaceGraphic(mGraphicOverlay);
-        if (faceGraphic == null || faceGraphic.getFaceBoundingBox() == null) {
+        if (faceGraphic == null || !faceGraphic.isOneFace() ||
+                faceGraphic.getFaceBoundingBox() == null) {
             return null;
         }
 
@@ -209,7 +217,8 @@ public final class ImageUtils {
             final Mat src,
             final GraphicOverlay<Graphic> mGraphicOverlay) {
         FaceGraphic faceGraphic = getFaceGraphic(mGraphicOverlay);
-        if (faceGraphic == null || faceGraphic.getFaceBoundingBox() == null) {
+        if (faceGraphic == null || !faceGraphic.isOneFace() ||
+                faceGraphic.getFaceBoundingBox() == null) {
             return null;
         }
 
@@ -372,6 +381,47 @@ public final class ImageUtils {
                 Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(bigMat, mBigImage);
         return mBigImage;
+    }
+
+
+    public static Mat getFaceMatFromPictureTaken(Face face, Bitmap bmp) {
+        if (null == face) {
+            Log.w(
+                    "Photo Taken",
+                    "Did not find any face on the image data. Picture taking " +
+                            "will fail.");
+            ImageUtils.safelyRemoveBitmap(bmp);
+            return null;
+        }
+        Mat picture = new Mat();
+        Utils.bitmapToMat(bmp, picture);
+        ImageUtils.safelyRemoveBitmap(bmp);
+        picture = ImageUtils.rotateMat(picture);
+
+        Rect faceBbSmall = getFaceBoundingBox(face);
+        Rect faceBoundingBox =
+                multiplyRect(PICTURE_PROCESS_SCALE, faceBbSmall);
+        if (!verifyBoundingBox(faceBoundingBox, picture.size())) {
+            Log.w(
+                    "Photo Taken",
+                    "Picture does not fit entirely within visible camera " +
+                            "region. Picture taking will fail.");
+            return null;
+        }
+        picture = picture.submat(AndroidRectToOpenCVRect(faceBoundingBox));
+        picture = ImageUtils.resizeMatToFinalSize(picture);
+        return picture;
+    }
+
+    @NotNull
+    public static InputImage getInputImage(
+            final Bitmap bigImage, final int scale) {
+        Bitmap smallImage = Bitmap.createScaledBitmap(
+                bigImage,
+                bigImage.getWidth() / scale,
+                bigImage.getHeight() / scale,
+                false);
+        return InputImage.fromBitmap(smallImage, 90);
     }
 
 }

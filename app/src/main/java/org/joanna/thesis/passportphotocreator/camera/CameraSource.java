@@ -11,20 +11,25 @@ import android.hardware.Camera.CameraInfo;
 import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
+import android.util.Size;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresPermission;
 import androidx.annotation.StringDef;
 
-import com.google.android.gms.common.images.Size;
-import com.google.android.gms.vision.Detector;
-import com.google.android.gms.vision.Frame;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.face.Face;
+import com.google.mlkit.vision.face.FaceDetector;
 
 import org.joanna.thesis.passportphotocreator.processing.Verifier;
+import org.joanna.thesis.passportphotocreator.processing.face.FaceTracker;
 
 import java.io.IOException;
 import java.lang.Thread.State;
@@ -117,11 +122,6 @@ public class CameraSource {
     private Camera mCamera;
 
     private int mFacing = CAMERA_FACING_BACK;
-    /**
-     * Rotation of the device, and thus the associated preview images captured from the device.
-     * See {@link Frame.Metadata#getRotation()}.
-     */
-    private int mRotation;
 
     private Size mPreviewSize;
 
@@ -165,14 +165,15 @@ public class CameraSource {
      * Builder for configuring and creating an associated camera source.
      */
     public static class Builder {
-        private final Detector<?>  mDetector;
+        private final FaceDetector mDetector;
+        private       FaceTracker  faceTracker;
         private       CameraSource mCameraSource = new CameraSource();
 
         /**
          * Creates a camera source builder with the supplied context and detector.  Camera preview
          * images will be streamed to the associated detector upon starting the camera source.
          */
-        public Builder(Context context, Detector<?> detector) {
+        public Builder(Context context, FaceDetector detector) {
             if (context == null) {
                 throw new IllegalArgumentException("No context supplied.");
             }
@@ -211,6 +212,11 @@ public class CameraSource {
             return this;
         }
 
+        public Builder setFaceDetector(final FaceTracker fdp) {
+            faceTracker = fdp;
+            return this;
+        }
+
         /**
          * Sets the desired width and height of the camera frames in pixels.  If the exact desired
          * values are not available options, the best matching available options are selected.
@@ -246,10 +252,10 @@ public class CameraSource {
          * Creates an instance of the camera source.
          */
         public CameraSource build() {
-            mCameraSource.mFrameProcessor = mCameraSource.new FrameProcessingRunnable(mDetector);
+            mCameraSource.mFrameProcessor = mCameraSource.new FrameProcessingRunnable(
+                    mDetector, faceTracker);
             return mCameraSource;
         }
-
     }
 
     //==============================================================================================
@@ -1022,9 +1028,6 @@ public class CameraSource {
             displayAngle = angle;
         }
 
-        // This corresponds to the rotation constants in {@link Frame}.
-        mRotation = angle / 90;
-
         camera.setDisplayOrientation(displayAngle);
         parameters.setRotation(angle);
     }
@@ -1104,7 +1107,8 @@ public class CameraSource {
      * received frame will immediately start on the same thread.
      */
     private class FrameProcessingRunnable implements Runnable {
-        private Detector<?> mDetector;
+        private final FaceTracker  mFaceTracker;
+        private       FaceDetector mDetector;
         private long        mStartTimeMillis = SystemClock.elapsedRealtime();
 
         // This lock guards all of the member variables below.
@@ -1116,8 +1120,11 @@ public class CameraSource {
         private int mPendingFrameId = 0;
         private ByteBuffer mPendingFrameData;
 
-        FrameProcessingRunnable(Detector<?> detector) {
+        FrameProcessingRunnable(
+                FaceDetector detector,
+                final FaceTracker faceTracker) {
             mDetector = detector;
+            mFaceTracker = faceTracker;
         }
 
         /**
@@ -1127,7 +1134,7 @@ public class CameraSource {
         @SuppressLint("Assert")
         void release() {
             assert (mProcessingThread.getState() == State.TERMINATED);
-            mDetector.release();
+            mDetector.close();
             mDetector = null;
         }
 
@@ -1185,9 +1192,9 @@ public class CameraSource {
          * If you find that this is using more CPU than you'd like, you should probably decrease the
          * FPS setting above to allow for some idle time in between frames.
          */
+
         @Override
         public void run() {
-            Frame outputFrame;
             ByteBuffer data;
 
             while (true) {
@@ -1211,14 +1218,6 @@ public class CameraSource {
                         return;
                     }
 
-                    outputFrame = new Frame.Builder()
-                            .setImageData(mPendingFrameData, mPreviewSize.getWidth(),
-                                    mPreviewSize.getHeight(), ImageFormat.NV21)
-                            .setId(mPendingFrameId)
-                            .setTimestampMillis(mPendingTimeMillis)
-                            .setRotation(mRotation)
-                            .build();
-
                     // Hold onto the frame data locally, so that we can use this for detection
                     // below.  We need to clear mPendingFrameData to ensure that this buffer isn't
                     // recycled back to the camera before we are done using that data.
@@ -1231,7 +1230,31 @@ public class CameraSource {
                 // frame.
 
                 try {
-                    mDetector.receiveFrame(outputFrame);
+                    InputImage image = InputImage.fromByteBuffer(data,
+                            mPreviewSize.getWidth(),
+                            mPreviewSize.getHeight(), 90, ImageFormat.NV21);
+                    mDetector.process(image)
+                             .addOnSuccessListener(
+                                     new OnSuccessListener<List<Face>>() {
+                                         @Override
+                                         public void onSuccess(
+                                                 List<Face> faces) {
+                                             if (mFaceTracker != null) {
+                                                 mFaceTracker.processFaces(
+                                                         faces);
+                                             }
+                                         }
+                                     })
+                             .addOnFailureListener(new OnFailureListener() {
+                                 @Override
+                                 public void onFailure(
+                                         @NonNull final Exception e) {
+                                     if (mFaceTracker != null) {
+                                         mFaceTracker.clear();
+                                     }
+                                     Log.e(TAG, e.getMessage());
+                                 }
+                             });
                 } catch (Throwable t) {
                     Log.e(TAG, "Exception thrown from receiver.", t);
                 } finally {

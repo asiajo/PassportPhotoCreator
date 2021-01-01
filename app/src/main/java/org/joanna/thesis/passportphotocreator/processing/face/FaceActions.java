@@ -11,5 +11,6 @@ public enum FaceActions implements Action {
     STRAIGHTEN_FROM_RIGHT,
     LEFT_EYE_OPEN,
     RIGHT_EYE_OPEN,
-    NEUTRAL_MOUTH
+    NEUTRAL_MOUTH,
+    TOO_MANY_FACES
 }

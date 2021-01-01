@@ -7,13 +7,16 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
-import com.google.android.gms.vision.face.Face;
+import com.google.mlkit.vision.face.Face;
 
 import org.joanna.thesis.passportphotocreator.R;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
 import org.joanna.thesis.passportphotocreator.processing.PhotoValidity;
 import org.joanna.thesis.passportphotocreator.utils.PPCUtlis;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.joanna.thesis.passportphotocreator.camera.GraphicOverlay.TOP_RECT_W_TO_H_RATIO;
 
@@ -24,9 +27,8 @@ public class FaceGraphic extends Graphic {
     private              double         bbProportionLeft;
     private              double         bbProportionTop;
     private              double         bbProportionWidth;
-    private              double         bbProportionHeight;
-    private              Rect           mFaceBoundingBox;
-    private volatile     Face           mFace;
+    private              List<Rect>     mFaceBoundingBoxes;
+    private volatile     List<Face>     mFaces;
     private              GraphicOverlay mOverlay;
     private              Context        mContext;
     private              int            mArrowsScale   = ARROW_MIN_SIZE;
@@ -73,34 +75,45 @@ public class FaceGraphic extends Graphic {
                 new BitmapMetaData(
                         FaceGraphic.class, R.drawable.mouth,
                         PhotoValidity.INVALID));
+        getActionsMap().put(
+                FaceActions.TOO_MANY_FACES,
+                new BitmapMetaData(
+                        FaceGraphic.class, R.drawable.too_many_faces,
+                        PhotoValidity.INVALID));
     }
 
     FaceGraphic(final GraphicOverlay overlay, final Context context) {
         super(overlay);
         mOverlay = overlay;
         mContext = context;
+        mFaceBoundingBoxes = new ArrayList<>();
     }
 
-    void updateFace(final Face face) {
-        mFace = face;
+    public void updateFaces(final List<Face> faces) {
+        mFaces = faces;
         postInvalidate();
     }
 
     @Override
     public void draw(final Canvas canvas) {
-        Face face = mFace;
-        if (face == null) {
+        if (null == mFaces || mFaces.size() == 0) {
             return;
         }
-        mFaceBoundingBox = FaceUtils.getFaceBoundingBox(face, this);
-        Rect displayBoundingBox = PPCUtlis.translateY(
-                mFaceBoundingBox,
-                mOverlay.getWidth() / TOP_RECT_W_TO_H_RATIO);
-        setBoundingBoxProportions();
-        canvas.drawRect(displayBoundingBox, getmPaint());
+        int i = 0;
+        mFaceBoundingBoxes.clear();
+        for (Face face : mFaces) {
+            mFaceBoundingBoxes.add(i, FaceUtils.getFaceBoundingBox(face, this));
+            Rect displayBoundingBox = PPCUtlis.translateY(
+                    mFaceBoundingBoxes.get(i),
+                    mOverlay.getWidth() / TOP_RECT_W_TO_H_RATIO);
+            canvas.drawRect(displayBoundingBox, getmPaint());
+        }
         drawActionsToBePerformed(canvas);
-        if (isFaceTooSmall()) {
-            drawEnlargingInfo(canvas);
+        if (mFaces.size() == 1) {
+            setFirstBoundingBoxProportions();
+            if (isFaceTooSmall()) {
+                drawEnlargingInfo(canvas);
+            }
         }
     }
 
@@ -109,17 +122,18 @@ public class FaceGraphic extends Graphic {
     }
 
     private void drawEnlargingInfo(final Canvas canvas) {
+        Rect bbox = mFaceBoundingBoxes.get(0);
         Bitmap enlarge = BitmapFactory.decodeResource(
                 mContext.getResources(),
                 R.drawable.enlarge);
         final Rect rectSrc = new Rect(0, 0, enlarge.getWidth(),
                 enlarge.getHeight());
-        int dstHalfWidth = (int) (mFaceBoundingBox.width() * mArrowsScale++ /
-                ARROW_MAX_SIZE);
+        int dstHalfWidth = bbox.width() * mArrowsScale++ /
+                ARROW_MAX_SIZE;
         int dstHalfHeight =
                 dstHalfWidth * enlarge.getHeight() / enlarge.getWidth();
-        final int centerX = mFaceBoundingBox.centerX();
-        final int centerY = (int) (mFaceBoundingBox.centerY() +
+        final int centerX = bbox.centerX();
+        final int centerY = (int) (bbox.centerY() +
                 mOverlay.getWidth() / TOP_RECT_W_TO_H_RATIO);
         final Rect rectDst = new Rect(
                 centerX - dstHalfWidth,
@@ -132,17 +146,19 @@ public class FaceGraphic extends Graphic {
         }
     }
 
-    private void setBoundingBoxProportions() {
+    private void setFirstBoundingBoxProportions() {
         double canvasWidth = mOverlay.getWidth();
         double canvasHeight = mOverlay.getOverlayRelativeHeight();
-        bbProportionLeft = mFaceBoundingBox.left / canvasWidth;
-        bbProportionTop = mFaceBoundingBox.top / canvasHeight;
-        bbProportionWidth = mFaceBoundingBox.width() / canvasWidth;
-        bbProportionHeight = mFaceBoundingBox.height() / canvasHeight;
+        bbProportionLeft = mFaceBoundingBoxes.get(0).left / canvasWidth;
+        bbProportionTop = mFaceBoundingBoxes.get(0).top / canvasHeight;
+        bbProportionWidth = mFaceBoundingBoxes.get(0).width() / canvasWidth;
     }
 
     public Rect getFaceBoundingBox() {
-        return mFaceBoundingBox;
+        if (mFaceBoundingBoxes.size() == 1) {
+            return mFaceBoundingBoxes.get(0);
+        }
+        return null;
     }
 
     public double getBbProportionLeft() {
@@ -157,16 +173,23 @@ public class FaceGraphic extends Graphic {
         return bbProportionWidth;
     }
 
+    public boolean isOneFace() {
+        return mFaceBoundingBoxes.size() == 1;
+    }
+
     public double getBbProportionCenterX() {
-        return mFaceBoundingBox.centerX() / (double) mOverlay.getWidth();
+        if (mFaceBoundingBoxes.size() == 1) {
+            return mFaceBoundingBoxes.get(0).centerX() /
+                    (double) mOverlay.getWidth();
+        }
+        return 0;
     }
 
     public double getBbProportionCenterY() {
-        return mFaceBoundingBox.centerY() /
-                ((double) mOverlay.getOverlayRelativeHeight());
-    }
-
-    public double getBbProportionHeight() {
-        return bbProportionHeight;
+        if (mFaceBoundingBoxes.size() == 1) {
+            return mFaceBoundingBoxes.get(0).centerY() /
+                    ((double) mOverlay.getOverlayRelativeHeight());
+        }
+        return 0;
     }
 }

@@ -2,7 +2,7 @@ package org.joanna.thesis.passportphotocreator.processing.face;
 
 import android.graphics.Rect;
 
-import com.google.android.gms.vision.face.Face;
+import com.google.mlkit.vision.face.Face;
 
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
@@ -17,22 +17,19 @@ public final class FaceUtils {
     public static Rect getFaceBoundingBox(
             final Face face,
             final Graphic graphic) {
-        // getPosition returns left top corner of the face bounding box
-        double centerX =
-                graphic.translateX(face.getPosition().x + face.getWidth() / 2);
-        double centerY =
-                graphic.translateY(face.getPosition().y + face.getHeight() / 2);
-        double widthWithOffset = graphic.scaleX(face.getWidth()) * BB_SCALING;
+        double centerX = graphic.scaleX(face.getBoundingBox().centerX());
+        double centerY = graphic.scaleX(face.getBoundingBox().centerY());
+        double widthWithOffset =
+                graphic.scaleX(face.getBoundingBox().width()) * BB_SCALING;
 
         return getFaceBoundingBox(centerX, centerY, widthWithOffset);
     }
 
     public static Rect getFaceBoundingBox(final Face face) {
-        // getPosition returns left top corner of the face bounding box
-        int centerX = (int) (face.getPosition().x + face.getWidth() / 2.);
-        int centerY = (int) (face.getPosition().y + face.getHeight() / 2.);
-        int widthWithOffset = (int) (face.getWidth() * BB_SCALING);
-
+        double centerX = face.getBoundingBox().centerX();
+        double centerY = face.getBoundingBox().centerY();
+        int widthWithOffset =
+                (int) (face.getBoundingBox().width() * BB_SCALING);
         return getFaceBoundingBox(centerX, centerY, widthWithOffset);
     }
 

@@ -2,10 +2,8 @@ package org.joanna.thesis.passportphotocreator;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,12 +16,18 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.gms.vision.face.FaceDetector;
-import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.face.Face;
+import com.google.mlkit.vision.face.FaceDetection;
+import com.google.mlkit.vision.face.FaceDetector;
+import com.google.mlkit.vision.face.FaceDetectorOptions;
 
 import org.joanna.thesis.passportphotocreator.camera.CameraSource;
 import org.joanna.thesis.passportphotocreator.camera.CameraSourcePreview;
@@ -41,7 +45,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.joanna.thesis.passportphotocreator.utils.PPCUtlis.getFaceMatFromPictureTaken;
+import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+import static android.graphics.BitmapFactory.decodeByteArray;
+import static com.google.mlkit.vision.face.FaceDetectorOptions.CLASSIFICATION_MODE_ALL;
+import static com.google.mlkit.vision.face.FaceDetectorOptions.LANDMARK_MODE_NONE;
+import static com.google.mlkit.vision.face.FaceDetectorOptions.PERFORMANCE_MODE_FAST;
+import static org.joanna.thesis.passportphotocreator.utils.ImageUtils.PICTURE_PROCESS_SCALE;
+import static org.joanna.thesis.passportphotocreator.utils.ImageUtils.getFaceMatFromPictureTaken;
+import static org.joanna.thesis.passportphotocreator.utils.ImageUtils.getInputImage;
+import static org.joanna.thesis.passportphotocreator.utils.PPCUtlis.makeCenteredToast;
 
 public class CameraFragment extends Fragment implements View.OnClickListener {
 
@@ -81,21 +93,22 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
 
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
         mPreview = view.findViewById(R.id.preview);
         {
             Button buttonTakePicture = view.findViewById(
                     R.id.take_photo_button);
             buttonTakePicture.setOnClickListener(this);
+
             mGraphicOverlay = view.findViewById(R.id.graphicOverlay);
             mVerifiers = new ArrayList<>();
-            mVerifiers.add(
-                    new ShadowVerification(getActivity(), mGraphicOverlay));
-            mVerifiers.add(
-                    new FaceUncoveredVerification(
-                            getActivity(), mGraphicOverlay));
+            mVerifiers.add(new ShadowVerification(
+                    getActivity(), mGraphicOverlay));
+            mVerifiers.add(new FaceUncoveredVerification(
+                    getActivity(), mGraphicOverlay));
             try {
-                mVerifiers.add(
-                        new BackgroundVerifier(getActivity(), mGraphicOverlay));
+                mVerifiers.add(new BackgroundVerifier(
+                        getActivity(), mGraphicOverlay));
             } catch (IOException e) {
                 Toast.makeText(
                         getActivity(),
@@ -169,30 +182,19 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
     private void createCameraSource() {
         Context context = getActivity().getApplicationContext();
 
-        getActivity().setRequestedOrientation(
-                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        mDetector = new FaceDetector.Builder(context)
-                .setLandmarkType(FaceDetector.NO_LANDMARKS)
-                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
-                .setProminentFaceOnly(true)
-                .build();
+        getActivity().setRequestedOrientation(SCREEN_ORIENTATION_PORTRAIT);
+
+        FaceDetectorOptions options =
+                new FaceDetectorOptions.Builder()
+                        .setPerformanceMode(PERFORMANCE_MODE_FAST)
+                        .setContourMode(LANDMARK_MODE_NONE)
+                        .setClassificationMode(CLASSIFICATION_MODE_ALL)
+                        .build();
+
+
+        mDetector = FaceDetection.getClient(options);
 
         mFaceTracker = new FaceTracker(mGraphicOverlay, context);
-        mDetector.setProcessor(
-                new LargestFaceFocusingProcessor(mDetector, mFaceTracker));
-
-        if (!mDetector.isOperational()) {
-            IntentFilter lowstorageFilter =
-                    new IntentFilter(Intent.ACTION_DEVICE_STORAGE_LOW);
-            boolean hasLowStorage = getActivity().registerReceiver(
-                    null,
-                    lowstorageFilter) != null;
-
-            if (hasLowStorage) {
-                Toast.makeText(getActivity(), R.string.low_storage_error,
-                        Toast.LENGTH_LONG).show();
-            }
-        }
 
         CameraSource.Builder builder = new CameraSource
                 .Builder(context, mDetector)
@@ -200,6 +202,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
                 .setRequestedPreviewSize(PREVIEW_HEIGHT, PREVIEW_WIDTH)
                 .setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)
                 .setVerifiers(mVerifiers)
+                .setFaceDetector(mFaceTracker)
                 .setRequestedFps(15.0f);
 
         mCameraSource = builder.build();
@@ -220,28 +223,58 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
     }
 
     private void takePhoto() {
-        if (mCameraSource == null) {
+        if (null == mCameraSource || null == mFaceTracker ||
+                cannotMakePicture(null == mFaceTracker.getFaces() ||
+                        mFaceTracker.getFaces().size() != 1)) {
             return;
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             requestStoragePermissions();
         }
+
         mCameraSource.takePicture(null, new CameraSource.PictureCallback() {
             @Override
             public void onPictureTaken(byte[] bytes) {
-                Mat picture = getFaceMatFromPictureTaken(bytes, mDetector);
-                if (picture == null) {
-                    Toast.makeText(
-                            getActivity(),
-                            R.string.cannot_make_a_picture,
-                            Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                photoSender.setPhoto(picture);
-                mPreview.stop();
-                photoSender.displayPreviewFragment();
+                Toast toast = makeCenteredToast(getActivity(),
+                        R.string.wait_for_a_picture, Toast.LENGTH_LONG);
+                toast.show();
+
+                Bitmap bigImg = decodeByteArray(bytes, 0, bytes.length);
+                InputImage image = getInputImage(bigImg, PICTURE_PROCESS_SCALE);
+
+                mDetector.process(image).addOnCompleteListener(
+                        new OnCompleteListener<List<Face>>() {
+                            @Override
+                            public void onComplete(
+                                    @NonNull final Task<List<Face>> task) {
+                                final List<Face> faces = task.getResult();
+                                toast.cancel();
+                                if (cannotMakePicture(
+                                        null == faces || faces.size() != 1)) {
+                                    return;
+                                }
+                                Mat picture = getFaceMatFromPictureTaken(
+                                        faces.get(0), bigImg);
+                                if (cannotMakePicture(null == picture)) {
+                                    return;
+                                }
+                                photoSender.setPhoto(picture);
+                                mPreview.stop();
+                                photoSender.displayPreviewFragment();
+                            }
+                        });
             }
         });
+    }
+
+    private boolean cannotMakePicture(final boolean condition) {
+        if (condition) {
+            makeCenteredToast(
+                    getActivity(),
+                    R.string.cannot_make_a_picture,
+                    Toast.LENGTH_LONG).show();
+        }
+        return condition;
     }
 
     public interface PhotoSender {

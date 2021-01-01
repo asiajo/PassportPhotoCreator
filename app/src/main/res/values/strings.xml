@@ -17,6 +17,7 @@
     <string name="no_face_on_the_picture">Did not find face on the picture. Cannot make a photo.</string>
     <string name="image_saved">Image Saved!</string>
     <string name="image_not_saved">ERROR! Image Could not be Saved.</string>
-    <string name="cannot_make_a_picture">Could not make a picture. Make sure that the rectangle around the face is fully visible.</string>
+    <string name="cannot_make_a_picture">Could not make a picture. Make sure that there is exactly one rectangle around the face and it is fully visible.</string>
+    <string name="wait_for_a_picture">Please wait while the picture is being processed. It will be displayed soon. It can take few seconds.</string>
     <string name="image_preview">Captured image:</string>
 </resources>

@@ -4,13 +4,12 @@ import android.Manifest;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.Size;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.ViewGroup;
 
 import androidx.annotation.RequiresPermission;
-
-import com.google.android.gms.common.images.Size;
 
 import java.io.IOException;
 
