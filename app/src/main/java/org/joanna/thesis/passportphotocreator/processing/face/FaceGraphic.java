@@ -29,7 +29,6 @@ public class FaceGraphic extends Graphic {
     private              double         bbProportionWidth;
     private              List<Rect>     mFaceBoundingBoxes;
     private volatile     List<Face>     mFaces;
-    private              GraphicOverlay mOverlay;
     private              Context        mContext;
     private              int            mArrowsScale   = ARROW_MIN_SIZE;
 
@@ -84,7 +83,6 @@ public class FaceGraphic extends Graphic {
 
     FaceGraphic(final GraphicOverlay overlay, final Context context) {
         super(overlay);
-        mOverlay = overlay;
         mContext = context;
         mFaceBoundingBoxes = new ArrayList<>();
     }
@@ -105,7 +103,7 @@ public class FaceGraphic extends Graphic {
             mFaceBoundingBoxes.add(i, FaceUtils.getFaceBoundingBox(face, this));
             Rect displayBoundingBox = PPCUtlis.translateY(
                     mFaceBoundingBoxes.get(i),
-                    mOverlay.getWidth() / TOP_RECT_W_TO_H_RATIO);
+                    getGraphicOverlay().getWidth() / TOP_RECT_W_TO_H_RATIO);
             canvas.drawRect(displayBoundingBox, getmPaint());
         }
         drawActionsToBePerformed(canvas);
@@ -134,7 +132,7 @@ public class FaceGraphic extends Graphic {
                 dstHalfWidth * enlarge.getHeight() / enlarge.getWidth();
         final int centerX = bbox.centerX();
         final int centerY = (int) (bbox.centerY() +
-                mOverlay.getWidth() / TOP_RECT_W_TO_H_RATIO);
+                getGraphicOverlay().getWidth() / TOP_RECT_W_TO_H_RATIO);
         final Rect rectDst = new Rect(
                 centerX - dstHalfWidth,
                 centerY - dstHalfHeight,
@@ -147,8 +145,8 @@ public class FaceGraphic extends Graphic {
     }
 
     private void setFirstBoundingBoxProportions() {
-        double canvasWidth = mOverlay.getWidth();
-        double canvasHeight = mOverlay.getOverlayRelativeHeight();
+        double canvasWidth = getGraphicOverlay().getWidth();
+        double canvasHeight = getGraphicOverlay().getOverlayRelativeHeight();
         bbProportionLeft = mFaceBoundingBoxes.get(0).left / canvasWidth;
         bbProportionTop = mFaceBoundingBoxes.get(0).top / canvasHeight;
         bbProportionWidth = mFaceBoundingBoxes.get(0).width() / canvasWidth;
@@ -180,7 +178,7 @@ public class FaceGraphic extends Graphic {
     public double getBbProportionCenterX() {
         if (mFaceBoundingBoxes.size() == 1) {
             return mFaceBoundingBoxes.get(0).centerX() /
-                    (double) mOverlay.getWidth();
+                    (double) getGraphicOverlay().getWidth();
         }
         return 0;
     }
@@ -188,7 +186,7 @@ public class FaceGraphic extends Graphic {
     public double getBbProportionCenterY() {
         if (mFaceBoundingBoxes.size() == 1) {
             return mFaceBoundingBoxes.get(0).centerY() /
-                    ((double) mOverlay.getOverlayRelativeHeight());
+                    ((double) getGraphicOverlay().getOverlayRelativeHeight());
         }
         return 0;
     }

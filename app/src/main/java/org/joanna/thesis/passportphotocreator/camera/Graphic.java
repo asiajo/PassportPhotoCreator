@@ -205,6 +205,10 @@ public abstract class Graphic {
         return false;
     }
 
+    protected GraphicOverlay getGraphicOverlay() {
+        return mOverlay;
+    }
+
     public class BitmapMetaData implements Comparable<BitmapMetaData> {
         private Class<? extends Graphic> mClass;
         private int                      mId;
