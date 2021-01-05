@@ -13,16 +13,17 @@ import java.util.List;
 
 public class FaceTracker {
 
+    static final double NEUTRAL_FACE_THRESHOLD = 0.5;
+    static final double ROTATION_THRESHOLD     = 4;
+    static final double ROTATION_X_THRESHOLD   = 8;
+    static final double EYES_OPEN_THRESHOLD    = 0.7;
+
     private static final String TAG = FaceTracker.class.getSimpleName();
 
-    private static final double                  NEUTRAL_FACE_THRESHOLD = 0.5;
-    private static final double                  EYES_OPEN_THRESHOLD    = 0.7;
-    private static final double                  ROTATION_THRESHOLD     = 4;
-    private static final double                  ROTATION_X_THRESHOLD   = 8;
-    private              List<Face>              mFaces;
-    private              GraphicOverlay<Graphic> mOverlay;
-    private              FaceGraphic             mFaceGraphic;
-    private              Context                 mContext;
+    private List<Face>              mFaces;
+    private GraphicOverlay<Graphic> mOverlay;
+    private FaceGraphic             mFaceGraphic;
+    private Context                 mContext;
 
     public FaceTracker(
             final GraphicOverlay<Graphic> overlay,
