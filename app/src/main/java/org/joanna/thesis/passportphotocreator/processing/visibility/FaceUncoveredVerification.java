@@ -4,9 +4,9 @@ import android.app.Activity;
 
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.joanna.thesis.passportphotocreator.processing.Action;
 import org.joanna.thesis.passportphotocreator.processing.Verifier;
+import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
@@ -60,10 +60,10 @@ public class FaceUncoveredVerification extends Verifier {
 
     private boolean isSimilar(final Mat src) {
 
-        // cut away top part of the hair
+        // crop the image further
         Mat image = src.submat(
-                src.height() / 4, src.height(),
-                0, src.width());
+                src.height() / 8 * 3, src.height(),
+                src.width() / 8, src.width() / 8 * 7);
 
         int halfWidth = image.width() / 2;
         Mat left = image.submat(
