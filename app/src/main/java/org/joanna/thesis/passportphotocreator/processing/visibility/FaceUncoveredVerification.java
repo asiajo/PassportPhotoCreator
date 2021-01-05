@@ -1,11 +1,15 @@
 package org.joanna.thesis.passportphotocreator.processing.visibility;
 
 import android.app.Activity;
+import android.graphics.Rect;
+
+import com.google.mlkit.vision.face.Face;
 
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
 import org.joanna.thesis.passportphotocreator.processing.Action;
 import org.joanna.thesis.passportphotocreator.processing.Verifier;
+import org.joanna.thesis.passportphotocreator.processing.face.FaceUtils;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -36,17 +40,25 @@ public class FaceUncoveredVerification extends Verifier {
     }
 
     @Override
-    public void verify(final byte[] data) {
+    public void verify(final byte[] data, final Face face) {
 
-        mOverlay.add(mVisibilityGraphic);
         List<Action> positions = new ArrayList<>();
-
+        if (!FaceUtils.isFacePositionCorrect(face)) {
+            mVisibilityGraphic.setBarActions(positions, mContext,
+                    VisibilityGraphic.class);
+            return;
+        }
+        mOverlay.add(mVisibilityGraphic);
         Mat image = ImageUtils.getMatFromYuvBytes(
                 data,
                 PREVIEW_HEIGHT,
                 PREVIEW_WIDTH);
 
-        image = ImageUtils.cropMatToFaceBoundingBox(image, mOverlay);
+        final Rect bbox = face.getBoundingBox();
+        int top = bbox.top + bbox.height() / 4;
+        int bottom = bbox.bottom + bbox.height() / 8;
+        image = ImageUtils.cropMatToBoundingBox(image,
+                new Rect(bbox.left, top, bbox.right, bottom));
         if (null == image) {
             return;
         }

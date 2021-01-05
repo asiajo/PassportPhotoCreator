@@ -1070,30 +1070,12 @@ public class CameraSource {
      */
     private class CameraPreviewCallback implements Camera.PreviewCallback {
 
-        private int verificationLoop = 0;
-        private int verificationItem = 0;
-
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
 
             mFrameProcessor.setNextFrame(data, camera);
-            if (verificationLoop++ == VERIFICATION_FREQUENCY / mVerifiers.size()) {
-                performVerifications(data);
-                verificationLoop = 0;
-            }
         }
 
-        private void performVerifications(final byte[] data) {
-
-            Verifier currentVerifier = mVerifiers.get(verificationItem++);
-            if (currentVerifier != null) {
-                currentVerifier.verify(data);
-            }
-            if (verificationItem == mVerifiers.size()) {
-                verificationItem = 0;
-            }
-            // TODO: add pupils verification
-        }
     }
 
     /**
@@ -1119,6 +1101,10 @@ public class CameraSource {
         private long mPendingTimeMillis;
         private int mPendingFrameId = 0;
         private ByteBuffer mPendingFrameData;
+        private byte [] mPendingFrameBytes;
+
+        private int verificationLoop = 0;
+        private int verificationItem = 0;
 
         FrameProcessingRunnable(
                 FaceDetector detector,
@@ -1172,6 +1158,7 @@ public class CameraSource {
                 mPendingTimeMillis = SystemClock.elapsedRealtime() - mStartTimeMillis;
                 mPendingFrameId++;
                 mPendingFrameData = mBytesToByteBuffer.get(data);
+                mPendingFrameBytes = data;
 
                 // Notify the processor thread if it is waiting on the next frame (see below).
                 mLock.notifyAll();
@@ -1233,6 +1220,7 @@ public class CameraSource {
                     InputImage image = InputImage.fromByteBuffer(data,
                             mPreviewSize.getWidth(),
                             mPreviewSize.getHeight(), 90, ImageFormat.NV21);
+                    final byte[] finalData = mPendingFrameBytes;
                     mDetector.process(image)
                              .addOnSuccessListener(
                                      new OnSuccessListener<List<Face>>() {
@@ -1240,8 +1228,8 @@ public class CameraSource {
                                          public void onSuccess(
                                                  List<Face> faces) {
                                              if (mFaceTracker != null) {
-                                                 mFaceTracker.processFaces(
-                                                         faces);
+                                                 mFaceTracker.processFaces(faces);
+                                                 processVerification(finalData, faces);
                                              }
                                          }
                                      })
@@ -1260,6 +1248,31 @@ public class CameraSource {
                 } finally {
                     mCamera.addCallbackBuffer(data.array());
                 }
+
+            }
+        }
+
+        private void processVerification(final byte[] data, List<Face> faces) {
+            if (null == faces || faces.size() != 1) {
+                return;
+            }
+            if (verificationLoop++ == VERIFICATION_FREQUENCY / mVerifiers.size()) {
+                Face face = faces.get(0);
+                performVerifications(data, face);
+                verificationLoop = 0;
+            }
+        }
+
+        private void performVerifications(
+                final byte[] data,
+                final Face face) {
+
+            Verifier currentVerifier = mVerifiers.get(verificationItem++);
+            if (currentVerifier != null) {
+                currentVerifier.verify(data, face);
+            }
+            if (verificationItem == mVerifiers.size()) {
+                verificationItem = 0;
             }
         }
     }

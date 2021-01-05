@@ -1,7 +1,10 @@
 package org.joanna.thesis.passportphotocreator.processing.light.verification;
 
 import android.app.Activity;
+import android.graphics.Rect;
 import android.util.Log;
+
+import com.google.mlkit.vision.face.Face;
 
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
@@ -48,7 +51,7 @@ public class ShadowVerification extends Verifier {
     }
 
     @Override
-    public void verify(final byte[] data) {
+    public void verify(final byte[] data, final Face face) {
 
         mOverlay.add(mShadowGraphic);
         List<Action> positions = new ArrayList<>();
@@ -57,7 +60,13 @@ public class ShadowVerification extends Verifier {
                 data,
                 PREVIEW_HEIGHT,
                 PREVIEW_WIDTH);
-        image = ImageUtils.cropMatToGetFaceOnly(image, mOverlay);
+        Rect bbox = face.getBoundingBox();
+        int left = bbox.left + bbox.width() / 8;
+        int right = bbox.right - bbox.width() / 8;
+        int top = bbox.top + bbox.height() / 4;
+        image = ImageUtils.cropMatToBoundingBox(image,
+                new Rect(left, top, right, bbox.bottom));
+
         if (null == image) {
             return;
         }

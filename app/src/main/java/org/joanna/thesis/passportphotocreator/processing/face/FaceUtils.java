@@ -7,6 +7,9 @@ import com.google.mlkit.vision.face.Face;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 
+import static org.joanna.thesis.passportphotocreator.processing.face.FaceTracker.ROTATION_THRESHOLD;
+import static org.joanna.thesis.passportphotocreator.processing.face.FaceTracker.ROTATION_X_THRESHOLD;
+
 public final class FaceUtils {
 
     private static final float BB_SCALING = 1.2f;
@@ -17,10 +20,14 @@ public final class FaceUtils {
     public static Rect getFaceBoundingBox(
             final Face face,
             final Graphic graphic) {
-        double centerX = graphic.scaleX(face.getBoundingBox().centerX());
-        double centerY = graphic.scaleX(face.getBoundingBox().centerY());
-        double widthWithOffset =
-                graphic.scaleX(face.getBoundingBox().width()) * BB_SCALING;
+        double centerX = face.getBoundingBox().centerX();
+        double centerY = face.getBoundingBox().centerY();
+        double widthWithOffset = face.getBoundingBox().width() * BB_SCALING;
+        if (graphic != null) {
+            centerX = graphic.scaleX((float) centerX);
+            centerY = graphic.scaleX((float) centerY);
+            widthWithOffset = graphic.scaleX((float) widthWithOffset);
+        }
 
         return getFaceBoundingBox(centerX, centerY, widthWithOffset);
     }
@@ -55,4 +62,12 @@ public final class FaceUtils {
         return new Rect(left, top, right, bottom);
     }
 
+    public static boolean isFacePositionCorrect(final Face face) {
+        return !(face.getHeadEulerAngleY() < -ROTATION_THRESHOLD)
+                && !(face.getHeadEulerAngleY() > ROTATION_THRESHOLD)
+                && !(face.getHeadEulerAngleX() < -ROTATION_X_THRESHOLD)
+                && !(face.getHeadEulerAngleX() > ROTATION_X_THRESHOLD)
+                && !(face.getHeadEulerAngleZ() < -ROTATION_THRESHOLD)
+                && !(face.getHeadEulerAngleZ() > ROTATION_THRESHOLD);
+    }
 }

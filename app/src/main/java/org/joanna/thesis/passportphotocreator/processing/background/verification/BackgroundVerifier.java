@@ -1,6 +1,9 @@
 package org.joanna.thesis.passportphotocreator.processing.background.verification;
 
 import android.app.Activity;
+import android.graphics.Rect;
+
+import com.google.mlkit.vision.face.Face;
 
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
@@ -9,6 +12,7 @@ import org.joanna.thesis.passportphotocreator.processing.Verifier;
 import org.joanna.thesis.passportphotocreator.processing.background.BackgroundUtils;
 import org.joanna.thesis.passportphotocreator.processing.background.ImageSegmentor;
 import org.joanna.thesis.passportphotocreator.processing.background.ImageSegmentorFloatMobileUnet;
+import org.joanna.thesis.passportphotocreator.processing.face.FaceUtils;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.core.Mat;
 
@@ -49,7 +53,7 @@ public class BackgroundVerifier extends Verifier {
     }
 
     @Override
-    public void verify(final byte[] data) {
+    public void verify(final byte[] data, final Face face) {
 
         if (mSegmentor == null) {
             return;
@@ -57,7 +61,7 @@ public class BackgroundVerifier extends Verifier {
 
         mOverlay.add(mBackgroundGraphic);
 
-        mBackground = getBackground(data);
+        mBackground = getBackground(data, face);
         if (null == mBackground) {
             return;
         }
@@ -86,16 +90,17 @@ public class BackgroundVerifier extends Verifier {
      * behind the person present on the image.
      *
      * @param data image frame from the camera in yuv bytes format
+     * @param face face discovered on the iamge
      * @return If person is detected on the image returs Mat with the
      *         background, null otherwise.
      */
-    private Mat getBackground(final byte[] data) {
+    private Mat getBackground(final byte[] data, final Face face) {
         Mat image = ImageUtils.getMatFromYuvBytes(
                 data,
                 PREVIEW_HEIGHT,
                 PREVIEW_WIDTH);
-        image = ImageUtils.cropMatToFaceBoundingBox(
-                image, mOverlay);
+        final Rect bbox = FaceUtils.getFaceBoundingBox(face, null);
+        image = ImageUtils.cropMatToBoundingBox(image, bbox);
         if (image == null) {
             return null;
         }

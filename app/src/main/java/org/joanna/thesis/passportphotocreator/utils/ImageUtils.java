@@ -12,24 +12,17 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.face.Face;
 
 import org.jetbrains.annotations.NotNull;
-import org.joanna.thesis.passportphotocreator.R;
-import org.joanna.thesis.passportphotocreator.camera.Graphic;
-import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
-import org.joanna.thesis.passportphotocreator.processing.face.FaceGraphic;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.ByteArrayOutputStream;
@@ -48,21 +41,21 @@ import static org.opencv.core.Core.BORDER_REPLICATE;
 
 public final class ImageUtils {
 
-    private static final float FINAL_IMAGE_WIDTH_FACTOR = 35f;
-    private static final float FINAL_IMAGE_HEIGHT_FACTOR = 45f;
-    public static final  float FINAL_IMAGE_H_TO_W_RATIO =
+    private static final float  FINAL_IMAGE_WIDTH_FACTOR = 35f;
+    private static final float  FINAL_IMAGE_HEIGHT_FACTOR = 45f;
+    public static final  float  FINAL_IMAGE_H_TO_W_RATIO =
             FINAL_IMAGE_HEIGHT_FACTOR / FINAL_IMAGE_WIDTH_FACTOR;
-    public static final  float FINAL_IMAGE_W_TO_H_RATIO =
+    public static final  float  FINAL_IMAGE_W_TO_H_RATIO =
             FINAL_IMAGE_WIDTH_FACTOR / FINAL_IMAGE_HEIGHT_FACTOR;
     /**
      * Size in pixels of the resulting image. 827 corresponds to 3,5 cm wide
      * image with the quality of 600 ppi.
      */
-    private static final int   FINAL_IMAGE_WIDTH_PX = 827;
-    private static final int   FINAL_IMAGE_HEIGHT_PX =
+    private static final int    FINAL_IMAGE_WIDTH_PX = 827;
+    private static final int    FINAL_IMAGE_HEIGHT_PX =
             (int) (FINAL_IMAGE_WIDTH_PX * FINAL_IMAGE_H_TO_W_RATIO);
     private static final String TAG = ImageUtils.class.getSimpleName();
-    public static        int   PICTURE_PROCESS_SCALE = 8;
+    public static        int    PICTURE_PROCESS_SCALE = 8;
 
 
     private ImageUtils() {
@@ -96,33 +89,6 @@ public final class ImageUtils {
         saveImage(btm, activity);
     }
 
-    public static void saveImage(
-            final byte[] bytes,
-            final Activity activity,
-            final GraphicOverlay<Graphic> mGraphicOverlay) throws IOException {
-
-        Mat image = getMatFromBytes(bytes);
-        image = cropMatToFaceBoundingBox(
-                image, mGraphicOverlay);
-        if (image == null) {
-            Toast.makeText(activity, R.string.cannot_make_a_picture,
-                    Toast.LENGTH_LONG).show();
-            return;
-        }
-        image = resizeMatToFinalSize(image);
-        Bitmap btm = getBitmapFromMat(image);
-        image.release();
-        saveImage(btm, activity);
-    }
-
-    public static Mat getMatFromBytes(final byte[] bytes) {
-        Mat image = Imgcodecs.imdecode(
-                new MatOfByte(bytes),
-                Imgcodecs.IMREAD_COLOR);
-        Imgproc.cvtColor(image, image, Imgproc.COLOR_BGR2RGBA);
-        return image;
-    }
-
     public static Mat getMatFromYuvBytes(
             final byte[] bytes, final int width, final int height) {
         int increasedHeight = height + (height / 2);
@@ -152,7 +118,6 @@ public final class ImageUtils {
     public static Mat rotateMat(final Mat src) {
         Mat rotated = new Mat();
         Core.transpose(src, rotated);
-        // TODO: double check if on all the phones the same rotation required
         Core.flip(rotated, rotated, 1);
         return rotated;
     }
@@ -187,74 +152,19 @@ public final class ImageUtils {
         return resized;
     }
 
-    public static Mat cropMatToFaceBoundingBox(
-            final Mat src,
-            final GraphicOverlay<Graphic> mGraphicOverlay) {
-        FaceGraphic faceGraphic = getFaceGraphic(mGraphicOverlay);
-        if (faceGraphic == null || !faceGraphic.isOneFace() ||
-                faceGraphic.getFaceBoundingBox() == null) {
+    public static Mat cropMatToBoundingBox(
+            final Mat src, final Rect bbox) {
+        if (!verifyBoundingBox(
+                bbox.left, bbox.top, bbox.right, bbox.bottom, src.size())) {
             return null;
         }
+        Mat cropped = src.submat(bbox.top, bbox.bottom, bbox.left, bbox.right);
 
-        double matWidth = src.size().width;
-        double matHeight = src.size().height;
-
-        int cutWidth = (int) (faceGraphic.getBbProportionWidth() * matWidth);
-        int cutHeight = (int) (cutWidth * FINAL_IMAGE_H_TO_W_RATIO);
-        int cutLeft = (int) (faceGraphic.getBbProportionLeft() * matWidth);
-        int cutTop = (int) (faceGraphic.getBbProportionTop() * matHeight);
-        int cutRight = cutLeft + cutWidth;
-        int cutBottom = cutTop + cutHeight;
-        if (!verifyBoundingBox(cutLeft, cutTop, cutRight, cutBottom,
-                src.size())) {
-            return null;
-        }
-        Mat cropped = src.submat(cutTop, cutBottom, cutLeft, cutRight);
+        Bitmap map = Bitmap.createBitmap(cropped.width(), cropped.height(),
+                Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(cropped, map);
+        ImageUtils.safelyRemoveBitmap(map);
         return cropped;
-    }
-
-    public static Mat cropMatToGetFaceOnly(
-            final Mat src,
-            final GraphicOverlay<Graphic> mGraphicOverlay) {
-        FaceGraphic faceGraphic = getFaceGraphic(mGraphicOverlay);
-        if (faceGraphic == null || !faceGraphic.isOneFace() ||
-                faceGraphic.getFaceBoundingBox() == null) {
-            return null;
-        }
-
-        double matWidth = src.size().width;
-        double matHeight = src.size().height;
-
-        double faceWidthProp = faceGraphic.getBbProportionWidth() * 0.57;
-        double faceHeightProp = faceGraphic.getBbProportionWidth() * 0.57;
-        double leftProp =
-                faceGraphic.getBbProportionCenterX() - faceWidthProp / 2;
-        double topProp =
-                faceGraphic.getBbProportionCenterY() - faceHeightProp * 0.2;
-
-        int cutWidth = (int) (faceWidthProp * matWidth);
-        int cutHeight = (int) (faceHeightProp * matWidth);
-        int cutLeft = (int) (leftProp * matWidth);
-        int cutTop = (int) (topProp * matHeight);
-        int cutRight = cutLeft + cutWidth;
-        int cutBottom = cutTop + cutHeight;
-        if (!verifyBoundingBox(cutLeft, cutTop, cutRight, cutBottom,
-                src.size())) {
-            return null;
-        }
-        Mat cropped = src.submat(cutTop, cutBottom, cutLeft, cutRight);
-        return cropped;
-    }
-
-    private static FaceGraphic getFaceGraphic(
-            final GraphicOverlay<Graphic> mGraphicOverlay) {
-        FaceGraphic faceGraphic = null;
-        for (Graphic item : mGraphicOverlay.getmGraphics()) {
-            if (item instanceof FaceGraphic) {
-                faceGraphic = (FaceGraphic) item;
-            }
-        }
-        return faceGraphic;
     }
 
     public static Mat padMatToSquare(final Mat src, final int borderSize) {
