@@ -55,10 +55,12 @@ public class FaceUncoveredVerification extends Verifier {
                 PREVIEW_WIDTH);
 
         final Rect bbox = face.getBoundingBox();
+        int left = bbox.left + bbox.width() / 16;
         int top = bbox.top + bbox.height() / 4;
+        int right = bbox.right - bbox.width() / 16;
         int bottom = bbox.bottom + bbox.height() / 8;
-        image = ImageUtils.cropMatToBoundingBox(image,
-                new Rect(bbox.left, top, bbox.right, bottom));
+        image = ImageUtils.cropMatToBoundingBox(
+                image, new Rect(left, top, right, bottom));
         if (null == image) {
             return;
         }
@@ -72,27 +74,21 @@ public class FaceUncoveredVerification extends Verifier {
 
     private boolean isSimilar(final Mat src) {
 
-        // crop the image further
-        Mat image = src.submat(
-                src.height() / 8 * 3, src.height(),
-                src.width() / 8, src.width() / 8 * 7);
+        int oneThird = src.width() / 3;
+        Mat left = src.submat(
+                0, src.height(),
+                0, oneThird);
 
-        int halfWidth = image.width() / 2;
-        Mat left = image.submat(
-                0, image.height(),
-                0, halfWidth);
-
-        Mat right = image.submat(
-                0, image.height(),
-                halfWidth, halfWidth * 2);
-        image.release();
+        Mat right = src.submat(
+                0, src.height(),
+                src.width() - oneThird, src.width());
         Core.flip(right, right, 1);
 
         Mat comparisionResult = new Mat();
 
         Imgproc.matchTemplate(left, right, comparisionResult, TM_CCORR_NORMED);
 
-        final double epsilon = 0.95;
+        final double epsilon = 0.96;
         final double similarity = comparisionResult.get(0, 0)[0];
 
         left.release();
