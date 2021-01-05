@@ -64,23 +64,32 @@ public class ShadowVerification extends Verifier {
         int left = bbox.left + bbox.width() / 8;
         int right = bbox.right - bbox.width() / 8;
         int top = bbox.top + bbox.height() / 4;
-        image = ImageUtils.cropMatToBoundingBox(image,
+        image = ImageUtils.cropMatToBoundingBox(
+                image,
                 new Rect(left, top, right, bbox.bottom));
 
         if (null == image) {
             return;
         }
 
-        Boolean isEvenlyLightened = null;
+        ShadowVerificator.EvenlyLigtened isEvenlyLightened = null;
         if (mShadowVerificator != null) {
             mShadowVerificator.classify(image);
             isEvenlyLightened = mShadowVerificator.isEvenlyLightened();
         }
 
-        if (!isEvenlyLightened(image) &&
-                (null == isEvenlyLightened || !isEvenlyLightened)) {
+        if (null != isEvenlyLightened &&
+                isEvenlyLightened == ShadowVerificator.EvenlyLigtened.SHADOW) {
             positions.add(ShadowActions.NOT_UNIFORM);
+            Log.i(TAG, "Face is not evenly lightened.");
+        } else if (null == isEvenlyLightened || isEvenlyLightened ==
+                ShadowVerificator.EvenlyLigtened.NOT_SURE) {
+            Log.i(TAG,"Verifying with OpenCV if face's evenly lightened.");
+            if (!isEvenlyLightened(image)) {
+                positions.add(ShadowActions.NOT_UNIFORM);
+            }
         }
+
         mShadowGraphic.setBarActions(positions, mContext,
                 ShadowGraphic.class);
 

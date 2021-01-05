@@ -1,8 +1,13 @@
 package org.joanna.thesis.passportphotocreator.processing.light.verification;
 
 import android.app.Activity;
+import android.util.Log;
 
 import java.io.IOException;
+
+import static org.joanna.thesis.passportphotocreator.processing.light.verification.ShadowVerificator.EvenlyLigtened.EVENLY;
+import static org.joanna.thesis.passportphotocreator.processing.light.verification.ShadowVerificator.EvenlyLigtened.NOT_SURE;
+import static org.joanna.thesis.passportphotocreator.processing.light.verification.ShadowVerificator.EvenlyLigtened.SHADOW;
 
 /**
  * This classifier works with the float mobile-net-V2 model.
@@ -58,11 +63,17 @@ public class ShadowVerificatorFloatMobileNetV2 extends ShadowVerificator {
     }
 
     @Override
-    public boolean isEvenlyLightened() {
+    public EvenlyLigtened isEvenlyLightened() {
         if (segmap == null) {
-            return false;
+            return null;
         }
-        return segmap[0][0] > 0;
+        if (segmap[0][0] > 1){
+            return EVENLY;
+        } else if (segmap[0][0] < -1){
+            return SHADOW;
+        } else {
+            return NOT_SURE;
+        }
     }
 
 }
