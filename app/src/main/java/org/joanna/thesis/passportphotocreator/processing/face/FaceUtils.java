@@ -7,8 +7,9 @@ import com.google.mlkit.vision.face.Face;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 
-import static org.joanna.thesis.passportphotocreator.processing.face.FaceTracker.ROTATION_THRESHOLD;
 import static org.joanna.thesis.passportphotocreator.processing.face.FaceTracker.ROTATION_X_THRESHOLD;
+import static org.joanna.thesis.passportphotocreator.processing.face.FaceTracker.ROTATION_Y_THRESHOLD;
+import static org.joanna.thesis.passportphotocreator.processing.face.FaceTracker.ROTATION_Z_THRESHOLD;
 
 public final class FaceUtils {
 
@@ -63,11 +64,11 @@ public final class FaceUtils {
     }
 
     public static boolean isFacePositionCorrect(final Face face) {
-        return !(face.getHeadEulerAngleY() < -ROTATION_THRESHOLD)
-                && !(face.getHeadEulerAngleY() > ROTATION_THRESHOLD)
+        return !(face.getHeadEulerAngleY() < -ROTATION_Y_THRESHOLD)
+                && !(face.getHeadEulerAngleY() > ROTATION_Y_THRESHOLD)
                 && !(face.getHeadEulerAngleX() < -ROTATION_X_THRESHOLD)
                 && !(face.getHeadEulerAngleX() > ROTATION_X_THRESHOLD)
-                && !(face.getHeadEulerAngleZ() < -ROTATION_THRESHOLD)
-                && !(face.getHeadEulerAngleZ() > ROTATION_THRESHOLD);
+                && !(face.getHeadEulerAngleZ() < -ROTATION_Z_THRESHOLD)
+                && !(face.getHeadEulerAngleZ() > ROTATION_Z_THRESHOLD);
     }
 }

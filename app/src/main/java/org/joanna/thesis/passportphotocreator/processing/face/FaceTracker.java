@@ -14,8 +14,9 @@ import java.util.List;
 public class FaceTracker {
 
     static final double NEUTRAL_FACE_THRESHOLD = 0.5;
-    static final double ROTATION_THRESHOLD     = 4;
-    static final double ROTATION_X_THRESHOLD   = 8;
+    static final double ROTATION_X_THRESHOLD   = 12; // up down
+    static final double ROTATION_Y_THRESHOLD   = 8; // right left
+    static final double ROTATION_Z_THRESHOLD   = 4; // with or against clock
     static final double EYES_OPEN_THRESHOLD    = 0.7;
 
     private static final String TAG = FaceTracker.class.getSimpleName();
@@ -53,20 +54,20 @@ public class FaceTracker {
         }
 
         Face face = faces.get(0);
-        if (face.getHeadEulerAngleY() < -ROTATION_THRESHOLD) {
-            positions.add(FaceActions.ROTATE_LEFT);
-        } else if (face.getHeadEulerAngleY() > ROTATION_THRESHOLD) {
+        if (face.getHeadEulerAngleY() < -ROTATION_Y_THRESHOLD) {
             positions.add(FaceActions.ROTATE_RIGHT);
+        } else if (face.getHeadEulerAngleY() > ROTATION_Y_THRESHOLD) {
+            positions.add(FaceActions.ROTATE_LEFT);
         }
         if (face.getHeadEulerAngleX() < -ROTATION_X_THRESHOLD) {
             positions.add(FaceActions.FACE_UP);
         } else if (face.getHeadEulerAngleX() > ROTATION_X_THRESHOLD) {
             positions.add(FaceActions.FACE_DOWN);
         }
-        if (face.getHeadEulerAngleZ() < -ROTATION_THRESHOLD) {
-            positions.add(FaceActions.STRAIGHTEN_FROM_LEFT);
-        } else if (face.getHeadEulerAngleZ() > ROTATION_THRESHOLD) {
+        if (face.getHeadEulerAngleZ() < -ROTATION_Z_THRESHOLD) {
             positions.add(FaceActions.STRAIGHTEN_FROM_RIGHT);
+        } else if (face.getHeadEulerAngleZ() > ROTATION_Z_THRESHOLD) {
+            positions.add(FaceActions.STRAIGHTEN_FROM_LEFT);
         }
         if (face.getLeftEyeOpenProbability() < EYES_OPEN_THRESHOLD) {
             positions.add(FaceActions.LEFT_EYE_OPEN);
