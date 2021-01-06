@@ -315,7 +315,7 @@ public final class BackgroundUtils {
      * @return true if received color is bright and false otherwise
      */
     public static Boolean isBright(final double color) {
-        return color > 0.5;
+        return color > 0.8;
     }
 
     /**
