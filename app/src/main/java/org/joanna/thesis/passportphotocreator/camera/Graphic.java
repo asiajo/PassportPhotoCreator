@@ -7,18 +7,17 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.util.Log;
 
 import org.joanna.thesis.passportphotocreator.processing.Action;
 import org.joanna.thesis.passportphotocreator.processing.PhotoValidity;
 
 import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class Graphic {
 
@@ -29,7 +28,8 @@ public abstract class Graphic {
 
     private static final String TAG = Graphic.class.getSimpleName();
 
-    private static Map<BitmapMetaData, Bitmap> mActions = new TreeMap<>();
+    private static Map<BitmapMetaData, Bitmap> mActions =
+            new ConcurrentHashMap<>();
     private        Map<Action, BitmapMetaData> mActionsMap = new HashMap<>();
     private        Map<PhotoValidity, Integer> mColorMap = new HashMap<>();
     private        GraphicOverlay              mOverlay;
@@ -59,18 +59,6 @@ public abstract class Graphic {
         return vertical * mOverlay.getHeightScaleFactor();
     }
 
-    public float translateX(final float x) {
-        if (mOverlay.getFacing() == CameraSource.CAMERA_FACING_FRONT) {
-            return mOverlay.getWidth() - scaleX(x);
-        } else {
-            return scaleX(x);
-        }
-    }
-
-    public float translateY(final float y) {
-        return scaleY(y);
-    }
-
     public void postInvalidate() {
         mOverlay.postInvalidate();
     }
@@ -82,11 +70,7 @@ public abstract class Graphic {
         int padding = iconSize / 5;
         List<Bitmap> actionBitmaps = new ArrayList<>();
 
-        try {
-            actionBitmaps.addAll(mActions.values());
-        } catch (ConcurrentModificationException e) {
-            Log.e(TAG, "Concurrent Modification of actions bar happened.");
-        }
+        actionBitmaps.addAll(mActions.values());
 
         for (Bitmap action : actionBitmaps) {
             final Rect rectSrc = new Rect(0, 0, action.getWidth(),
@@ -113,28 +97,21 @@ public abstract class Graphic {
                             context.getResources(),
                             mActionsMap.get(action).getId()));
         }
-        try {
+
+        if (null != mActions) {
             clearActions(aClass);
             mActions.putAll(newActions);
-        } catch (ConcurrentModificationException e) {
-            Log.e(TAG, "Concurrent Modification of actions bar happened.");
-        } catch (NullPointerException e) {
-            Log.e(TAG, e.getMessage());
         }
         setValidity();
     }
 
     protected void clearActions(final Class<? extends Graphic> aClass) {
-        try {
-            for (Iterator<Map.Entry<BitmapMetaData, Bitmap>> it =
-                 mActions.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry<BitmapMetaData, Bitmap> entry = it.next();
-                if (entry.getKey().getGraphicClass().equals(aClass)) {
-                    it.remove();
-                }
+        for (Iterator<Map.Entry<BitmapMetaData, Bitmap>> it =
+             mActions.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<BitmapMetaData, Bitmap> entry = it.next();
+            if (entry.getKey().getGraphicClass().equals(aClass)) {
+                it.remove();
             }
-        } catch (ConcurrentModificationException e) {
-            Log.e(TAG, "Concurrent Modification of actions bar happened.");
         }
     }
 
@@ -172,16 +149,12 @@ public abstract class Graphic {
      *         otherwise
      */
     private boolean containsInvalidActions() {
-        try {
-            for (Iterator<BitmapMetaData> it =
-                 mActions.keySet().iterator(); it.hasNext(); ) {
-                BitmapMetaData metaData = it.next();
-                if (metaData.makesPhotoInvalid()) {
-                    return true;
-                }
+        for (Iterator<BitmapMetaData> it =
+             mActions.keySet().iterator(); it.hasNext(); ) {
+            BitmapMetaData metaData = it.next();
+            if (metaData.makesPhotoInvalid()) {
+                return true;
             }
-        } catch (ConcurrentModificationException e) {
-            Log.e(TAG, "Concurrent Modification of actions bar happened.");
         }
         return false;
     }
