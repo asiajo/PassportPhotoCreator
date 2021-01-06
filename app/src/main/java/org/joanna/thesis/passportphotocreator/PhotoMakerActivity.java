@@ -105,6 +105,7 @@ public class PhotoMakerActivity extends AppCompatActivity
         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         transaction.addToBackStack(null);
         transaction.commit();
+        cameraFragment.onPause();
     }
 
     @Override
