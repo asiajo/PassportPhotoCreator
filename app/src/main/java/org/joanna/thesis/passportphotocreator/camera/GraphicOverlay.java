@@ -80,14 +80,6 @@ public class GraphicOverlay<T extends Graphic> extends View {
         return mHeightScaleFactor;
     }
 
-    public int getFacing() {
-        return mFacing;
-    }
-
-    public Set<T> getmGraphics() {
-        return mGraphics;
-    }
-
     public int getOverlayRelativeHeight() {
         return getHeight() - (int) (getWidth() / TOP_RECT_W_TO_H_RATIO);
     }

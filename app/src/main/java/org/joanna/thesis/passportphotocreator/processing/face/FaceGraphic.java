@@ -22,15 +22,13 @@ import static org.joanna.thesis.passportphotocreator.camera.GraphicOverlay.TOP_R
 
 public class FaceGraphic extends Graphic {
 
-    private static final int            ARROW_MIN_SIZE = 12;
-    private static final int            ARROW_MAX_SIZE = 24;
-    private              double         bbProportionLeft;
-    private              double         bbProportionTop;
-    private              double         bbProportionWidth;
-    private              List<Rect>     mFaceBoundingBoxes;
-    private volatile     List<Face>     mFaces;
-    private              Context        mContext;
-    private              int            mArrowsScale   = ARROW_MIN_SIZE;
+    private static final int        ARROW_MIN_SIZE = 12;
+    private static final int        ARROW_MAX_SIZE = 24;
+    private              double     bbProportionWidth;
+    private              List<Rect> mFaceBoundingBoxes;
+    private volatile     List<Face> mFaces;
+    private              Context    mContext;
+    private              int        mArrowsScale   = ARROW_MIN_SIZE;
 
     {
         getActionsMap().put(
@@ -146,48 +144,6 @@ public class FaceGraphic extends Graphic {
 
     private void setFirstBoundingBoxProportions() {
         double canvasWidth = getGraphicOverlay().getWidth();
-        double canvasHeight = getGraphicOverlay().getOverlayRelativeHeight();
-        bbProportionLeft = mFaceBoundingBoxes.get(0).left / canvasWidth;
-        bbProportionTop = mFaceBoundingBoxes.get(0).top / canvasHeight;
         bbProportionWidth = mFaceBoundingBoxes.get(0).width() / canvasWidth;
-    }
-
-    public Rect getFaceBoundingBox() {
-        if (mFaceBoundingBoxes.size() == 1) {
-            return mFaceBoundingBoxes.get(0);
-        }
-        return null;
-    }
-
-    public double getBbProportionLeft() {
-        return bbProportionLeft;
-    }
-
-    public double getBbProportionTop() {
-        return bbProportionTop;
-    }
-
-    public double getBbProportionWidth() {
-        return bbProportionWidth;
-    }
-
-    public boolean isOneFace() {
-        return mFaceBoundingBoxes.size() == 1;
-    }
-
-    public double getBbProportionCenterX() {
-        if (mFaceBoundingBoxes.size() == 1) {
-            return mFaceBoundingBoxes.get(0).centerX() /
-                    (double) getGraphicOverlay().getWidth();
-        }
-        return 0;
-    }
-
-    public double getBbProportionCenterY() {
-        if (mFaceBoundingBoxes.size() == 1) {
-            return mFaceBoundingBoxes.get(0).centerY() /
-                    ((double) getGraphicOverlay().getOverlayRelativeHeight());
-        }
-        return 0;
     }
 }
