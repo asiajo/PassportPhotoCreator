@@ -33,6 +33,14 @@ public final class FaceUtils {
         return getFaceBoundingBox(centerX, centerY, widthWithOffset);
     }
 
+    public static Rect getFaceBoundingBox(final com.google.android.gms.vision.face.Face face) {
+        int centerX = (int) (face.getPosition().x + face.getWidth() / 2.);
+        int centerY = (int) (face.getPosition().y + face.getHeight() / 2.);
+        int widthWithOffset = (int) (face.getWidth() * BB_SCALING);
+
+        return getFaceBoundingBox(centerX, centerY, widthWithOffset);
+    }
+
     public static Rect getFaceBoundingBox(final Face face) {
         double centerX = face.getBoundingBox().centerX();
         double centerY = face.getBoundingBox().centerY();

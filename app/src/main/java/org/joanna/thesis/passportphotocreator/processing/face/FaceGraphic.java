@@ -90,13 +90,17 @@ public class FaceGraphic extends Graphic {
         postInvalidate();
     }
 
+    public void clearBoundingBoxes(){
+        mFaceBoundingBoxes.clear();
+    }
+
     @Override
     public void draw(final Canvas canvas) {
+        clearBoundingBoxes();
         if (null == mFaces || mFaces.size() == 0) {
             return;
         }
         int i = 0;
-        mFaceBoundingBoxes.clear();
         for (Face face : mFaces) {
             mFaceBoundingBoxes.add(i, FaceUtils.getFaceBoundingBox(face, this));
             Rect displayBoundingBox = PPCUtlis.translateY(

@@ -33,16 +33,15 @@ public class FaceTracker {
         this.mContext = context;
         this.mOverlay = overlay;
         mFaceGraphic = new FaceGraphic(overlay, context);
+        mOverlay.add(mFaceGraphic);
     }
 
     public void processFaces(final List<Face> faces) {
         mFaces = faces;
         List<Action> positions = new ArrayList<>();
-        mOverlay.add(mFaceGraphic);
         mFaceGraphic.updateFaces(faces);
 
         if (faces.size() == 0) {
-            mOverlay.remove(mFaceGraphic);
             mFaceGraphic.clearActions();
             return;
         }
@@ -86,8 +85,9 @@ public class FaceTracker {
     }
 
     public void clear() {
-        mOverlay.remove(mFaceGraphic);
-        mOverlay.slowlyPostinvalidate();
+        mFaceGraphic.updateFaces(new ArrayList<Face>());
         mFaceGraphic.clearActions();
+        mFaceGraphic.clearBoundingBoxes();
+        mOverlay.remove(mFaceGraphic);
     }
 }

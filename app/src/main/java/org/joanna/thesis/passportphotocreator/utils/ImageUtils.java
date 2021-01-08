@@ -6,17 +6,18 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.SparseArray;
 
-import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.face.Face;
+import com.google.android.gms.vision.Frame;
+import com.google.android.gms.vision.face.FaceDetector;
 
-import org.jetbrains.annotations.NotNull;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Objects;
 
+import static com.google.android.gms.vision.Frame.ROTATION_90;
 import static org.joanna.thesis.passportphotocreator.processing.face.FaceUtils.getFaceBoundingBox;
 import static org.joanna.thesis.passportphotocreator.utils.PPCUtlis.AndroidRectToOpenCVRect;
 import static org.joanna.thesis.passportphotocreator.utils.PPCUtlis.multiplyRect;
@@ -293,8 +295,42 @@ public final class ImageUtils {
         return mBigImage;
     }
 
+    private static com.google.android.gms.vision.face.Face detectAndGetFace(
+            final int bigToSmallImgScale,
+            final Bitmap bigImage,
+            final FaceDetector detector) {
 
-    public static Mat getFaceMatFromPictureTaken(Face face, Bitmap bmp) {
+        Bitmap smallImage = Bitmap.createScaledBitmap(
+                bigImage,
+                bigImage.getWidth() / bigToSmallImgScale,
+                bigImage.getHeight() / bigToSmallImgScale,
+                false);
+
+        Frame frame = new Frame.Builder().setBitmap(smallImage)
+                                         .setRotation(ROTATION_90)
+                                         .build();
+
+        SparseArray<com.google.android.gms.vision.face.Face>
+                faces = detector.detect(frame);
+        ImageUtils.safelyRemoveBitmap(smallImage);
+        if (faces.size() != 1) {
+            return null;
+        }
+        // this detector finds only most prominent face
+        return faces.valueAt(0);
+    }
+
+    public static Mat getFaceMatFromPictureTaken(
+            final byte[] bytes,
+            final com.google.android.gms.vision.face.FaceDetector detector) {
+
+        Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        // we need to detect face again on the bitmap. In case the face is quite
+        // small on the screen and the camera was moved there could be a shift
+        // between previously detected face position and actual position on the
+        // picture. To be on the safe side we make detection on the final photo.
+        com.google.android.gms.vision.face.Face face =
+                detectAndGetFace(PICTURE_PROCESS_SCALE, bmp, detector);
         if (null == face) {
             Log.w(
                     "Photo Taken",
@@ -309,8 +345,7 @@ public final class ImageUtils {
         picture = ImageUtils.rotateMat(picture);
 
         Rect faceBbSmall = getFaceBoundingBox(face);
-        Rect faceBoundingBox =
-                multiplyRect(PICTURE_PROCESS_SCALE, faceBbSmall);
+        Rect faceBoundingBox = multiplyRect(PICTURE_PROCESS_SCALE, faceBbSmall);
         if (!verifyBoundingBox(faceBoundingBox, picture.size())) {
             Log.w(
                     "Photo Taken",
@@ -321,17 +356,6 @@ public final class ImageUtils {
         picture = picture.submat(AndroidRectToOpenCVRect(faceBoundingBox));
         picture = ImageUtils.resizeMatToFinalSize(picture);
         return picture;
-    }
-
-    @NotNull
-    public static InputImage getInputImage(
-            final Bitmap bigImage, final int scale) {
-        Bitmap smallImage = Bitmap.createScaledBitmap(
-                bigImage,
-                bigImage.getWidth() / scale,
-                bigImage.getHeight() / scale,
-                false);
-        return InputImage.fromBitmap(smallImage, 90);
     }
 
 }
