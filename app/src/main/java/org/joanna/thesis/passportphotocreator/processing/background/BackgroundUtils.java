@@ -105,8 +105,8 @@ public final class BackgroundUtils {
         bgContourDetectorRight.process(background, pixelBackgroundRight);
 
         final Scalar rgbAverage = computeColorAverage(
-                bgContourDetectorLeft.getmBlobColorRgba(),
-                bgContourDetectorRight.getmBlobColorRgba());
+                bgContourDetectorLeft.getBlobColorRgba(),
+                bgContourDetectorRight.getBlobColorRgba());
 
         properties.setBgColorRgba(rgbAverage);
         final double areaBgdLeft = bgContourDetectorLeft.getContoursTotalArea();
@@ -212,12 +212,12 @@ public final class BackgroundUtils {
     }
 
     public static int getContoursLengthOnTheImage(final Mat background) {
-        final int cannyTreshold = 30;
+        final int cannyThreshold = 30;
         Mat grey = new Mat();
         Imgproc.cvtColor(background, grey, Imgproc.COLOR_BGR2GRAY);
         Imgproc.blur(grey, grey, new Size(5, 5));
         Mat edges = new Mat();
-        Imgproc.Canny(grey, edges, cannyTreshold, cannyTreshold * 3);
+        Imgproc.Canny(grey, edges, cannyThreshold, cannyThreshold * 3);
         grey.release();
 
         int whitePixels = Core.countNonZero(edges);
@@ -267,10 +267,10 @@ public final class BackgroundUtils {
     private static Point findPixel(
             final Mat src, final Point[] likelyPoints, final boolean black) {
 
-        for (int i = 0; i < likelyPoints.length; i++) {
-            int x = (int) likelyPoints[i].x;
-            int y = (int) likelyPoints[i].y;
-            double brightness = getBrigtness(src.get(y, x));
+        for (final Point likelyPoint : likelyPoints) {
+            int x = (int) likelyPoint.x;
+            int y = (int) likelyPoint.y;
+            double brightness = getBrightness(src.get(y, x));
             if ((brightness == 0) == black) {
                 return new Point(x, y);
             }
@@ -279,13 +279,13 @@ public final class BackgroundUtils {
     }
 
     /**
-     * {@link #getBrigtness(double[] p)}
+     * {@link #getBrightness(double[] p)}
      *
      * @param p element describing RGB(A) value
      * @return brightness value
      */
-    public static double getBrigtness(final Scalar p) {
-        return getBrigtness(p.val);
+    public static double getBrightness(final Scalar p) {
+        return getBrightness(p.val);
     }
 
     /**
@@ -297,7 +297,7 @@ public final class BackgroundUtils {
      * @param p 3 or 4 element array describing RGB(A) value
      * @return brightness value
      */
-    public static double getBrigtness(final double[] p) {
+    public static double getBrightness(final double[] p) {
         if (p.length < 3) {
             return -1;
         }
@@ -312,43 +312,6 @@ public final class BackgroundUtils {
      */
     public static Boolean isBright(final double color) {
         return color > 0.8;
-    }
-
-    /**
-     * Pastes one image containing alpha channel into the second one. This
-     * implementation expects that bot images have exactly the same width
-     * and height and rgba and rgb channels respectively.
-     *
-     * @param foreground image to be pasted in in rgba format
-     * @param background image to which image should be pasted in rgb format
-     * @return merged both images into one
-     */
-    public static Mat paste(final Mat foreground, final Mat background) {
-        if (!(foreground.cols() == background.cols() &&
-                foreground.rows() == background.rows() &&
-                foreground.channels() == 4 &&
-                background.channels() == 3)) {
-            Log.e(
-                    TAG,
-                    "Paste method expects two Mats of exactly same width and " +
-                            "height, where first one has rgba and second one " +
-                            "rgb format. Unmodified background will be " +
-                            "returned.");
-            return background;
-        }
-        Mat output = background.clone();
-        for (int y = 0; y < output.rows(); y++) {
-            for (int x = 0; x < output.cols(); x++) {
-                final double alpha = foreground.get(y, x)[3];
-                if (alpha > 0) {
-                    final double[] point = averageTwoColors(
-                            foreground.get(y, x),
-                            output.get(y, x));
-                    output.put(y, x, point);
-                }
-            }
-        }
-        return output;
     }
 
     private static double[] averageTwoColors(

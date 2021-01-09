@@ -30,7 +30,7 @@ public class FaceUncoveredVerification extends Verifier {
     private static final String TAG =
             FaceUncoveredVerification.class.getSimpleName();
 
-    private Graphic mVisibilityGraphic;
+    private final Graphic mVisibilityGraphic;
 
     public FaceUncoveredVerification(
             final Activity activity,
@@ -54,11 +54,11 @@ public class FaceUncoveredVerification extends Verifier {
                 PREVIEW_HEIGHT,
                 PREVIEW_WIDTH);
 
-        final Rect bbox = face.getBoundingBox();
-        int left = bbox.left + bbox.width() / 16;
-        int top = bbox.top + bbox.height() / 4;
-        int right = bbox.right - bbox.width() / 16;
-        int bottom = bbox.bottom + bbox.height() / 8;
+        final Rect bBox = face.getBoundingBox();
+        int left = bBox.left + bBox.width() / 16;
+        int top = bBox.top + bBox.height() / 4;
+        int right = bBox.right - bBox.width() / 16;
+        int bottom = bBox.bottom + bBox.height() / 8;
         image = ImageUtils.cropMatToBoundingBox(
                 image, new Rect(left, top, right, bottom));
         if (null == image) {

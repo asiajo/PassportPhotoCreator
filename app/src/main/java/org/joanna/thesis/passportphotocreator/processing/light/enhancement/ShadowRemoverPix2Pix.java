@@ -22,7 +22,7 @@ public class ShadowRemoverPix2Pix extends ShadowRemover {
     /**
      * Initializes an {@code ShadowRemoverPix2Pix}.
      *
-     * @param activity
+     * @param activity the activity
      */
     public ShadowRemoverPix2Pix(Activity activity) throws IOException {
         super(activity);

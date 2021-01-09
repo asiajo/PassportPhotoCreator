@@ -7,9 +7,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public final class PPCUtlis {
+public final class PPCUtils {
 
-    private static final String TAG = PPCUtlis.class.getSimpleName();
+    private static final String TAG = PPCUtils.class.getSimpleName();
 
     public static Rect multiplyRect(
             final int bigToSmallImgScale, final Rect faceBoundingBoxSmall) {
@@ -38,12 +38,6 @@ public final class PPCUtlis {
     }
 
     public static Toast makeCenteredToast(
-            Activity activity, String text, int duration) {
-        Toast toast = Toast.makeText(activity, text, duration);
-        return makeCenteredToast(toast);
-    }
-
-    public static Toast makeCenteredToast(
             Activity activity, int textRef, int duration) {
         Toast toast = Toast.makeText(activity, textRef, duration);
         return makeCenteredToast(toast);
@@ -59,6 +53,6 @@ public final class PPCUtlis {
         return toast;
     }
 
-    private void Utils() {
+    private PPCUtils() {
     }
 }

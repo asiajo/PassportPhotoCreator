@@ -16,16 +16,14 @@ import java.io.File;
 public class MainActivity extends AppCompatActivity
         implements View.OnClickListener {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
-
+    public static final  String   FILE_NAME             = "fileName";
+    private static final String   TAG                   =
+            MainActivity.class.getSimpleName();
     private static final int      PHOTO_REQUEST_CODE    = 0;
     private static final int      RC_HANDLE_CAMERA_PERM = 2;
     private static final String[] PERMISSIONS_CAMERA    =
             {Manifest.permission.CAMERA};
-
-    public static String FILE_NAME = "fileName";
-
-    private TextView statusMessage;
+    private              TextView statusMessage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,9 +61,9 @@ public class MainActivity extends AppCompatActivity
                         Environment.DIRECTORY_DCIM + File.separator +
                                 data.getStringExtra(FILE_NAME);
 
-                statusMessage.setText(
-                        "The picture was successfully saved in: " +
-                                picturePath);
+                statusMessage.setText(String.format(
+                        getResources().getString(R.string.successfully_saved),
+                        picturePath));
             }
         }
     }

@@ -15,7 +15,7 @@ public class BackgroundProperties {
     private int     isEdgesFree;
 
     public void setBgColorRgba(final Scalar bgColor) {
-        final double brightness = BackgroundUtils.getBrigtness(bgColor);
+        final double brightness = BackgroundUtils.getBrightness(bgColor);
         isBright = BackgroundUtils.isBright(brightness);
     }
 

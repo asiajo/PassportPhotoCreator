@@ -17,6 +17,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import org.jetbrains.annotations.NotNull;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.core.Mat;
 
@@ -27,30 +28,27 @@ import static org.joanna.thesis.passportphotocreator.utils.ImageUtils.getMultipl
 
 public class PhotoPreviewFragment extends Fragment
         implements View.OnClickListener, View.OnTouchListener {
-    private static final float MAX_ZOOM      = 6.0f;
-    private static final float MIN_ZOOM      = 1.0f;
-    private static final float INCH          = 2.54f;
-    private static final int   DPI_600_CM_10 = (int) (600 * 10 / INCH);
-    private static final int   DPI_600_CM_15 = (int) (600 * 15 / INCH);
-
-    private PhotoReceiver photoReceiver;
-    private Bitmap        mImage;
-    private ImageView     mImageView;
-    private Mat           picture;
-    private Matrix        matrix         = new Matrix();
-    private Matrix        savedMatrix    = new Matrix();
-    private TouchAction   mode           = TouchAction.NONE;
-    private PointF        start          = new PointF();
-    private PointF        mid            = new PointF();
-    private float         oldDist        = 1f;
-    private float         startingWidth  = 0f;
-    private float         startingHeight = 0f;
-    private float[]       valuesStart    = new float[9];
-    private float[]       values         = new float[9];
-
+    private static final float         MAX_ZOOM       = 6.0f;
+    private static final float         MIN_ZOOM       = 1.0f;
+    private static final float         INCH           = 2.54f;
+    private static final int           DPI_600_CM_10  = (int) (600 * 10 / INCH);
+    private static final int           DPI_600_CM_15  = (int) (600 * 15 / INCH);
+    private final        PointF        start          = new PointF();
+    private final        PointF        mid            = new PointF();
+    private final        float[]       valuesStart    = new float[9];
+    private final        float[]       values         = new float[9];
+    private              PhotoReceiver photoReceiver;
+    private              Bitmap        mImage;
+    private              Mat           picture;
+    private              Matrix        matrix         = new Matrix();
+    private              Matrix        savedMatrix    = new Matrix();
+    private              TouchAction   mode           = TouchAction.NONE;
+    private              float         oldDist        = 1f;
+    private              float         startingWidth  = 0f;
+    private              float         startingHeight = 0f;
 
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(@NotNull Context context) {
         super.onAttach(context);
         photoReceiver = (PhotoReceiver) context;
         picture = photoReceiver.getPhoto();
@@ -73,16 +71,17 @@ public class PhotoPreviewFragment extends Fragment
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(
+            @NotNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Button buttonSave = view.findViewById(R.id.save_photo);
         buttonSave.setOnClickListener(this);
         Button buttonCancel = view.findViewById(R.id.cancel);
         buttonCancel.setOnClickListener(this);
-        Button buttonPictures = (Button) view.findViewById(R.id.many_photos);
+        Button buttonPictures = view.findViewById(R.id.many_photos);
         buttonPictures.setOnClickListener(this);
 
-        mImageView = view.findViewById(R.id.view_photo);
+        final ImageView mImageView = view.findViewById(R.id.view_photo);
         mImageView.setImageBitmap(mImage);
         mImageView.setOnTouchListener(this);
         mImageView.setScaleType(ImageView.ScaleType.MATRIX);
@@ -103,7 +102,8 @@ public class PhotoPreviewFragment extends Fragment
                         DPI_600_CM_15, picture);
             }
             try {
-                String fileName = ImageUtils.saveImage(mImage, getActivity());
+                String fileName =
+                        ImageUtils.saveImage(mImage, requireActivity());
                 Toast.makeText(
                         getActivity(), R.string.image_saved,
                         Toast.LENGTH_SHORT).show();

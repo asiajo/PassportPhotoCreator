@@ -8,7 +8,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +22,7 @@ import com.google.mlkit.vision.face.FaceDetection;
 import com.google.mlkit.vision.face.FaceDetector;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
 
+import org.jetbrains.annotations.NotNull;
 import org.joanna.thesis.passportphotocreator.camera.CameraSource;
 import org.joanna.thesis.passportphotocreator.camera.CameraSourcePreview;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
@@ -38,13 +38,14 @@ import org.opencv.core.Mat;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
 import static com.google.mlkit.vision.face.FaceDetectorOptions.CLASSIFICATION_MODE_ALL;
 import static com.google.mlkit.vision.face.FaceDetectorOptions.LANDMARK_MODE_NONE;
 import static com.google.mlkit.vision.face.FaceDetectorOptions.PERFORMANCE_MODE_FAST;
 import static org.joanna.thesis.passportphotocreator.utils.ImageUtils.getFaceMatFromPictureTaken;
-import static org.joanna.thesis.passportphotocreator.utils.PPCUtlis.makeCenteredToast;
+import static org.joanna.thesis.passportphotocreator.utils.PPCUtils.makeCenteredToast;
 
 public class CameraFragment extends Fragment implements View.OnClickListener {
 
@@ -61,19 +62,18 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
         OpenCVLoader.initDebug();
     }
 
-    private ScaleGestureDetector    mScaleGestureDetector;
-    private CameraSource            mCameraSource;
-    private CameraSourcePreview     mPreview;
-    private GraphicOverlay<Graphic> mGraphicOverlay;
-    private FaceTracker             mFaceTracker;
-    private List<Verifier>          mVerifiers;
-    private PhotoSender             photoSender;
-    private Button                  buttonTakePicture;
-    private FaceDetector            mDetectorVideo;
+    private ScaleGestureDetector                            mScaleGestureDetector;
+    private CameraSource                                    mCameraSource;
+    private CameraSourcePreview                             mPreview;
+    private GraphicOverlay<Graphic>                         mGraphicOverlay;
+    private FaceTracker                                     mFaceTracker;
+    private List<Verifier>                                  mVerifiers;
+    private PhotoSender                                     photoSender;
+    private Button                                          buttonTakePicture;
     private com.google.android.gms.vision.face.FaceDetector mDetectorPhoto;
 
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(@NotNull Context context) {
         super.onAttach(context);
         photoSender = (PhotoSender) context;
     }
@@ -84,7 +84,8 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
         return inflater.inflate(R.layout.fragment_camera, container, false);
     }
 
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(
+            @NotNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         mPreview = view.findViewById(R.id.preview);
@@ -112,18 +113,11 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
         mScaleGestureDetector = new ScaleGestureDetector(
                 getActivity(),
                 new CameraFragment.ScaleListener());
-        view.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                mScaleGestureDetector.onTouchEvent(motionEvent);
-                return true;
-            }
+        view.setOnTouchListener((view1, motionEvent) -> {
+            view.performClick();
+            mScaleGestureDetector.onTouchEvent(motionEvent);
+            return true;
         });
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
     }
 
     @Override
@@ -182,9 +176,9 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
     }
 
     private void createCameraSource() {
-        Context context = getActivity().getApplicationContext();
+        Context context = requireActivity().getApplicationContext();
 
-        getActivity().setRequestedOrientation(SCREEN_ORIENTATION_PORTRAIT);
+        requireActivity().setRequestedOrientation(SCREEN_ORIENTATION_PORTRAIT);
 
         FaceDetectorOptions options =
                 new FaceDetectorOptions.Builder()
@@ -200,7 +194,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
                         .face.FaceDetector.ACCURATE_MODE)
                 .build();
 
-        mDetectorVideo = FaceDetection.getClient(options);
+        final FaceDetector mDetectorVideo = FaceDetection.getClient(options);
 
         mFaceTracker = new FaceTracker(mGraphicOverlay, context);
 
@@ -219,12 +213,12 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
 
     private void requestStoragePermissions() {
         int permission = ActivityCompat.checkSelfPermission(
-                getActivity(),
+                requireActivity(),
                 Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
         if (permission != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
-                    getActivity(),
+                    requireActivity(),
                     PERMISSIONS_STORAGE,
                     REQUEST_EXTERNAL_STORAGE);
         }
@@ -243,23 +237,20 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
                 R.string.wait_for_a_picture, Toast.LENGTH_LONG);
         toast.show();
 
-        mCameraSource.takePicture(null, new CameraSource.PictureCallback() {
-            @Override
-            public void onPictureTaken(byte[] bytes) {
-                toast.cancel();
-                Mat picture = getFaceMatFromPictureTaken(bytes, mDetectorPhoto);
-                if (picture == null) {
-                    Toast.makeText(
-                            getActivity(),
-                            R.string.cannot_make_a_picture,
-                            Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                photoSender.setPhoto(picture);
-                mPreview.stop();
-                buttonTakePicture.setEnabled(false);
-                photoSender.displayPreviewFragment();
+        mCameraSource.takePicture(null, bytes -> {
+            toast.cancel();
+            Mat picture = getFaceMatFromPictureTaken(bytes, mDetectorPhoto);
+            if (picture == null) {
+                Toast.makeText(
+                        getActivity(),
+                        R.string.cannot_make_a_picture,
+                        Toast.LENGTH_SHORT).show();
+                return;
             }
+            photoSender.setPhoto(picture);
+            mPreview.stop();
+            buttonTakePicture.setEnabled(false);
+            photoSender.displayPreviewFragment();
         });
     }
 

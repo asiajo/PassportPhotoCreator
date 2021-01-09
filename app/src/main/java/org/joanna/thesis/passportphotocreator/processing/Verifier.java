@@ -10,8 +10,8 @@ import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
 
 public abstract class Verifier {
 
-    protected GraphicOverlay<Graphic> mOverlay;
-    protected Context                 mContext;
+    protected final GraphicOverlay<Graphic> mOverlay;
+    protected final Context                 mContext;
 
     protected Verifier(
             final Activity activity,
@@ -24,7 +24,7 @@ public abstract class Verifier {
      * Performs the verification and sets the graphic overlay respectively.
      *
      * @param data image data under verification
-     * @param face face discovered on the iamge
+     * @param face face discovered on the image
      */
     public abstract void verify(final byte[] data, final Face face);
 

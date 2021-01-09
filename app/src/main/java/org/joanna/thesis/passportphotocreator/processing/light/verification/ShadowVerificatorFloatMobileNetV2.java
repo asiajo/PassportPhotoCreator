@@ -1,13 +1,12 @@
 package org.joanna.thesis.passportphotocreator.processing.light.verification;
 
 import android.app.Activity;
-import android.util.Log;
 
 import java.io.IOException;
 
-import static org.joanna.thesis.passportphotocreator.processing.light.verification.ShadowVerificator.EvenlyLigtened.EVENLY;
-import static org.joanna.thesis.passportphotocreator.processing.light.verification.ShadowVerificator.EvenlyLigtened.NOT_SURE;
-import static org.joanna.thesis.passportphotocreator.processing.light.verification.ShadowVerificator.EvenlyLigtened.SHADOW;
+import static org.joanna.thesis.passportphotocreator.processing.light.verification.ShadowVerificator.EvenlyLightened.EVENLY;
+import static org.joanna.thesis.passportphotocreator.processing.light.verification.ShadowVerificator.EvenlyLightened.NOT_SURE;
+import static org.joanna.thesis.passportphotocreator.processing.light.verification.ShadowVerificator.EvenlyLightened.SHADOW;
 
 /**
  * This classifier works with the float mobile-net-V2 model.
@@ -22,7 +21,7 @@ public class ShadowVerificatorFloatMobileNetV2 extends ShadowVerificator {
     /**
      * Initializes an {@code ShadowVerificatorFloatMobileNetV2}.
      *
-     * @param activity
+     * @param activity  the activity
      */
     public ShadowVerificatorFloatMobileNetV2(Activity activity)
             throws IOException {
@@ -63,7 +62,7 @@ public class ShadowVerificatorFloatMobileNetV2 extends ShadowVerificator {
     }
 
     @Override
-    public EvenlyLigtened isEvenlyLightened() {
+    public EvenlyLightened isEvenlyLightened() {
         if (segmap == null) {
             return null;
         }

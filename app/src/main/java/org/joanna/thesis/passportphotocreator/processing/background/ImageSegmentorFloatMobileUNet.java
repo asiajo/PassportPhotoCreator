@@ -16,9 +16,9 @@ import static org.opencv.core.CvType.CV_8UC3;
 
 /**
  * Based on Portrait Segmentation Sample from Tensorflow.
- * This segmentor works with the float mobile-unet model.
+ * This segmentor works with the float mobile-uNet model.
  */
-public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
+public class ImageSegmentorFloatMobileUNet extends ImageSegmentor {
 
     public static final  int   MODEL_INPUT_IMG_SIZE = 224;
     private static final float IMAGE_MEAN           = 127.5f;
@@ -30,9 +30,9 @@ public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
     /**
      * Initializes an {@code ImageSegmentorFloatMobileUnet}.
      *
-     * @param activity
+     * @param activity the activity
      */
-    public ImageSegmentorFloatMobileUnet(Activity activity) throws IOException {
+    public ImageSegmentorFloatMobileUNet(Activity activity) throws IOException {
         super(activity);
         segmap = new float[1][MODEL_INPUT_IMG_SIZE * MODEL_INPUT_IMG_SIZE];
     }

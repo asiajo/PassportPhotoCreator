@@ -18,12 +18,11 @@ import static org.joanna.thesis.passportphotocreator.camera.GraphicOverlay.TOP_R
 public class CameraSourcePreview extends ViewGroup {
 
     private static final String TAG = CameraSourcePreview.class.getSimpleName();
-
-    private boolean        mStartRequested;
-    private boolean        mSurfaceAvailable;
-    private SurfaceView    mSurfaceView;
-    private CameraSource   mCameraSource;
-    private GraphicOverlay mOverlay;
+    private final SurfaceView    mSurfaceView;
+    private       boolean        mStartRequested;
+    private       boolean        mSurfaceAvailable;
+    private       CameraSource   mCameraSource;
+    private       GraphicOverlay mOverlay;
 
     public CameraSourcePreview(
             final Context context,
@@ -75,9 +74,7 @@ public class CameraSourcePreview extends ViewGroup {
             mCameraSource.start(mSurfaceView.getHolder());
             if (mOverlay != null) {
                 Size size = mCameraSource.getPreviewSize();
-                mOverlay.setCameraInfo(
-                        size.getHeight(), size.getWidth(),
-                        mCameraSource.getCameraFacing());
+                mOverlay.setCameraInfo(size.getHeight(), size.getWidth());
             }
             mStartRequested = false;
         }

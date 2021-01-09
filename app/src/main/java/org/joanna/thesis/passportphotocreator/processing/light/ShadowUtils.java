@@ -58,9 +58,9 @@ public final class ShadowUtils {
         Core.meanStdDev(yChannel, mean, std);
         final double yMean = mean.toArray()[0];
         final double yStd = std.toArray()[0];
-        final double treshold = yMean - (yStd / 3);
+        final double threshold = yMean - (yStd / 3);
         Mat mask = new Mat();
-        Imgproc.threshold(yChannel, mask, treshold, 255., THRESH_BINARY);
+        Imgproc.threshold(yChannel, mask, threshold, 255., THRESH_BINARY);
         yChannel.release();
         Mat left = mask.submat(
                 0, mask.height(),

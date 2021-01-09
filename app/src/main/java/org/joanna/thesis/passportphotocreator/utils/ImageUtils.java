@@ -36,13 +36,14 @@ import java.util.Objects;
 
 import static com.google.android.gms.vision.Frame.ROTATION_90;
 import static org.joanna.thesis.passportphotocreator.processing.face.FaceUtils.getFaceBoundingBox;
-import static org.joanna.thesis.passportphotocreator.utils.PPCUtlis.AndroidRectToOpenCVRect;
-import static org.joanna.thesis.passportphotocreator.utils.PPCUtlis.multiplyRect;
+import static org.joanna.thesis.passportphotocreator.utils.PPCUtils.AndroidRectToOpenCVRect;
+import static org.joanna.thesis.passportphotocreator.utils.PPCUtils.multiplyRect;
 import static org.opencv.core.Core.BORDER_CONSTANT;
 import static org.opencv.core.Core.BORDER_REPLICATE;
 
 public final class ImageUtils {
 
+    public static final  int    PICTURE_PROCESS_SCALE = 8;
     private static final float  FINAL_IMAGE_WIDTH_FACTOR = 35f;
     private static final float  FINAL_IMAGE_HEIGHT_FACTOR = 45f;
     public static final  float  FINAL_IMAGE_H_TO_W_RATIO =
@@ -57,7 +58,6 @@ public final class ImageUtils {
     private static final int    FINAL_IMAGE_HEIGHT_PX =
             (int) (FINAL_IMAGE_WIDTH_PX * FINAL_IMAGE_H_TO_W_RATIO);
     private static final String TAG = ImageUtils.class.getSimpleName();
-    public static        int    PICTURE_PROCESS_SCALE = 8;
 
 
     private ImageUtils() {
@@ -82,13 +82,6 @@ public final class ImageUtils {
         fos.flush();
         fos.close();
         return fileName;
-    }
-
-    public static void saveImage(
-            final Mat image, final Activity activity)
-            throws IOException {
-        Bitmap btm = getBitmapFromMat(image);
-        saveImage(btm, activity);
     }
 
     public static Mat getMatFromYuvBytes(
@@ -155,12 +148,12 @@ public final class ImageUtils {
     }
 
     public static Mat cropMatToBoundingBox(
-            final Mat src, final Rect bbox) {
+            final Mat src, final Rect bBox) {
         if (!verifyBoundingBox(
-                bbox.left, bbox.top, bbox.right, bbox.bottom, src.size())) {
+                bBox.left, bBox.top, bBox.right, bBox.bottom, src.size())) {
             return null;
         }
-        Mat cropped = src.submat(bbox.top, bbox.bottom, bbox.left, bbox.right);
+        Mat cropped = src.submat(bBox.top, bBox.bottom, bBox.left, bBox.right);
 
         Bitmap map = Bitmap.createBitmap(cropped.width(), cropped.height(),
                 Bitmap.Config.ARGB_8888);
@@ -194,8 +187,7 @@ public final class ImageUtils {
     public static Mat unpadMatFromSquare(final Mat src, final int imgWidth) {
         int left = (src.width() - imgWidth) / 2;
         int right = left + imgWidth;
-        Mat cropped = src.submat(0, src.height(), left, right);
-        return cropped;
+        return src.submat(0, src.height(), left, right);
     }
 
     public static boolean verifyBoundingBox(
@@ -261,7 +253,7 @@ public final class ImageUtils {
                 System.currentTimeMillis());
         contentValues.put(
                 MediaStore.MediaColumns.DATE_MODIFIED,
-                System.currentTimeMillis() / 1000l);
+                System.currentTimeMillis() / 1000);
         Uri imageUri = resolver.insert(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 contentValues);

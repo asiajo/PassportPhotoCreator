@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.joanna.thesis.passportphotocreator.processing.Enhancer;
 import org.joanna.thesis.passportphotocreator.processing.background.BackgroundUtils;
 import org.joanna.thesis.passportphotocreator.processing.background.ImageSegmentor;
-import org.joanna.thesis.passportphotocreator.processing.background.ImageSegmentorFloatMobileUnet;
+import org.joanna.thesis.passportphotocreator.processing.background.ImageSegmentorFloatMobileUNet;
 import org.joanna.thesis.passportphotocreator.processing.background.verification.BackgroundProperties;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -29,7 +29,7 @@ public class BackgroundEnhancement implements Enhancer {
 
 
     public BackgroundEnhancement(final Activity activity) throws IOException {
-        mSegmentor = new ImageSegmentorFloatMobileUnet(activity);
+        mSegmentor = new ImageSegmentorFloatMobileUNet(activity);
         mBackgroundProperties = new BackgroundProperties();
     }
 

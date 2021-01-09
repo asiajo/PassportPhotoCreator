@@ -50,7 +50,7 @@ public abstract class ImageSegmentor extends DetectorTensorflowLite {
 
     /**
      * Returns mask hiding background, in the size of input image (but padded
-     * to squere!) and in CV_32F color scheme.
+     * to square!) and in CV_32F color scheme.
      *
      * @return mask
      */
@@ -58,7 +58,7 @@ public abstract class ImageSegmentor extends DetectorTensorflowLite {
 
     /**
      * Returns mask hiding person, in the size of input image (but padded
-     * to squere!) and in CV_32F color scheme.
+     * to square!) and in CV_32F color scheme.
      *
      * @return mask
      */

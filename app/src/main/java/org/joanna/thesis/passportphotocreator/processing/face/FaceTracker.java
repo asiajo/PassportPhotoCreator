@@ -20,11 +20,10 @@ public class FaceTracker {
     static final double EYES_OPEN_THRESHOLD    = 0.7;
 
     private static final String TAG = FaceTracker.class.getSimpleName();
-
-    private List<Face>              mFaces;
-    private GraphicOverlay<Graphic> mOverlay;
-    private FaceGraphic             mFaceGraphic;
-    private Context                 mContext;
+    private final GraphicOverlay<Graphic> mOverlay;
+    private final FaceGraphic             mFaceGraphic;
+    private final Context                 mContext;
+    private       List<Face>              mFaces;
 
     public FaceTracker(
             final GraphicOverlay<Graphic> overlay,
@@ -41,7 +40,7 @@ public class FaceTracker {
         List<Action> positions = new ArrayList<>();
         mFaceGraphic.updateFaces(faces);
 
-        if (faces.size() == 0) {
+        if (null == faces || faces.size() == 0) {
             mFaceGraphic.clearActions();
             return;
         }
@@ -53,6 +52,7 @@ public class FaceTracker {
         }
 
         Face face = faces.get(0);
+
         if (face.getHeadEulerAngleY() < -ROTATION_Y_THRESHOLD) {
             positions.add(FaceActions.ROTATE_RIGHT);
         } else if (face.getHeadEulerAngleY() > ROTATION_Y_THRESHOLD) {
@@ -85,7 +85,7 @@ public class FaceTracker {
     }
 
     public void clear() {
-        mFaceGraphic.updateFaces(new ArrayList<Face>());
+        mFaceGraphic.updateFaces(new ArrayList<>());
         mFaceGraphic.clearActions();
         mFaceGraphic.clearBoundingBoxes();
         mOverlay.remove(mFaceGraphic);

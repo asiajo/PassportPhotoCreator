@@ -11,14 +11,12 @@ import java.util.Set;
 public class GraphicOverlay<T extends Graphic> extends View {
     public static final float  TOP_RECT_W_TO_H_RATIO = 8.0f;
     private final       Object mLock                 = new Object();
+    private final Set<T> mGraphics = new HashSet<>();
     private             int    mPreviewWidth;
     private             float  mWidthScaleFactor     = 1.0f;
     private             int    mPreviewHeight;
     private             float  mHeightScaleFactor    = 1.0f;
-
-    private int    mFacing   = CameraSource.CAMERA_FACING_BACK;
-    private Set<T> mGraphics = new HashSet<>();
-    private int    mCounter  = 0;
+    private       int    mCounter  = 0;
 
     public GraphicOverlay(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -28,7 +26,7 @@ public class GraphicOverlay<T extends Graphic> extends View {
         synchronized (mLock) {
             mGraphics.add(graphic);
         }
-        slowlyPostinvalidate();
+        slowlyPostInvalidate();
     }
 
     public void remove(T graphic) {
@@ -36,16 +34,15 @@ public class GraphicOverlay<T extends Graphic> extends View {
         synchronized (mLock) {
             mGraphics.remove(graphic);
         }
-        slowlyPostinvalidate();
+        slowlyPostInvalidate();
     }
 
-    public void setCameraInfo(int previewWidth, int previewHeight, int facing) {
+    public void setCameraInfo(int previewWidth, int previewHeight) {
         synchronized (mLock) {
             mPreviewWidth = previewWidth;
             mPreviewHeight = previewHeight;
-            mFacing = facing;
         }
-        slowlyPostinvalidate();
+        slowlyPostInvalidate();
     }
 
     @Override
@@ -65,7 +62,7 @@ public class GraphicOverlay<T extends Graphic> extends View {
         }
     }
 
-    public void slowlyPostinvalidate() {
+    public void slowlyPostInvalidate() {
         if (mCounter >= 5) {
             mCounter = 0;
             postInvalidate();

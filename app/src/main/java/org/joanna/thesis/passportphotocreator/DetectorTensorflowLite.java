@@ -17,9 +17,6 @@ public abstract class DetectorTensorflowLite {
 
     public static final int COLOR_CHANNELS_NO = 3;
 
-    /** Options for configuring the Interpreter. */
-    private final Interpreter.Options mTfliteOptions =
-            new Interpreter.Options();
     /** An instance of the driver class to run model inference with Tfl Lite. */
     protected     Interpreter         mTflite;
     /** A ByteBuffer to hold image data, to be feed into Tfl Lite as inputs. */
@@ -31,6 +28,7 @@ public abstract class DetectorTensorflowLite {
 
     protected DetectorTensorflowLite(final Activity activity)
             throws IOException {
+        final Interpreter.Options mTfliteOptions = new Interpreter.Options();
         mTfliteModel = loadModelFile(activity);
         mTflite = new Interpreter(mTfliteModel, mTfliteOptions);
         mIntValues = new int[getImageSizeX() * getImageSizeY()];
@@ -89,21 +87,21 @@ public abstract class DetectorTensorflowLite {
     /**
      * Get the name of the model file stored in Assets.
      *
-     * @return
+     * @return model path
      */
     protected abstract String getModelPath();
 
     /**
      * Get the image size along the x axis.
      *
-     * @return
+     * @return mage size along the x axis
      */
     protected abstract int getImageSizeX();
 
     /**
      * Get the image size along the y axis.
      *
-     * @return
+     * @return image size along the y axis
      */
     protected abstract int getImageSizeY();
 
@@ -111,14 +109,14 @@ public abstract class DetectorTensorflowLite {
      * Get the number of bytes that is used to store a single color channel
      * value.
      *
-     * @return
+     * @return number of bytes that is used to store a single color channel val
      */
     protected abstract int getNumBytesPerChannel();
 
     /**
      * Add pixelValue to byteBuffer.
      *
-     * @param pixelValue
+     * @param pixelValue value of a pixel
      */
     protected abstract void addPixelValue(int pixelValue);
 

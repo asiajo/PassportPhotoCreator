@@ -17,24 +17,23 @@ import java.util.List;
 /** Based on ColorBlobDetection Sample from OpenCV. */
 public class ColorBlobDetector {
     /** Minimum contour area in percent for contours filtering */
-    private static double mMinContourArea = 0.1;
+    private static double mMinContourArea     = 0.1;
     /** Cache */
-    Mat mPyrDownMat  = new Mat();
-    Mat mHsvMat      = new Mat();
-    Mat mMask        = new Mat();
-    Mat mDilatedMask = new Mat();
-    Mat mHierarchy   = new Mat();
+    private final  Mat mPyrDownMat            = new Mat();
+    private final  Mat mHsvMat                = new Mat();
+    private final  Mat mMask                  = new Mat();
+    private final  Mat mDilatedMask           = new Mat();
+    private final  Mat mHierarchy             = new Mat();
     /** Lower and Upper bounds for range checking in HSV color space */
-    private Scalar           mLowerBound  = new Scalar(0);
-    private Scalar           mUpperBound  = new Scalar(0);
+    private final  Scalar mLowerBound         = new Scalar(0);
+    private final  Scalar mUpperBound         = new Scalar(0);
     /** Color radius for range checking in HSV color space */
-    private Scalar           mColorRadius = new Scalar(25, 50, 50, 0);
-    private Mat              mSpectrum    = new Mat();
-    private List<MatOfPoint> mContours    = new ArrayList<MatOfPoint>();
+    private        Scalar mColorRadius        = new Scalar(25, 50, 50, 0);
+    private final  Mat mSpectrum              = new Mat();
+    private final  List<MatOfPoint> mContours = new ArrayList<>();
 
     private Scalar mBlobColorRgba = new Scalar(255);
-    private Scalar mBlobColorHsv = new Scalar(255);
-    private int    imgScale      = 1;
+    private int    imgScale       = 1;
 
     public double getContoursMaxArea() {
         return getContoursMaxArea(mContours);
@@ -47,9 +46,7 @@ public class ColorBlobDetector {
     private double getContoursMaxArea(List<MatOfPoint> contours) {
         // Find max contour area
         double maxArea = 0;
-        Iterator<MatOfPoint> contour = contours.iterator();
-        while (contour.hasNext()) {
-            MatOfPoint wrapper = contour.next();
+        for (final MatOfPoint wrapper : contours) {
             double area = Imgproc.contourArea(wrapper);
             if (area > maxArea) {
                 maxArea = area;
@@ -61,9 +58,8 @@ public class ColorBlobDetector {
     private double getContoursTotalArea(List<MatOfPoint> contours) {
         // Find max contour area
         double totalArea = 0;
-        Iterator<MatOfPoint> contour = contours.iterator();
-        while (contour.hasNext()) {
-            totalArea += Imgproc.contourArea(contour.next());
+        for (final MatOfPoint matOfPoint : contours) {
+            totalArea += Imgproc.contourArea(matOfPoint);
         }
         return totalArea;
     }
@@ -71,9 +67,7 @@ public class ColorBlobDetector {
     public double getContoursMaxPerimeter() {
         // Find max contour area
         double maxPerimeter = 0;
-        Iterator<MatOfPoint> each = mContours.iterator();
-        while (each.hasNext()) {
-            MatOfPoint wrapper = each.next();
+        for (final MatOfPoint wrapper : mContours) {
             double perm = Imgproc.arcLength(
                     new MatOfPoint2f(wrapper.toArray()), true);
             if (perm > maxPerimeter) {
@@ -85,7 +79,7 @@ public class ColorBlobDetector {
 
     public void process(Mat in, Point p) {
 
-        if ( p == null || (p.x < 0) || (p.y < 0) || (p.x > in.cols()) ||
+        if (p == null || (p.x < 0) || (p.y < 0) || (p.x > in.cols()) ||
                 (p.y > in.rows())) {
             return;
         }
@@ -97,7 +91,7 @@ public class ColorBlobDetector {
         Imgproc.cvtColor(colorSample, colorSample, Imgproc.COLOR_RGB2HSV_FULL);
 
         // Calculate average color of the sample
-        mBlobColorHsv = Core.sumElems(colorSample);
+        final Scalar mBlobColorHsv = Core.sumElems(colorSample);
         int pointCount = colorRect.width * colorRect.height;
         for (int i = 0; i < mBlobColorHsv.val.length; i++) {
             mBlobColorHsv.val[i] /= pointCount;
@@ -164,16 +158,8 @@ public class ColorBlobDetector {
         return new Scalar(pointMatRgba.get(0, 0));
     }
 
-    public List<MatOfPoint> getContours() {
-        return mContours;
-    }
-
-    public Scalar getmBlobColorRgba() {
+    public Scalar getBlobColorRgba() {
         return mBlobColorRgba;
-    }
-
-    public Scalar getmBlobColorHsv() {
-        return mBlobColorHsv;
     }
 
     private void setHsvColor(Scalar hsvColor) {
@@ -203,13 +189,5 @@ public class ColorBlobDetector {
 
         Imgproc.cvtColor(spectrumHsv, mSpectrum, Imgproc.COLOR_HSV2RGB_FULL, 4);
         spectrumHsv.release();
-    }
-
-    public void setColorRadius(Scalar radius) {
-        mColorRadius = radius;
-    }
-
-    public void setMinContourArea(double area) {
-        mMinContourArea = area;
     }
 }

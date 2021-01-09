@@ -11,7 +11,7 @@ import org.joanna.thesis.passportphotocreator.processing.Action;
 import org.joanna.thesis.passportphotocreator.processing.Verifier;
 import org.joanna.thesis.passportphotocreator.processing.background.BackgroundUtils;
 import org.joanna.thesis.passportphotocreator.processing.background.ImageSegmentor;
-import org.joanna.thesis.passportphotocreator.processing.background.ImageSegmentorFloatMobileUnet;
+import org.joanna.thesis.passportphotocreator.processing.background.ImageSegmentorFloatMobileUNet;
 import org.joanna.thesis.passportphotocreator.processing.face.FaceUtils;
 import org.joanna.thesis.passportphotocreator.utils.ImageUtils;
 import org.opencv.core.Mat;
@@ -30,10 +30,9 @@ public class BackgroundVerifier extends Verifier {
 
     private static final String TAG = BackgroundVerifier.class.getSimpleName();
 
-    public  ImageSegmentor       mSegmentor;
-    private Graphic              mBackgroundGraphic;
-    private BackgroundProperties mBackgroundProperties;
-    private Mat                  mBackground;
+    public        ImageSegmentor       mSegmentor;
+    private final Graphic              mBackgroundGraphic;
+    private final BackgroundProperties mBackgroundProperties;
 
 
     public BackgroundVerifier(
@@ -42,7 +41,7 @@ public class BackgroundVerifier extends Verifier {
         super(activity, overlay);
         mBackgroundGraphic = new BackgroundGraphic(overlay);
         mBackgroundProperties = new BackgroundProperties();
-        mSegmentor = new ImageSegmentorFloatMobileUnet(activity);
+        mSegmentor = new ImageSegmentorFloatMobileUNet(activity);
     }
 
     @Override
@@ -61,7 +60,7 @@ public class BackgroundVerifier extends Verifier {
 
         mOverlay.add(mBackgroundGraphic);
 
-        mBackground = getBackground(data, face);
+        Mat mBackground = getBackground(data, face);
         if (null == mBackground) {
             return;
         }
@@ -90,8 +89,8 @@ public class BackgroundVerifier extends Verifier {
      * behind the person present on the image.
      *
      * @param data image frame from the camera in yuv bytes format
-     * @param face face discovered on the iamge
-     * @return If person is detected on the image returs Mat with the
+     * @param face face discovered on the image
+     * @return If person is detected on the image returns Mat with the
      *         background, null otherwise.
      */
     private Mat getBackground(final byte[] data, final Face face) {
@@ -99,8 +98,8 @@ public class BackgroundVerifier extends Verifier {
                 data,
                 PREVIEW_HEIGHT,
                 PREVIEW_WIDTH);
-        final Rect bbox = FaceUtils.getFaceBoundingBox(face, null);
-        image = ImageUtils.cropMatToBoundingBox(image, bbox);
+        final Rect bBox = FaceUtils.getFaceBoundingBox(face, null);
+        image = ImageUtils.cropMatToBoundingBox(image, bBox);
         if (image == null) {
             return null;
         }

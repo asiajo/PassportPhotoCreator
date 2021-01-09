@@ -41,14 +41,6 @@ public final class FaceUtils {
         return getFaceBoundingBox(centerX, centerY, widthWithOffset);
     }
 
-    public static Rect getFaceBoundingBox(final Face face) {
-        double centerX = face.getBoundingBox().centerX();
-        double centerY = face.getBoundingBox().centerY();
-        int widthWithOffset =
-                (int) (face.getBoundingBox().width() * BB_SCALING);
-        return getFaceBoundingBox(centerX, centerY, widthWithOffset);
-    }
-
     private static Rect getFaceBoundingBox(
             final double centerX, final double centerY,
             final double widthWithOffset) {

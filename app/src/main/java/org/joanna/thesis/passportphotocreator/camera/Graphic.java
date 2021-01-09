@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
+import org.jetbrains.annotations.NotNull;
 import org.joanna.thesis.passportphotocreator.processing.Action;
 import org.joanna.thesis.passportphotocreator.processing.PhotoValidity;
 
@@ -28,12 +29,14 @@ public abstract class Graphic {
 
     private static final String TAG = Graphic.class.getSimpleName();
 
-    private static Map<BitmapMetaData, Bitmap> mActions =
+    private static final Map<BitmapMetaData, Bitmap> mActions =
             new ConcurrentHashMap<>();
-    private        Map<Action, BitmapMetaData> mActionsMap = new HashMap<>();
-    private        Map<PhotoValidity, Integer> mColorMap = new HashMap<>();
-    private        GraphicOverlay              mOverlay;
-    private        Paint                       mPaint;
+    private final        Map<Action, BitmapMetaData> mActionsMap =
+            new HashMap<>();
+    private final        Map<PhotoValidity, Integer> mColorMap =
+            new HashMap<>();
+    private final        GraphicOverlay              mOverlay;
+    private final        Paint                       mPaint;
 
     {
         mColorMap.put(PhotoValidity.VALID, VALID_COLOR);
@@ -55,10 +58,6 @@ public abstract class Graphic {
         return horizontal * mOverlay.getWidthScaleFactor();
     }
 
-    public float scaleY(final float vertical) {
-        return vertical * mOverlay.getHeightScaleFactor();
-    }
-
     public void postInvalidate() {
         mOverlay.postInvalidate();
     }
@@ -68,9 +67,8 @@ public abstract class Graphic {
         int i = 0;
         int iconSize = mOverlay.getWidth() / 12;
         int padding = iconSize / 5;
-        List<Bitmap> actionBitmaps = new ArrayList<>();
 
-        actionBitmaps.addAll(mActions.values());
+        List<Bitmap> actionBitmaps = new ArrayList<>(mActions.values());
 
         for (Bitmap action : actionBitmaps) {
             final Rect rectSrc = new Rect(0, 0, action.getWidth(),
@@ -98,10 +96,8 @@ public abstract class Graphic {
                             mActionsMap.get(action).getId()));
         }
 
-        if (null != mActions) {
-            clearActions(aClass);
-            mActions.putAll(newActions);
-        }
+        clearActions(aClass);
+        mActions.putAll(newActions);
         setValidity();
     }
 
@@ -137,7 +133,7 @@ public abstract class Graphic {
         }
     }
 
-    public Paint getmPaint() {
+    public Paint getPaint() {
         return mPaint;
     }
 
@@ -149,9 +145,7 @@ public abstract class Graphic {
      *         otherwise
      */
     private boolean containsInvalidActions() {
-        for (Iterator<BitmapMetaData> it =
-             mActions.keySet().iterator(); it.hasNext(); ) {
-            BitmapMetaData metaData = it.next();
+        for (BitmapMetaData metaData : mActions.keySet()) {
             if (metaData.makesPhotoInvalid()) {
                 return true;
             }
@@ -168,9 +162,7 @@ public abstract class Graphic {
      * @return true if at least one action is warning action, false otherwise.
      */
     private boolean containsWarningActions() {
-        for (Iterator<BitmapMetaData> it =
-             mActions.keySet().iterator(); it.hasNext(); ) {
-            BitmapMetaData metaData = it.next();
+        for (BitmapMetaData metaData : mActions.keySet()) {
             if (metaData.makesPhotoWarning()) {
                 return true;
             }
@@ -182,10 +174,10 @@ public abstract class Graphic {
         return mOverlay;
     }
 
-    public class BitmapMetaData implements Comparable<BitmapMetaData> {
-        private Class<? extends Graphic> mClass;
-        private int                      mId;
-        private PhotoValidity            mValidity;
+    public static class BitmapMetaData implements Comparable<BitmapMetaData> {
+        private final Class<? extends Graphic> mClass;
+        private final int                      mId;
+        private final PhotoValidity            mValidity;
 
         public BitmapMetaData(
                 final Class<? extends Graphic> aClass,
@@ -201,6 +193,7 @@ public abstract class Graphic {
             return this.getId().compareTo(o.getId());
         }
 
+        @NotNull
         @Override
         public String toString() {
             return "Bitmap [id=" + mId + "], class: [" + mClass + "]";

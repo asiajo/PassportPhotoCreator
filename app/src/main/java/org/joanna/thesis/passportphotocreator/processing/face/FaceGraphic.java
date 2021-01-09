@@ -13,7 +13,7 @@ import org.joanna.thesis.passportphotocreator.R;
 import org.joanna.thesis.passportphotocreator.camera.Graphic;
 import org.joanna.thesis.passportphotocreator.camera.GraphicOverlay;
 import org.joanna.thesis.passportphotocreator.processing.PhotoValidity;
-import org.joanna.thesis.passportphotocreator.utils.PPCUtlis;
+import org.joanna.thesis.passportphotocreator.utils.PPCUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,10 +103,10 @@ public class FaceGraphic extends Graphic {
         int i = 0;
         for (Face face : mFaces) {
             mFaceBoundingBoxes.add(i, FaceUtils.getFaceBoundingBox(face, this));
-            Rect displayBoundingBox = PPCUtlis.translateY(
+            Rect displayBoundingBox = PPCUtils.translateY(
                     mFaceBoundingBoxes.get(i),
                     getGraphicOverlay().getWidth() / TOP_RECT_W_TO_H_RATIO);
-            canvas.drawRect(displayBoundingBox, getmPaint());
+            canvas.drawRect(displayBoundingBox, getPaint());
         }
         drawActionsToBePerformed(canvas);
         if (mFaces.size() == 1) {
@@ -122,18 +122,18 @@ public class FaceGraphic extends Graphic {
     }
 
     private void drawEnlargingInfo(final Canvas canvas) {
-        Rect bbox = mFaceBoundingBoxes.get(0);
+        Rect bBox = mFaceBoundingBoxes.get(0);
         Bitmap enlarge = BitmapFactory.decodeResource(
                 mContext.getResources(),
                 R.drawable.enlarge);
         final Rect rectSrc = new Rect(0, 0, enlarge.getWidth(),
                 enlarge.getHeight());
-        int dstHalfWidth = bbox.width() * mArrowsScale++ /
+        int dstHalfWidth = bBox.width() * mArrowsScale++ /
                 ARROW_MAX_SIZE;
         int dstHalfHeight =
                 dstHalfWidth * enlarge.getHeight() / enlarge.getWidth();
-        final int centerX = bbox.centerX();
-        final int centerY = (int) (bbox.centerY() +
+        final int centerX = bBox.centerX();
+        final int centerY = (int) (bBox.centerY() +
                 getGraphicOverlay().getWidth() / TOP_RECT_W_TO_H_RATIO);
         final Rect rectDst = new Rect(
                 centerX - dstHalfWidth,

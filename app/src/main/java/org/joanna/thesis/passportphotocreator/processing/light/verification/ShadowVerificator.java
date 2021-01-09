@@ -49,9 +49,9 @@ public abstract class ShadowVerificator extends DetectorTensorflowLite {
     /**
      * @return mask
      */
-    public abstract EvenlyLigtened isEvenlyLightened();
+    public abstract EvenlyLightened isEvenlyLightened();
 
-    public enum EvenlyLigtened {
+    public enum EvenlyLightened {
         EVENLY,
         NOT_SURE,
         SHADOW

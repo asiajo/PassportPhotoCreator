@@ -29,8 +29,8 @@ public class ShadowVerification extends Verifier {
     private static final String TAG =
             ShadowVerification.class.getSimpleName();
 
-    private Graphic mShadowGraphic;
-    private ShadowVerificator mShadowVerificator;
+    private final Graphic mShadowGraphic;
+    private       ShadowVerificator mShadowVerificator;
 
     public ShadowVerification(
             final Activity activity,
@@ -40,7 +40,7 @@ public class ShadowVerification extends Verifier {
         try {
             mShadowVerificator =
                     new ShadowVerificatorFloatMobileNetV2(activity);
-            Log.i(TAG, "Succesfully initialized shadow verifier.");
+            Log.i(TAG, "Successfully initialized shadow verifier.");
         } catch (IOException e) {
             Log.e(
                     TAG,
@@ -72,19 +72,18 @@ public class ShadowVerification extends Verifier {
             return;
         }
 
-        ShadowVerificator.EvenlyLigtened isEvenlyLightened = null;
+        ShadowVerificator.EvenlyLightened isEvenlyLightened = null;
         if (mShadowVerificator != null) {
             mShadowVerificator.classify(image);
             isEvenlyLightened = mShadowVerificator.isEvenlyLightened();
         }
 
-        if (null != isEvenlyLightened &&
-                isEvenlyLightened == ShadowVerificator.EvenlyLigtened.SHADOW) {
+        if (isEvenlyLightened == ShadowVerificator.EvenlyLightened.SHADOW) {
             positions.add(ShadowActions.NOT_UNIFORM);
             Log.i(TAG, "Face is not evenly lightened.");
         } else if (null == isEvenlyLightened || isEvenlyLightened ==
-                ShadowVerificator.EvenlyLigtened.NOT_SURE) {
-            Log.i(TAG,"Verifying with OpenCV if face's evenly lightened.");
+                ShadowVerificator.EvenlyLightened.NOT_SURE) {
+            Log.i(TAG, "Verifying with OpenCV if face's evenly lightened.");
             if (!isEvenlyLightened(image)) {
                 positions.add(ShadowActions.NOT_UNIFORM);
             }
