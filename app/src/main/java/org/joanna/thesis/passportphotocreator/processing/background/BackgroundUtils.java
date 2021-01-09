@@ -69,11 +69,12 @@ public final class BackgroundUtils {
 
         Imgproc.cvtColor(personMask, personMask, Imgproc.COLOR_RGB2GRAY);
         personMask.convertTo(personMask, CV_8UC1, 255);
-        Imgproc.blur(personMask, personMask, new Size(15, 15));
-        Imgproc.threshold(
-                personMask, personMask, 127, 255, Imgproc.THRESH_BINARY);
         personMask = ImageUtils.unpadMatFromSquare(personMask, imgWidth);
         personMask = ImageUtils.resizeMat(personMask, src.width());
+        Imgproc.blur(personMask, personMask, new Size(5, 5));
+        Imgproc.threshold(
+                personMask, personMask, 127, 255, Imgproc.THRESH_BINARY);
+
         return personMask;
     }
 
