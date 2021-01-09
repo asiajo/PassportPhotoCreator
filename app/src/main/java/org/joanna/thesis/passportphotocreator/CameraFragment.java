@@ -70,7 +70,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
     private PhotoSender             photoSender;
     private FaceDetector            mDetectorVideo;
     private com.google.android.gms.vision.face.FaceDetector mDetectorPhoto;
-    
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
