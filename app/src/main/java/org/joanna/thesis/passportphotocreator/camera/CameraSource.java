@@ -9,7 +9,6 @@ import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.os.Build;
-import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
@@ -1091,15 +1090,11 @@ public class CameraSource {
     private class FrameProcessingRunnable implements Runnable {
         private final FaceTracker  mFaceTracker;
         private       FaceDetector mDetector;
-        private long        mStartTimeMillis = SystemClock.elapsedRealtime();
 
         // This lock guards all of the member variables below.
         private final Object mLock = new Object();
         private boolean mActive = true;
 
-        // These pending variables hold the state associated with the new frame awaiting processing.
-        private long mPendingTimeMillis;
-        private int mPendingFrameId = 0;
         private ByteBuffer mPendingFrameData;
         private byte [] mPendingFrameBytes;
 
@@ -1120,8 +1115,10 @@ public class CameraSource {
         @SuppressLint("Assert")
         void release() {
             assert (mProcessingThread.getState() == State.TERMINATED);
-            mDetector.close();
-            mDetector = null;
+            if (mDetector != null) {
+                mDetector.close();
+                mDetector = null;
+            }
         }
 
         /**
@@ -1153,10 +1150,6 @@ public class CameraSource {
                     return;
                 }
 
-                // Timestamp and frame ID are maintained here, which will give downstream code some
-                // idea of the timing of frames received and when frames were dropped along the way.
-                mPendingTimeMillis = SystemClock.elapsedRealtime() - mStartTimeMillis;
-                mPendingFrameId++;
                 mPendingFrameData = mBytesToByteBuffer.get(data);
                 mPendingFrameBytes = data;
 
