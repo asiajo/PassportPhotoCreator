@@ -66,11 +66,11 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
     private CameraSourcePreview     mPreview;
     private GraphicOverlay<Graphic> mGraphicOverlay;
     private FaceTracker             mFaceTracker;
-    private FaceDetector            mDetectorVideo;
-    private com.google.android.gms.vision.face.FaceDetector mDetectorPhoto;
     private List<Verifier>          mVerifiers;
     private PhotoSender             photoSender;
-
+    private FaceDetector            mDetectorVideo;
+    private com.google.android.gms.vision.face.FaceDetector mDetectorPhoto;
+    
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -167,7 +167,14 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.take_photo_button:
-                takePhoto();
+                try {
+                    takePhoto();
+                } catch (Exception e) {
+                    makeCenteredToast(
+                            getActivity(),
+                            R.string.picture_making_failed,
+                            Toast.LENGTH_LONG).show();
+                }
                 break;
         }
     }
@@ -185,11 +192,11 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
                         .build();
 
         mDetectorPhoto = new com.google.android.gms.vision
-                        .face.FaceDetector.Builder(context)
-                        .setProminentFaceOnly(true)
-                        .setMode(com.google.android.gms.vision
-                                .face.FaceDetector.ACCURATE_MODE)
-                        .build();
+                .face.FaceDetector.Builder(context)
+                .setProminentFaceOnly(true)
+                .setMode(com.google.android.gms.vision
+                        .face.FaceDetector.ACCURATE_MODE)
+                .build();
 
         mDetectorVideo = FaceDetection.getClient(options);
 
