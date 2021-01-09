@@ -81,19 +81,6 @@ public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
     }
 
     @Override
-    public Mat getForeground() {
-
-        Mat mask = getMaskedBackground();
-        if (mask == null) {
-            return null;
-        }
-        Mat foreground = applyMask(mImage, mask);
-        mask.release();
-
-        return foreground;
-    }
-
-    @Override
     public Mat getMaskedBackground() {
         if (segmap == null) {
             return null;
@@ -115,7 +102,7 @@ public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
                 CV_32F, new Scalar(1.0));
         Core.subtract(maskInverted, mask, maskInverted);
         mask.release();
-        return convertMask(maskInverted);
+        return convertMaskWithThreshold(maskInverted);
     }
 
     private Mat applyMask(final Mat src, final Mat mask) {
@@ -134,6 +121,13 @@ public class ImageSegmentorFloatMobileUnet extends ImageSegmentor {
     }
 
     private Mat convertMask(final Mat src) {
+        Mat dst = new Mat();
+        Imgproc.resize(src, dst, new Size(PROCESS_IMG_SIZE, PROCESS_IMG_SIZE));
+        Imgproc.cvtColor(dst, dst, Imgproc.COLOR_GRAY2BGR);
+        return dst;
+    }
+
+    private Mat convertMaskWithThreshold(final Mat src) {
         Mat dst = new Mat();
         Imgproc.threshold(src, dst, 0.9, 1.0, Imgproc.THRESH_BINARY);
         Imgproc.resize(dst, dst, new Size(PROCESS_IMG_SIZE, PROCESS_IMG_SIZE));

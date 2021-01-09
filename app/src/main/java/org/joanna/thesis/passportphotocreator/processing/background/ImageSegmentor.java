@@ -71,10 +71,4 @@ public abstract class ImageSegmentor extends DetectorTensorflowLite {
      */
     public abstract Mat getBackground();
 
-    /**
-     * Returns original image with detected background painted black.
-     *
-     * @return image with background painted black
-     */
-    public abstract Mat getForeground();
 }
