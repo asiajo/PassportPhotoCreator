@@ -68,6 +68,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
     private FaceTracker             mFaceTracker;
     private List<Verifier>          mVerifiers;
     private PhotoSender             photoSender;
+    private Button                  buttonTakePicture;
     private FaceDetector            mDetectorVideo;
     private com.google.android.gms.vision.face.FaceDetector mDetectorPhoto;
 
@@ -88,7 +89,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
 
         mPreview = view.findViewById(R.id.preview);
         {
-            Button buttonTakePicture = view.findViewById(
+            buttonTakePicture = view.findViewById(
                     R.id.take_photo_button);
             buttonTakePicture.setOnClickListener(this);
 
@@ -141,6 +142,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
         super.onResume();
         createCameraSource();
         startCameraSource();
+        buttonTakePicture.setEnabled(true);
     }
 
     @Override
@@ -255,6 +257,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
                 }
                 photoSender.setPhoto(picture);
                 mPreview.stop();
+                buttonTakePicture.setEnabled(false);
                 photoSender.displayPreviewFragment();
             }
         });
