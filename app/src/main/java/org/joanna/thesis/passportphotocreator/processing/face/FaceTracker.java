@@ -19,11 +19,12 @@ public class FaceTracker {
     static final double ROTATION_Z_THRESHOLD   = 4; // with or against clock
     static final double EYES_OPEN_THRESHOLD    = 0.7;
 
-    private static final String TAG = FaceTracker.class.getSimpleName();
-    private final GraphicOverlay<Graphic> mOverlay;
-    private final FaceGraphic             mFaceGraphic;
-    private final Context                 mContext;
-    private       List<Face>              mFaces;
+    private static final String                  TAG =
+            FaceTracker.class.getSimpleName();
+    private final        GraphicOverlay<Graphic> mOverlay;
+    private final        FaceGraphic             mFaceGraphic;
+    private final        Context                 mContext;
+    private              List<Face>              mFaces;
 
     public FaceTracker(
             final GraphicOverlay<Graphic> overlay,
@@ -68,13 +69,16 @@ public class FaceTracker {
         } else if (face.getHeadEulerAngleZ() > ROTATION_Z_THRESHOLD) {
             positions.add(FaceActions.STRAIGHTEN_FROM_LEFT);
         }
-        if (face.getLeftEyeOpenProbability() < EYES_OPEN_THRESHOLD) {
+        if (null != face.getLeftEyeOpenProbability() &&
+                face.getLeftEyeOpenProbability() < EYES_OPEN_THRESHOLD) {
             positions.add(FaceActions.LEFT_EYE_OPEN);
         }
-        if (face.getRightEyeOpenProbability() < EYES_OPEN_THRESHOLD) {
+        if (null != face.getRightEyeOpenProbability() &&
+                face.getRightEyeOpenProbability() < EYES_OPEN_THRESHOLD) {
             positions.add(FaceActions.RIGHT_EYE_OPEN);
         }
-        if (face.getSmilingProbability() > NEUTRAL_FACE_THRESHOLD) {
+        if (null != face.getSmilingProbability() &&
+                face.getSmilingProbability() > NEUTRAL_FACE_THRESHOLD) {
             positions.add(FaceActions.NEUTRAL_MOUTH);
         }
         mFaceGraphic.setBarActions(positions, mContext, FaceGraphic.class);
