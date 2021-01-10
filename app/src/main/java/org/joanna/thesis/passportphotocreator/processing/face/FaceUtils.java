@@ -13,7 +13,8 @@ import static org.joanna.thesis.passportphotocreator.processing.face.FaceTracker
 
 public final class FaceUtils {
 
-    private static final float BB_SCALING = 1.2f;
+    private static final float BB_SCALING_MLKIT = 1.2f;
+    private static final float BB_SCALING_MV    = 1.05f;
 
     private FaceUtils() {
     }
@@ -23,7 +24,8 @@ public final class FaceUtils {
             final Graphic graphic) {
         double centerX = face.getBoundingBox().centerX();
         double centerY = face.getBoundingBox().centerY();
-        double widthWithOffset = face.getBoundingBox().width() * BB_SCALING;
+        double widthWithOffset = face.getBoundingBox().width() *
+                BB_SCALING_MLKIT;
         if (graphic != null) {
             centerX = graphic.scaleX((float) centerX);
             centerY = graphic.scaleX((float) centerY);
@@ -33,10 +35,11 @@ public final class FaceUtils {
         return getFaceBoundingBox(centerX, centerY, widthWithOffset);
     }
 
-    public static Rect getFaceBoundingBox(final com.google.android.gms.vision.face.Face face) {
+    public static Rect getFaceBoundingBox(
+            final com.google.android.gms.vision.face.Face face) {
         int centerX = (int) (face.getPosition().x + face.getWidth() / 2.);
         int centerY = (int) (face.getPosition().y + face.getHeight() / 2.);
-        int widthWithOffset = (int) (face.getWidth() * BB_SCALING);
+        int widthWithOffset = (int) (face.getWidth() * BB_SCALING_MV);
 
         return getFaceBoundingBox(centerX, centerY, widthWithOffset);
     }
@@ -49,7 +52,7 @@ public final class FaceUtils {
                 widthWithOffset / ImageUtils.FINAL_IMAGE_W_TO_H_RATIO;
 
         // find location of bounding box edges
-        final int RatioDivisor = 16; // for changing y position of BB
+        final int RatioDivisor = 8; // for changing y position of BB
         final float upperEdgeProportion = RatioDivisor / 2.0f + 1;
         final float upperEdgeRatio = upperEdgeProportion / RatioDivisor;
         final float lowerEdgeRatio = 1 - upperEdgeRatio;
