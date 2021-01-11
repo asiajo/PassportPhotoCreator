@@ -13,8 +13,8 @@ import static org.joanna.thesis.passportphotocreator.processing.face.FaceTracker
 
 public final class FaceUtils {
 
-    private static final float BB_SCALING_MLKIT = 1.25f;
-    private static final float BB_SCALING_MV    = 1.1f;
+    private static final float BB_SCALING_MLKIT = 1.3f;
+    private static final float BB_SCALING_MV    = 1.15f;
 
     private FaceUtils() {
     }
@@ -52,8 +52,8 @@ public final class FaceUtils {
                 widthWithOffset / ImageUtils.FINAL_IMAGE_W_TO_H_RATIO;
 
         // find location of bounding box edges
-        final int RatioDivisor = 32; // for changing y position of BB
-        final float upperEdgeProportion = RatioDivisor / 2.0f + 3;
+        final int RatioDivisor = 16; // for changing y position of BB
+        final float upperEdgeProportion = RatioDivisor / 2.0f + 1;
         final float upperEdgeRatio = upperEdgeProportion / RatioDivisor;
         final float lowerEdgeRatio = 1 - upperEdgeRatio;
         final float half = 0.5f;
