@@ -8,7 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.ScaleGestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -38,7 +38,6 @@ import org.opencv.core.Mat;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
 import static com.google.mlkit.vision.face.FaceDetectorOptions.CLASSIFICATION_MODE_ALL;
@@ -62,7 +61,6 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
         OpenCVLoader.initDebug();
     }
 
-    private ScaleGestureDetector                            mScaleGestureDetector;
     private CameraSource                                    mCameraSource;
     private CameraSourcePreview                             mPreview;
     private GraphicOverlay<Graphic>                         mGraphicOverlay;
@@ -89,35 +87,32 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
         super.onViewCreated(view, savedInstanceState);
 
         mPreview = view.findViewById(R.id.preview);
-        {
-            buttonTakePicture = view.findViewById(
-                    R.id.take_photo_button);
-            buttonTakePicture.setOnClickListener(this);
 
-            mGraphicOverlay = view.findViewById(R.id.graphicOverlay);
-            mVerifiers = new ArrayList<>();
-            mVerifiers.add(new ShadowVerification(
-                    getActivity(), mGraphicOverlay));
-            mVerifiers.add(new FaceUncoveredVerification(
-                    getActivity(), mGraphicOverlay));
-            try {
-                mVerifiers.add(new BackgroundVerifier(
-                        getActivity(), mGraphicOverlay));
-            } catch (IOException e) {
-                Toast.makeText(
-                        getActivity(),
-                        R.string.no_background_verification_error,
-                        Toast.LENGTH_LONG).show();
-            }
-        }
-        mScaleGestureDetector = new ScaleGestureDetector(
-                getActivity(),
-                new CameraFragment.ScaleListener());
-        view.setOnTouchListener((view1, motionEvent) -> {
-            view.performClick();
-            mScaleGestureDetector.onTouchEvent(motionEvent);
+        buttonTakePicture = view.findViewById(
+                R.id.take_photo_button);
+        buttonTakePicture.setOnClickListener(this);
+
+        mGraphicOverlay = view.findViewById(R.id.graphicOverlay);
+        mGraphicOverlay.setOnTouchListener((view1, motionEvent) -> {
+            mCameraSource.onTouch(motionEvent);
             return true;
         });
+
+        mVerifiers = new ArrayList<>();
+        mVerifiers.add(new ShadowVerification(
+                getActivity(), mGraphicOverlay));
+        mVerifiers.add(new FaceUncoveredVerification(
+                getActivity(), mGraphicOverlay));
+        try {
+            mVerifiers.add(new BackgroundVerifier(
+                    getActivity(), mGraphicOverlay));
+        } catch (IOException e) {
+            Toast.makeText(
+                    getActivity(),
+                    R.string.no_background_verification_error,
+                    Toast.LENGTH_LONG).show();
+        }
+
     }
 
     @Override
@@ -136,7 +131,10 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
         super.onResume();
         createCameraSource();
         startCameraSource();
-        buttonTakePicture.setEnabled(true);
+        if (mCameraSource != null) {
+            buttonTakePicture.setEnabled(true);
+        }
+
     }
 
     @Override
@@ -248,7 +246,6 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
                 return;
             }
             photoSender.setPhoto(picture);
-            mPreview.stop();
             buttonTakePicture.setEnabled(false);
             photoSender.displayPreviewFragment();
         });
@@ -270,24 +267,5 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
         void setPhoto(Mat pict);
 
         void displayPreviewFragment();
-    }
-
-    private class ScaleListener
-            implements ScaleGestureDetector.OnScaleGestureListener {
-
-        @Override
-        public boolean onScale(ScaleGestureDetector detector) {
-            return false;
-        }
-
-        @Override
-        public boolean onScaleBegin(ScaleGestureDetector detector) {
-            return true;
-        }
-
-        @Override
-        public void onScaleEnd(ScaleGestureDetector detector) {
-            mCameraSource.doZoom(detector.getScaleFactor());
-        }
     }
 }

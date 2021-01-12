@@ -8,6 +8,7 @@ import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.util.Log;
 import android.util.Size;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
@@ -94,6 +95,10 @@ public class CameraSource {
     private              int                     mRequestedPreviewHeight = 768;
     private              String                  mFocusMode              = null;
     private              String                  mFlashMode              = null;
+
+    private float fingerSpacing = 0;
+    private int   zoomLevel     = 1;
+
     // These instances need to be held onto to avoid GC of their underlying
     // resources.  Even though
     // these aren't used outside of the method that creates them, they still
@@ -343,37 +348,33 @@ public class CameraSource {
         return mPreviewSize;
     }
 
-    public int doZoom(float scale) {
-        synchronized (mCameraLock) {
-            if (mCamera == null) {
-                return 0;
-            }
-            int currentZoom = 0;
-            int maxZoom;
-            Camera.Parameters parameters = mCamera.getParameters();
-            if (!parameters.isZoomSupported()) {
-                Log.w(TAG, "Zoom is not supported on this device");
-                return currentZoom;
-            }
-            maxZoom = parameters.getMaxZoom();
+    public boolean onTouch(MotionEvent event) {
 
-            currentZoom = parameters.getZoom() + 1;
-            float newZoom;
-            if (scale > 1) {
-                newZoom = currentZoom + scale * (maxZoom / 10);
-            } else {
-                newZoom = currentZoom * scale;
+        Camera.Parameters parameters = mCamera.getParameters();
+
+        if (event.getPointerCount() > 1) {
+            float currentFingerSpacing = getFingerSpacing(event);
+            if (fingerSpacing != 0) {
+                if (currentFingerSpacing > fingerSpacing &&
+                        parameters.getMaxZoom() > zoomLevel) {
+                    zoomLevel++;
+                } else if (currentFingerSpacing < fingerSpacing &&
+                        zoomLevel > 1) {
+                    zoomLevel--;
+                }
+                parameters.setZoom(zoomLevel);
+                mCamera.setParameters(parameters);
             }
-            currentZoom = Math.round(newZoom) - 1;
-            if (currentZoom < 0) {
-                currentZoom = 0;
-            } else if (currentZoom > maxZoom) {
-                currentZoom = maxZoom;
-            }
-            parameters.setZoom(currentZoom);
-            mCamera.setParameters(parameters);
-            return currentZoom;
+            fingerSpacing = currentFingerSpacing;
         }
+        return true;
+    }
+
+
+    private float getFingerSpacing(MotionEvent event) {
+        float x = event.getX(0) - event.getX(1);
+        float y = event.getY(0) - event.getY(1);
+        return (float) Math.sqrt(x * x + y * y);
     }
 
     /**
