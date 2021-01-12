@@ -244,7 +244,11 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
                 return;
             }
             photoSender.setPhoto(picture);
-            photoSender.displayPreviewFragment();
+            try {
+                photoSender.displayPreviewFragment();
+            } catch (Exception e) {
+                Log.e(TAG, "Exception happened " + e.getMessage());
+            }
         });
     }
 
