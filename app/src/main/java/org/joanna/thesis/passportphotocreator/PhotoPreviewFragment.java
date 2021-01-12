@@ -108,7 +108,7 @@ public class PhotoPreviewFragment extends Fragment
                         getActivity(), R.string.image_saved,
                         Toast.LENGTH_SHORT).show();
                 photoReceiver.finishWithResult(fileName);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 Toast.makeText(
                         getActivity(), R.string.image_not_saved,
                         Toast.LENGTH_LONG).show();

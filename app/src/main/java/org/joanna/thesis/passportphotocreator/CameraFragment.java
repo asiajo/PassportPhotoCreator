@@ -8,7 +8,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -131,17 +130,17 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
         super.onResume();
         createCameraSource();
         startCameraSource();
-        if (mCameraSource != null) {
+        if (null != mCameraSource) {
             buttonTakePicture.setEnabled(true);
         }
-
     }
 
     @Override
     public void onPause() {
-        super.onPause();
         mPreview.release();
         mFaceTracker.clear();
+        buttonTakePicture.setEnabled(false);
+        super.onPause();
     }
 
     private void startCameraSource() throws SecurityException {
@@ -234,7 +233,6 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
         Toast toast = makeCenteredToast(getActivity(),
                 R.string.wait_for_a_picture, Toast.LENGTH_LONG);
         toast.show();
-
         mCameraSource.takePicture(null, bytes -> {
             toast.cancel();
             Mat picture = getFaceMatFromPictureTaken(bytes, mDetectorPhoto);
@@ -246,7 +244,6 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
                 return;
             }
             photoSender.setPhoto(picture);
-            buttonTakePicture.setEnabled(false);
             photoSender.displayPreviewFragment();
         });
     }

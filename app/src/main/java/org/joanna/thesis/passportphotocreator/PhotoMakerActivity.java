@@ -111,8 +111,8 @@ public class PhotoMakerActivity extends AppCompatActivity
 
     @Override
     public void displayCameraFragment() {
-        getSupportFragmentManager().popBackStack();
         cameraFragment.onResume();
+        getSupportFragmentManager().popBackStack();
     }
 
     @Override

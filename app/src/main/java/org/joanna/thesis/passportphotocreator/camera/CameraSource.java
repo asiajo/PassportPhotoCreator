@@ -350,6 +350,10 @@ public class CameraSource {
 
     public boolean onTouch(MotionEvent event) {
 
+        if (null == mCamera){
+            return false;
+        }
+
         Camera.Parameters parameters = mCamera.getParameters();
 
         if (event.getPointerCount() > 1) {
