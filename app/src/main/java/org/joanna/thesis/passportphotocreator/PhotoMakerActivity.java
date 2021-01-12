@@ -24,10 +24,10 @@ public class PhotoMakerActivity extends AppCompatActivity
         implements CameraFragment.PhotoSender,
                    PhotoPreviewFragment.PhotoReceiver {
 
-    public static final  int    PREVIEW_WIDTH  = 480;
-    public static final  int    PREVIEW_HEIGHT = 640;
-    private static final String TAG            =
-            PhotoMakerActivity.class.getSimpleName();
+    public static final int PREVIEW_WIDTH  = 480;
+    public static final int PREVIEW_HEIGHT = 640;
+
+    private static final String TAG = PhotoMakerActivity.class.getSimpleName();
 
     static {
         OpenCVLoader.initDebug();
@@ -46,18 +46,19 @@ public class PhotoMakerActivity extends AppCompatActivity
         setContentView(R.layout.photo_capture);
         mEnhancers = new ArrayList<>();
         try {
+            mEnhancers.add(new BackgroundEnhancement(this));
+        } catch (IOException e) {
+            Toast.makeText(this, R.string.no_background_verification_error,
+                    Toast.LENGTH_LONG).show();
+        }
+
+        try {
             mEnhancers.add(new ShadowRemoverPix2Pix(this));
         } catch (IOException e) {
             Toast.makeText(
                     this,
                     R.string.no_face_shadow_removal_error,
                     Toast.LENGTH_SHORT).show();
-        }
-        try {
-            mEnhancers.add(new BackgroundEnhancement(this));
-        } catch (IOException e) {
-            Toast.makeText(this, R.string.no_background_verification_error,
-                    Toast.LENGTH_LONG).show();
         }
         cameraFragment =
                 getSupportFragmentManager().findFragmentById(R.id.camera_place);
