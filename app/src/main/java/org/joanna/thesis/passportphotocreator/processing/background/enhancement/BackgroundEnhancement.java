@@ -73,7 +73,6 @@ public class BackgroundEnhancement implements Enhancer {
 
         Mat background = input.clone();
 
-        Imgproc.blur(background, background, new Size(50, 50));
         Imgproc.medianBlur(background, background, 51);
         background.convertTo(background, -1, 1, 30);
         background.convertTo(background, CV_32FC3);
