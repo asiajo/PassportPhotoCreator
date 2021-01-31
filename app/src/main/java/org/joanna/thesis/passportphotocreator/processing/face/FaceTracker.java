@@ -92,6 +92,5 @@ public class FaceTracker {
         mFaceGraphic.updateFaces(new ArrayList<>());
         mFaceGraphic.clearActions();
         mFaceGraphic.clearBoundingBoxes();
-        mOverlay.remove(mFaceGraphic);
     }
 }

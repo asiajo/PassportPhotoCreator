@@ -112,6 +112,15 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
                     Toast.LENGTH_LONG).show();
         }
 
+        mFaceTracker = new FaceTracker(mGraphicOverlay, requireActivity());
+
+        mDetectorPhoto = new com.google.android.gms.vision
+                .face.FaceDetector.Builder(requireActivity())
+                .setProminentFaceOnly(true)
+                .setMode(com.google.android.gms.vision
+                        .face.FaceDetector.ACCURATE_MODE)
+                .build();
+
     }
 
     @Override
@@ -184,16 +193,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
                         .setClassificationMode(CLASSIFICATION_MODE_ALL)
                         .build();
 
-        mDetectorPhoto = new com.google.android.gms.vision
-                .face.FaceDetector.Builder(context)
-                .setProminentFaceOnly(true)
-                .setMode(com.google.android.gms.vision
-                        .face.FaceDetector.ACCURATE_MODE)
-                .build();
-
         final FaceDetector mDetectorVideo = FaceDetection.getClient(options);
-
-        mFaceTracker = new FaceTracker(mGraphicOverlay, context);
 
         CameraSource.Builder builder = new CameraSource
                 .Builder(context, mDetectorVideo)
