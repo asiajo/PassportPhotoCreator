@@ -19,7 +19,7 @@ For enabling shadow removal please download a shadow removal model from [here](h
 Usage of the application without this model is possible, but shadows will not be corrected.
 Shadow removal model was taught using [pix2pix](https://github.com/affinelayer/pix2pix-tensorflow).
 Training data was generated with help of [DPR](https://github.com/zhhoper/DPR) and
-[face-seg](https://github.com/kampta/face-seg). Link to the code for data generation to follow.
+[face-seg](https://github.com/kampta/face-seg). Code for data generation can be found [HERE](https://github.com/asiajo/DPR).
 
 
 
