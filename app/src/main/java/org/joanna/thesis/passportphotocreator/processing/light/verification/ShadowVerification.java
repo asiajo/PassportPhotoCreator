@@ -51,7 +51,7 @@ public class ShadowVerification extends Verifier {
     }
 
     @Override
-    public void verify(final byte[] data, final Face face) {
+    public Boolean verify(final byte[] data, final Face face) {
 
         mOverlay.add(mShadowGraphic);
         List<Action> positions = new ArrayList<>();
@@ -69,7 +69,7 @@ public class ShadowVerification extends Verifier {
                 new Rect(left, top, right, bbox.bottom));
 
         if (null == image) {
-            return;
+            return null;
         }
 
         ShadowVerificator.EvenlyLightened isEvenlyLightened = null;
@@ -93,6 +93,7 @@ public class ShadowVerification extends Verifier {
                 ShadowGraphic.class);
 
         image.release();
+        return positions.size() == 0;
     }
 
 }

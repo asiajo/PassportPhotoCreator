@@ -40,13 +40,13 @@ public class FaceUncoveredVerification extends Verifier {
     }
 
     @Override
-    public void verify(final byte[] data, final Face face) {
+    public Boolean verify(final byte[] data, final Face face) {
 
         List<Action> positions = new ArrayList<>();
         if (!FaceUtils.isFacePositionCorrect(face)) {
             mVisibilityGraphic.setBarActions(positions, mContext,
                     VisibilityGraphic.class);
-            return;
+            return null;
         }
         mOverlay.add(mVisibilityGraphic);
         Mat image = ImageUtils.getMatFromYuvBytes(
@@ -62,7 +62,7 @@ public class FaceUncoveredVerification extends Verifier {
         image = ImageUtils.cropMatToBoundingBox(
                 image, new Rect(left, top, right, bottom));
         if (null == image) {
-            return;
+            return null;
         }
         if (!isSimilar(image)) {
             positions.add(VisibilityActions.HIDDEN);
@@ -70,6 +70,7 @@ public class FaceUncoveredVerification extends Verifier {
         mVisibilityGraphic.setBarActions(positions, mContext,
                 VisibilityGraphic.class);
         image.release();
+        return positions.size() == 0;
     }
 
     private boolean isSimilar(final Mat src) {
@@ -97,6 +98,4 @@ public class FaceUncoveredVerification extends Verifier {
 
         return similarity > epsilon;
     }
-
-
 }

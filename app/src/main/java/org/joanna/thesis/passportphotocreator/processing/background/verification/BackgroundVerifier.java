@@ -1,6 +1,7 @@
 package org.joanna.thesis.passportphotocreator.processing.background.verification;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
 import android.graphics.Rect;
 
 import com.google.mlkit.vision.face.Face;
@@ -52,17 +53,17 @@ public class BackgroundVerifier extends Verifier {
     }
 
     @Override
-    public void verify(final byte[] data, final Face face) {
+    public Boolean verify(final byte[] data, final Face face) {
 
         if (mSegmentor == null) {
-            return;
+            return null;
         }
 
         mOverlay.add(mBackgroundGraphic);
 
         Mat mBackground = getBackground(data, face);
         if (null == mBackground) {
-            return;
+            return null;
         }
         if (!mBackground.isContinuous()) {
             mBackground = mBackground.clone();
@@ -82,6 +83,7 @@ public class BackgroundVerifier extends Verifier {
         mBackgroundGraphic.setBarActions(positions, mContext,
                 BackgroundGraphic.class);
         mBackground.release();
+        return positions.size() == 0;
     }
 
     /**

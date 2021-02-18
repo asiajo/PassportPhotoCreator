@@ -42,13 +42,12 @@ import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
 import static com.google.mlkit.vision.face.FaceDetectorOptions.CLASSIFICATION_MODE_ALL;
 import static com.google.mlkit.vision.face.FaceDetectorOptions.LANDMARK_MODE_NONE;
 import static com.google.mlkit.vision.face.FaceDetectorOptions.PERFORMANCE_MODE_FAST;
+import static org.joanna.thesis.passportphotocreator.PhotoMakerActivity.PREVIEW_HEIGHT;
+import static org.joanna.thesis.passportphotocreator.PhotoMakerActivity.PREVIEW_WIDTH;
 import static org.joanna.thesis.passportphotocreator.utils.ImageUtils.getFaceMatFromPictureTaken;
 import static org.joanna.thesis.passportphotocreator.utils.PPCUtils.makeCenteredToast;
 
 public class CameraFragment extends Fragment implements View.OnClickListener {
-
-    public static final int PREVIEW_WIDTH  = 480;
-    public static final int PREVIEW_HEIGHT = 640;
 
     private static final String TAG = PhotoMakerActivity.class.getSimpleName();
 

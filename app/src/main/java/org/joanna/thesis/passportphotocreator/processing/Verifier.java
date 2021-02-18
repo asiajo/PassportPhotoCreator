@@ -26,7 +26,7 @@ public abstract class Verifier {
      * @param data image data under verification
      * @param face face discovered on the image
      */
-    public abstract void verify(final byte[] data, final Face face);
+    public abstract Boolean verify(final byte[] data, final Face face);
 
     public void close() {
 
