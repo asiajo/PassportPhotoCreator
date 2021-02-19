@@ -104,6 +104,58 @@ public class CameraFragmentTest {
         assertFalse(backgroundVerifier.verify(yuv, result.get(0)));
     }
 
+    @Test
+    public void testShadowVerificationPositive()
+            throws IOException, InterruptedException {
+
+        final Bitmap in = getBitmapFromFile("face.jpg", context);
+        final byte[] yuv = getYuvBytes(in);
+        final InputImage image = InputImage.fromBitmap(in, 0);
+        final List<Face> result = getFaces(image);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertTrue(shadowVerification.verify(yuv, result.get(0)));
+    }
+
+    @Test
+    public void testShadowVerificationNegative()
+            throws IOException, InterruptedException {
+
+        final Bitmap in = getBitmapFromFile("shadow3.jpg", context);
+        final byte[] yuv = getYuvBytes(in);
+        final InputImage image = InputImage.fromBitmap(in, 0);
+        final List<Face> result = getFaces(image);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertFalse(shadowVerification.verify(yuv, result.get(0)));
+    }
+
+    @Test
+    public void testFaceCoveredVerificationPositive()
+            throws IOException, InterruptedException {
+
+        final Bitmap in = getBitmapFromFile("light2.png", context);
+        final byte[] yuv = getYuvBytes(in);
+        final InputImage image = InputImage.fromBitmap(in, 0);
+        final List<Face> result = getFaces(image);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertTrue(faceUncoveredVerification.verify(yuv, result.get(0)));
+    }
+
+    @Test
+    public void testFaceCoveredVerificationNegative()
+            throws IOException, InterruptedException {
+
+        final Bitmap in = getBitmapFromFile("face_covered.jpg", context);
+        final byte[] yuv = getYuvBytes(in);
+        final InputImage image = InputImage.fromBitmap(in, 0);
+        final List<Face> result = getFaces(image);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertFalse(faceUncoveredVerification.verify(yuv, result.get(0)));
+    }
+
     private List<Face> getFaces(final InputImage image)
             throws InterruptedException {
         final Task<List<Face>> p = FaceDetection
